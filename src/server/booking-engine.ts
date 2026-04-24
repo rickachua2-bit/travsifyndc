@@ -253,8 +253,9 @@ const ContactSchema = z.object({
 
 const GuestCheckoutSchema = z.object({
   vertical: z.enum(["flights", "hotels", "tours", "transfers", "insurance", "visas"]),
-  base_amount: z.number().positive().max(1_000_000),  // provider price (pre-markup)
-  currency: z.string().length(3),
+  base_amount: z.number().positive().max(1_000_000),  // provider price (pre-markup, in provider currency)
+  currency: z.string().length(3),                      // provider currency (e.g. "USD")
+  display_currency: DisplayCurrencyEnum.optional(),    // user-chosen settlement currency (defaults to USD)
   contact: ContactSchema,
   // Vertical-specific identifiers / payload — preserved in metadata for webhook fulfillment.
   payload: z.record(z.string(), z.unknown()),
@@ -264,7 +265,8 @@ export const guestCheckout = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => GuestCheckoutSchema.parse(d))
   .handler(async ({ data }) => {
     const vertical = data.vertical as Vertical;
-    const price = await publicPrice(vertical, data.base_amount, data.currency);
+    const display = data.display_currency || "USD";
+    const price = await publicPrice(vertical, data.base_amount, data.currency, display);
     const reference = genBookingRef();
 
     // Insert booking row in pending_payment. user_id NULL is not allowed (NOT NULL),
@@ -283,7 +285,7 @@ export const guestCheckout = createServerFn({ method: "POST" })
         fulfillment_mode: FULFILLMENT[vertical],
         customer_name: data.contact.name,
         customer_email: data.contact.email,
-        currency: data.currency.toUpperCase(),
+        currency: price.currency,
         total_amount: price.total,
         margin_amount: price.travsify_markup,
         metadata: {
@@ -291,6 +293,8 @@ export const guestCheckout = createServerFn({ method: "POST" })
           contact: data.contact,
           payload: data.payload,
           price_breakdown: price,
+          provider_currency: data.currency.toUpperCase(),
+          provider_amount: data.base_amount,
         } as never,
       })
       .select("id, reference")
@@ -298,10 +302,10 @@ export const guestCheckout = createServerFn({ method: "POST" })
 
     if (error || !booking) throw new Error(`Booking insert failed: ${error?.message}`);
 
-    // Create Stripe PaymentIntent. Amount is in smallest currency unit.
+    // Create Stripe PaymentIntent. Charge the user in their chosen display currency.
     const intent = await createPaymentIntent({
       amount: Math.round(price.total * 100),
-      currency: data.currency,
+      currency: price.currency,
       description: `Travsify ${vertical} booking ${reference}`,
       customer_email: data.contact.email,
       metadata: {
