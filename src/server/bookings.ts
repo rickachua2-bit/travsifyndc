@@ -158,7 +158,7 @@ export async function createBookingAndDebit(input: CreateBookingInput): Promise<
       metadata: {
         ...input.metadata,
         price_breakdown: price,
-      },
+      } as never,
     })
     .select("id")
     .single();
@@ -175,7 +175,7 @@ export async function createBookingAndDebit(input: CreateBookingInput): Promise<
     });
   } catch (e) {
     // Roll back the booking row so we don't leave an orphan.
-    await supabaseAdmin.from("bookings").update({ status: "cancelled", metadata: { ...input.metadata, price_breakdown: price, cancel_reason: (e as Error).message } }).eq("id", booking.id);
+    await supabaseAdmin.from("bookings").update({ status: "cancelled", metadata: { ...input.metadata, price_breakdown: price, cancel_reason: (e as Error).message } as never }).eq("id", booking.id);
     throw e;
   }
 
@@ -189,7 +189,7 @@ export async function confirmBooking(bookingId: string, providerReference: strin
   const merged = { ...((existing?.metadata as Record<string, unknown>) ?? {}), ...extraMetadata };
   await supabaseAdmin
     .from("bookings")
-    .update({ status: "confirmed", provider_reference: providerReference, metadata: merged })
+    .update({ status: "confirmed", provider_reference: providerReference, metadata: merged as never })
     .eq("id", bookingId);
 }
 
@@ -212,6 +212,6 @@ export async function failAndRefundBooking(input: {
   });
   await supabaseAdmin
     .from("bookings")
-    .update({ status: "failed", metadata: { failure_reason: input.reason } })
+    .update({ status: "failed", metadata: { failure_reason: input.reason } as never })
     .eq("id", input.bookingId);
 }
