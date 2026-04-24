@@ -172,6 +172,7 @@ export function TourResults({
               {travelers} traveler{travelers > 1 ? "s" : ""}
               {priced.length > 0 && <> · from <span className="font-semibold text-foreground">{format(cheapest)}</span> per person</>}
             </p>
+            <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Fulfilled by GetYourGuide · ops-confirmed within hours</p>
           </div>
           <div className="flex gap-1 rounded-lg border border-border p-1">
             {(["recommended", "cheapest", "rating"] as const).map((s) => (
