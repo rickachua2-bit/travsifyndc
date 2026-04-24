@@ -3,9 +3,9 @@ import { Link } from "@tanstack/react-router";
 import { DashboardMock } from "./DashboardMock";
 
 const trustChips = [
-  { icon: Zap, label: "Live in 7 days" },
-  { icon: ShieldCheck, label: "PCI-DSS & GDPR" },
-  { icon: Sparkles, label: "500+ airlines" },
+  { icon: Zap, label: "Sandbox in 60s" },
+  { icon: ShieldCheck, label: "PCI-DSS · SOC 2" },
+  { icon: Sparkles, label: "6 verticals · 1 schema" },
 ];
 
 export function Hero() {
@@ -31,23 +31,23 @@ export function Hero() {
         <div>
           <div className="animate-fade-in-up inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
             <span className="inline-block h-2 w-2 animate-pulse-glow rounded-full bg-accent" />
-            Now live across 54 African markets
+            One unified API · 200+ countries
           </div>
 
           <h1 className="animate-fade-in-up delay-100 mt-5 font-display text-5xl font-extrabold leading-[1.05] tracking-tight text-primary md:text-6xl lg:text-7xl">
-            Build. Launch.<br />
-            Scale your travel<br />
-            business — <span className="text-gradient-accent">instantly.</span>
+            One API.<br />
+            Every travel<br />
+            product. <span className="text-gradient-accent">Every market.</span>
           </h1>
 
           <p className="animate-fade-in-up delay-200 mt-6 max-w-md text-lg text-muted-foreground">
-            One API for flights, hotels, transfers, e-Visas and insurance.
-            Global inventory, local payments — built for Africa, ready for the world.
+            Sell flights, hotels, tours, transfers, e-Visas and insurance from your platform —
+            with one integration, one schema, and local payments built for the real world.
           </p>
 
           <div className="animate-fade-in-up delay-300 mt-8 flex flex-wrap items-center gap-3">
             <Link
-              to="/contact"
+              to="/get-api-access"
               className="btn-glow group inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-accent transition hover:opacity-95"
               style={{ boxShadow: "var(--shadow-accent)" }}
             >
@@ -58,7 +58,7 @@ export function Hero() {
               to="/demo"
               className="inline-flex items-center gap-2 rounded-md border border-border bg-white px-6 py-3 text-sm font-semibold text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
             >
-              Watch live demo
+              Try the live demo
             </Link>
           </div>
 

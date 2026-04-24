@@ -7,7 +7,7 @@ const links = [
   { to: "/developers", label: "Developers" },
   { to: "/docs", label: "Docs" },
   { to: "/demo", label: "Demo" },
-  { to: "/contact", label: "Contact us" },
+  { to: "/contact", label: "Contact" },
 ] as const;
 
 export function Nav() {
@@ -49,13 +49,13 @@ export function Nav() {
 
         <div className="flex items-center gap-3">
           <Link
-            to="/contact"
+            to="/signin"
             className="hidden text-sm font-medium text-foreground transition hover:text-accent sm:block"
           >
             Sign in
           </Link>
           <Link
-            to="/contact"
+            to="/get-api-access"
             className="btn-glow group relative hidden items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground shadow-sm transition hover:opacity-95 sm:inline-flex"
           >
             Get API Access
@@ -86,7 +86,14 @@ export function Nav() {
               </Link>
             ))}
             <Link
-              to="/contact"
+              to="/signin"
+              onClick={() => setOpen(false)}
+              className="mt-2 inline-flex items-center justify-center rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground"
+            >
+              Sign in
+            </Link>
+            <Link
+              to="/get-api-access"
               onClick={() => setOpen(false)}
               className="mt-2 inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground"
             >
