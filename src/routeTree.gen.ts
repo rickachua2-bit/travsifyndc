@@ -14,7 +14,6 @@ import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as GetApiAccessRouteImport } from './routes/get-api-access'
 import { Route as DocsRouteImport } from './routes/docs'
-import { Route as DevelopersRouteImport } from './routes/developers'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -76,11 +75,6 @@ const GetApiAccessRoute = GetApiAccessRouteImport.update({
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevelopersRoute = DevelopersRouteImport.update({
-  id: '/developers',
-  path: '/developers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRoute = DemoRouteImport.update({
@@ -277,7 +271,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
-  '/developers': typeof DevelopersRoute
   '/docs': typeof DocsRoute
   '/get-api-access': typeof GetApiAccessRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -321,7 +314,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
-  '/developers': typeof DevelopersRoute
   '/docs': typeof DocsRoute
   '/get-api-access': typeof GetApiAccessRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -366,7 +358,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
-  '/developers': typeof DevelopersRoute
   '/docs': typeof DocsRoute
   '/get-api-access': typeof GetApiAccessRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -412,7 +403,6 @@ export interface FileRouteTypes {
     | '/'
     | '/contact'
     | '/demo'
-    | '/developers'
     | '/docs'
     | '/get-api-access'
     | '/reset-password'
@@ -456,7 +446,6 @@ export interface FileRouteTypes {
     | '/'
     | '/contact'
     | '/demo'
-    | '/developers'
     | '/docs'
     | '/get-api-access'
     | '/reset-password'
@@ -500,7 +489,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/contact'
     | '/demo'
-    | '/developers'
     | '/docs'
     | '/get-api-access'
     | '/reset-password'
@@ -546,7 +534,6 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ContactRoute: typeof ContactRoute
   DemoRoute: typeof DemoRoute
-  DevelopersRoute: typeof DevelopersRoute
   DocsRoute: typeof DocsRoute
   GetApiAccessRoute: typeof GetApiAccessRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -608,13 +595,6 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/developers': {
-      id: '/developers'
-      path: '/developers'
-      fullPath: '/developers'
-      preLoaderRoute: typeof DevelopersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -931,7 +911,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ContactRoute: ContactRoute,
   DemoRoute: DemoRoute,
-  DevelopersRoute: DevelopersRoute,
   DocsRoute: DocsRoute,
   GetApiAccessRoute: GetApiAccessRoute,
   ResetPasswordRoute: ResetPasswordRoute,
