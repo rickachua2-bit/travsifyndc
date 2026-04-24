@@ -360,7 +360,7 @@ export async function getOrScrapeInsurance(input: InsuranceScrapeInput): Promise
         duration_bucket: dBucket,
         max_age: aBucket,
         travelers_count: tCount,
-        quotes: fresh as unknown as object,
+        quotes: JSON.parse(JSON.stringify(fresh)) as never,
         last_scraped_at: new Date().toISOString(),
       }], { onConflict: "destination,nationality,duration_bucket,max_age,travelers_count" });
   } catch (e) {
