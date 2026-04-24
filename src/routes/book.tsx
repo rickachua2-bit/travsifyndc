@@ -9,9 +9,12 @@ import { VerticalTabs, VERTICALS, type BookingVertical } from "@/components/book
 import { Field, inputCls } from "@/components/booking/SearchForm";
 import { FlightSearchForm, type FlightSearchPayload } from "@/components/booking/FlightSearchForm";
 import { FlightResults, type FlightOffer } from "@/components/booking/FlightResults";
+import { HotelSearchForm, type HotelSearchPayload } from "@/components/booking/HotelSearchForm";
+import { HotelResults, type Hotel } from "@/components/booking/HotelResults";
+import { findCityByCode } from "@/data/cities";
 import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/components/booking/GuestCheckout";
 import { CurrencySwitcher } from "@/components/booking/CurrencySwitcher";
-import { publicSearchFlights } from "@/server/booking-engine";
+import { publicSearchFlights, publicSearchHotels } from "@/server/booking-engine";
 
 export const Route = createFileRoute("/book")({
   component: BookPage,
