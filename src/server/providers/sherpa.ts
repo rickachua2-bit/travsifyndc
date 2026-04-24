@@ -4,14 +4,16 @@
 // Docs: https://developers.joinsherpa.com/
 const BASE = "https://requirements-api.joinsherpa.com/v2";
 
-function token(): string {
-  const t = process.env.SHERPA_AFFILIATE_TOKEN;
-  if (!t) throw new Error("SHERPA_AFFILIATE_TOKEN not configured");
-  return t;
+function affiliateId(): string {
+  // Sherpa uses an affiliate ID (no token/secret). Stored as SHERPA_AFFILIATE_ID
+  // (legacy SHERPA_AFFILIATE_TOKEN is also accepted for backwards compatibility).
+  const id = process.env.SHERPA_AFFILIATE_ID || process.env.SHERPA_AFFILIATE_TOKEN;
+  if (!id) throw new Error("SHERPA_AFFILIATE_ID not configured");
+  return id;
 }
 
 async function call<T>(path: string): Promise<T> {
-  const url = `${BASE}${path}${path.includes("?") ? "&" : "?"}affiliate=${token()}`;
+  const url = `${BASE}${path}${path.includes("?") ? "&" : "?"}affiliate=${affiliateId()}`;
   const res = await fetch(url, { headers: { "Accept": "application/json" } });
   const text = await res.text();
   let json: unknown = null;
