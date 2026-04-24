@@ -31,6 +31,7 @@ import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as VisaTrackReferenceRouteImport } from './routes/visa.track.$reference'
 import { Route as ApiV1PayoutsRouteImport } from './routes/api/v1/payouts'
 import { Route as ApiV1HealthRouteImport } from './routes/api/v1/health'
 import { Route as ApiPublicDemoSearchRouteImport } from './routes/api/public/demo-search'
@@ -165,6 +166,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const VisaTrackReferenceRoute = VisaTrackReferenceRouteImport.update({
+  id: '/visa/track/$reference',
+  path: '/visa/track/$reference',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1PayoutsRoute = ApiV1PayoutsRouteImport.update({
   id: '/api/v1/payouts',
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
+  '/visa/track/$reference': typeof VisaTrackReferenceRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByTo {
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
+  '/visa/track/$reference': typeof VisaTrackReferenceRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
@@ -408,6 +416,7 @@ export interface FileRoutesById {
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
+  '/visa/track/$reference': typeof VisaTrackReferenceRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
@@ -456,6 +465,7 @@ export interface FileRouteTypes {
     | '/api/public/demo-search'
     | '/api/v1/health'
     | '/api/v1/payouts'
+    | '/visa/track/$reference'
     | '/admin/'
     | '/admin/applications/$id'
     | '/api/public/webhooks/fincra'
@@ -501,6 +511,7 @@ export interface FileRouteTypes {
     | '/api/public/demo-search'
     | '/api/v1/health'
     | '/api/v1/payouts'
+    | '/visa/track/$reference'
     | '/admin'
     | '/admin/applications/$id'
     | '/api/public/webhooks/fincra'
@@ -548,6 +559,7 @@ export interface FileRouteTypes {
     | '/api/public/demo-search'
     | '/api/v1/health'
     | '/api/v1/payouts'
+    | '/visa/track/$reference'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/applications/$id'
     | '/api/public/webhooks/fincra'
@@ -583,6 +595,7 @@ export interface RootRouteChildren {
   ApiPublicDemoSearchRoute: typeof ApiPublicDemoSearchRoute
   ApiV1HealthRoute: typeof ApiV1HealthRoute
   ApiV1PayoutsRoute: typeof ApiV1PayoutsRoute
+  VisaTrackReferenceRoute: typeof VisaTrackReferenceRoute
   ApiPublicWebhooksFincraRoute: typeof ApiPublicWebhooksFincraRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
   ApiV1FlightsOrdersRoute: typeof ApiV1FlightsOrdersRoute
@@ -755,6 +768,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/visa/track/$reference': {
+      id: '/visa/track/$reference'
+      path: '/visa/track/$reference'
+      fullPath: '/visa/track/$reference'
+      preLoaderRoute: typeof VisaTrackReferenceRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/v1/payouts': {
       id: '/api/v1/payouts'
@@ -985,6 +1005,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDemoSearchRoute: ApiPublicDemoSearchRoute,
   ApiV1HealthRoute: ApiV1HealthRoute,
   ApiV1PayoutsRoute: ApiV1PayoutsRoute,
+  VisaTrackReferenceRoute: VisaTrackReferenceRoute,
   ApiPublicWebhooksFincraRoute: ApiPublicWebhooksFincraRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
   ApiV1FlightsOrdersRoute: ApiV1FlightsOrdersRoute,
