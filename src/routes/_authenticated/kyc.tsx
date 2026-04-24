@@ -180,9 +180,8 @@ function KycWizard() {
   }
 
   async function saveAndExit() {
-    toast.success("Progress saved. We'll pick up where you left off.");
-    await signOut();
-    navigate({ to: "/" });
+    toast.success("Progress saved. You can finish KYC anytime from your dashboard.");
+    navigate({ to: "/dashboard" });
   }
 
   async function submit() {
