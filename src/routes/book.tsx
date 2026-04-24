@@ -13,10 +13,14 @@ import { HotelSearchForm, type HotelSearchPayload } from "@/components/booking/H
 import { HotelResults, type Hotel } from "@/components/booking/HotelResults";
 import { TourSearchForm, type TourSearchPayload } from "@/components/booking/TourSearchForm";
 import { TourResults, type Tour } from "@/components/booking/TourResults";
+import { VisaSearchForm, type VisaSearchPayload } from "@/components/booking/VisaSearchForm";
+import { VisaResults, type VisaProduct } from "@/components/booking/VisaResults";
 import { findCityByCode } from "@/data/cities";
 import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/components/booking/GuestCheckout";
 import { CurrencySwitcher } from "@/components/booking/CurrencySwitcher";
 import { publicSearchFlights, publicSearchHotels, publicSearchTours } from "@/server/booking-engine";
+import { publicSearchVisaProducts } from "@/server/visa-products.functions";
+import { Field, inputCls } from "@/components/booking/SearchForm";
 
 export const Route = createFileRoute("/book")({
   component: BookPage,
