@@ -19,6 +19,8 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedPendingReviewRouteImport } from './routes/_authenticated/pending-review'
+import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as ApiPublicDemoSearchRouteImport } from './routes/api/public/demo-search'
 
@@ -71,6 +73,17 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPendingReviewRoute =
+  AuthenticatedPendingReviewRouteImport.update({
+    id: '/pending-review',
+    path: '/pending-review',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -93,6 +106,8 @@ export interface FileRoutesByFullPath {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kyc': typeof AuthenticatedKycRoute
+  '/pending-review': typeof AuthenticatedPendingReviewRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
 }
 export interface FileRoutesByTo {
@@ -106,6 +121,8 @@ export interface FileRoutesByTo {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kyc': typeof AuthenticatedKycRoute
+  '/pending-review': typeof AuthenticatedPendingReviewRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
 }
 export interface FileRoutesById {
@@ -121,6 +138,8 @@ export interface FileRoutesById {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/kyc': typeof AuthenticatedKycRoute
+  '/_authenticated/pending-review': typeof AuthenticatedPendingReviewRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
 }
 export interface FileRouteTypes {
@@ -136,6 +155,8 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/dashboard'
+    | '/kyc'
+    | '/pending-review'
     | '/api/public/demo-search'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -149,6 +170,8 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/dashboard'
+    | '/kyc'
+    | '/pending-review'
     | '/api/public/demo-search'
   id:
     | '__root__'
@@ -163,6 +186,8 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/_authenticated/dashboard'
+    | '/_authenticated/kyc'
+    | '/_authenticated/pending-review'
     | '/api/public/demo-search'
   fileRoutesById: FileRoutesById
 }
@@ -252,6 +277,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/pending-review': {
+      id: '/_authenticated/pending-review'
+      path: '/pending-review'
+      fullPath: '/pending-review'
+      preLoaderRoute: typeof AuthenticatedPendingReviewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/kyc': {
+      id: '/_authenticated/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof AuthenticatedKycRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -271,10 +310,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedKycRoute: typeof AuthenticatedKycRoute
+  AuthenticatedPendingReviewRoute: typeof AuthenticatedPendingReviewRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedKycRoute: AuthenticatedKycRoute,
+  AuthenticatedPendingReviewRoute: AuthenticatedPendingReviewRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
