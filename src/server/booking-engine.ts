@@ -19,13 +19,14 @@ import { createPaymentIntent } from "@/server/providers/stripe";
 import { searchFlights as duffelSearch } from "@/server/providers/duffel";
 import { searchHotelRates as liteapiSearch } from "@/server/providers/liteapi";
 import { searchTours as gygSearch } from "@/server/providers/getyourguide";
-import { searchTransfers as mozioSearch } from "@/server/providers/mozio";
+import { getOrScrapeTransfers } from "@/server/providers/transfers-scraper";
+import { getOrScrapeCarRentals } from "@/server/providers/car-rental-scraper";
 import { getOrScrapeInsurance } from "@/server/providers/insurance-scraper";
 import { searchVisas as sherpaSearch } from "@/server/providers/sherpa";
 import { convert as fxConvert, SUPPORTED_CURRENCIES } from "@/server/fx";
 import { findCountryByCode } from "@/data/countries";
 
-type Vertical = "flights" | "hotels" | "tours" | "transfers" | "insurance" | "visas";
+type Vertical = "flights" | "hotels" | "tours" | "transfers" | "insurance" | "visas" | "car_rentals";
 
 /** Auto verticals settle immediately on payment; manual ones wait for ops fulfillment. */
 const FULFILLMENT: Record<Vertical, "auto" | "manual"> = {
@@ -35,23 +36,27 @@ const FULFILLMENT: Record<Vertical, "auto" | "manual"> = {
   transfers: "manual",
   insurance: "manual",
   visas: "manual",
+  car_rentals: "manual",
 };
 
 /**
- * Affiliate verticals: we earn commission via the supplier's affiliate program
- * after manual fulfillment, so the public /book flow must NOT add any Travsify
- * markup. Customer pays the raw provider price (FX-converted to display ccy).
- * Partner API still applies markups normally — that's a separate code path.
+ * Affiliate / scraped verticals: we either earn commission via the supplier's
+ * affiliate program after manual fulfillment, or we aggregate quotes via
+ * scrape and settle the actual booking on the supplier site. Either way the
+ * public /book flow does NOT add Travsify markup. Customer pays the raw
+ * provider price (FX-converted to display ccy). Partner API still applies
+ * markups normally — that's a separate code path.
  */
-const AFFILIATE_VERTICALS: Set<Vertical> = new Set(["tours", "transfers", "insurance", "visas"]);
+const AFFILIATE_VERTICALS: Set<Vertical> = new Set(["tours", "transfers", "insurance", "visas", "car_rentals"]);
 
 const PROVIDER: Record<Vertical, string> = {
   flights: "duffel",
   hotels: "liteapi",
   tours: "getyourguide",
-  transfers: "mozio",
-  insurance: "safetywing",
+  transfers: "scraped",
+  insurance: "scraped",
   visas: "sherpa",
+  car_rentals: "scraped",
 };
 
 const DisplayCurrencyEnum = z.enum(SUPPORTED_CURRENCIES as [string, ...string[]]);
@@ -224,10 +229,51 @@ export const publicSearchTransfers = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
     const display = data.display_currency || "USD";
-    const res = await mozioSearch(data);
-    const quotes = await Promise.all(res.quotes.map(async (q) => {
+    const normalized = await getOrScrapeTransfers({
+      pickup_address: data.pickup_address,
+      dropoff_address: data.dropoff_address,
+      pickup_datetime: data.pickup_datetime,
+      num_passengers: data.num_passengers,
+    });
+    const quotes = await Promise.all(normalized.map(async (q) => {
       const price = await publicPrice("transfers", q.total_price, q.currency, display);
-      return { ...q, base_price: q.total_price, base_currency: q.currency, total_price: price.total, currency: price.currency, price_breakdown: price };
+      const { _internal_underwriter: _u, ...publicQuote } = q;
+      return {
+        ...publicQuote,
+        base_price: q.total_price,
+        base_currency: q.currency,
+        total_price: price.total,
+        currency: price.currency,
+        price_breakdown: price,
+      };
+    }));
+    return JSON.stringify({ quotes, display_currency: display });
+  });
+
+export const publicSearchCarRentals = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({
+    pickup_location: z.string().min(2).max(200),
+    dropoff_location: z.string().min(2).max(200),
+    pickup_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    dropoff_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    driver_age: z.number().int().min(18).max(99),
+    display_currency: DisplayCurrencyEnum.optional(),
+  }).parse(d))
+  .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
+    const normalized = await getOrScrapeCarRentals(data);
+    const quotes = await Promise.all(normalized.map(async (q) => {
+      const price = await publicPrice("car_rentals", q.total_price, q.currency, display);
+      const { _internal_underwriter: _u, ...publicQuote } = q;
+      return {
+        ...publicQuote,
+        base_price: q.total_price,
+        base_currency: q.currency,
+        total_price: price.total,
+        per_day_price: Number((price.total / Math.max(1, q.rental_days)).toFixed(2)),
+        currency: price.currency,
+        price_breakdown: price,
+      };
     }));
     return JSON.stringify({ quotes, display_currency: display });
   });
@@ -300,7 +346,7 @@ const ContactSchema = z.object({
 });
 
 const GuestCheckoutSchema = z.object({
-  vertical: z.enum(["flights", "hotels", "tours", "transfers", "insurance", "visas"]),
+  vertical: z.enum(["flights", "hotels", "tours", "transfers", "insurance", "visas", "car_rentals"]),
   base_amount: z.number().positive().max(1_000_000),  // provider price (pre-markup, in provider currency)
   currency: z.string().length(3),                      // provider currency (e.g. "USD")
   display_currency: DisplayCurrencyEnum.optional(),    // user-chosen settlement currency (defaults to USD)

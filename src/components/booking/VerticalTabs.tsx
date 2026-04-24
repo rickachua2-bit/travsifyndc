@@ -1,12 +1,13 @@
-import { Plane, Building2, MapPin, Car, Globe2, Shield } from "lucide-react";
+import { Plane, Building2, MapPin, Car, Globe2, Shield, KeyRound } from "lucide-react";
 
-export type BookingVertical = "flights" | "hotels" | "tours" | "transfers" | "visas" | "insurance";
+export type BookingVertical = "flights" | "hotels" | "tours" | "transfers" | "visas" | "insurance" | "car_rentals";
 
 export const VERTICALS: { id: BookingVertical; label: string; icon: typeof Plane; tagline: string }[] = [
   { id: "flights", label: "Flights", icon: Plane, tagline: "500+ carriers, instant ticketing" },
   { id: "hotels", label: "Hotels", icon: Building2, tagline: "1.6M+ properties worldwide" },
   { id: "tours", label: "Tours & activities", icon: MapPin, tagline: "12k+ experiences in 150 countries" },
   { id: "transfers", label: "Airport transfers", icon: Car, tagline: "City and airport pickup, 130+ countries" },
+  { id: "car_rentals", label: "Car rentals", icon: KeyRound, tagline: "Self-drive worldwide, free cancellation" },
   { id: "visas", label: "e-Visas", icon: Globe2, tagline: "Government-grade processing" },
   { id: "insurance", label: "Travel insurance", icon: Shield, tagline: "Medical, trip & nomad cover" },
 ];

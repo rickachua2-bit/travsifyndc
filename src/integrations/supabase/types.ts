@@ -279,6 +279,42 @@ export type Database = {
           },
         ]
       }
+      car_rental_quote_cache: {
+        Row: {
+          created_at: string
+          driver_age_bucket: number
+          dropoff_date: string
+          dropoff_location: string
+          id: string
+          last_scraped_at: string
+          pickup_date: string
+          pickup_location: string
+          quotes: Json
+        }
+        Insert: {
+          created_at?: string
+          driver_age_bucket: number
+          dropoff_date: string
+          dropoff_location: string
+          id?: string
+          last_scraped_at?: string
+          pickup_date: string
+          pickup_location: string
+          quotes?: Json
+        }
+        Update: {
+          created_at?: string
+          driver_age_bucket?: number
+          dropoff_date?: string
+          dropoff_location?: string
+          id?: string
+          last_scraped_at?: string
+          pickup_date?: string
+          pickup_location?: string
+          quotes?: Json
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           company: string | null
@@ -697,6 +733,39 @@ export type Database = {
           created_at?: string
           stripe_customer_id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      transfer_quote_cache: {
+        Row: {
+          created_at: string
+          datetime_bucket: string
+          dropoff_key: string
+          id: string
+          last_scraped_at: string
+          passengers_bucket: number
+          pickup_key: string
+          quotes: Json
+        }
+        Insert: {
+          created_at?: string
+          datetime_bucket: string
+          dropoff_key: string
+          id?: string
+          last_scraped_at?: string
+          passengers_bucket: number
+          pickup_key: string
+          quotes?: Json
+        }
+        Update: {
+          created_at?: string
+          datetime_bucket?: string
+          dropoff_key?: string
+          id?: string
+          last_scraped_at?: string
+          passengers_bucket?: number
+          pickup_key?: string
+          quotes?: Json
         }
         Relationships: []
       }
@@ -1432,6 +1501,7 @@ export type Database = {
         | "tours"
         | "visas"
         | "insurance"
+        | "car_rentals"
       visa_application_status:
         | "draft"
         | "submitted"
@@ -1588,6 +1658,7 @@ export const Constants = {
         "tours",
         "visas",
         "insurance",
+        "car_rentals",
       ],
       visa_application_status: [
         "draft",
