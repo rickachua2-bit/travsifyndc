@@ -37,7 +37,7 @@ function BookingsPage() {
             <h1 className="font-display text-3xl font-extrabold text-primary">Bookings</h1>
             <p className="mt-1 text-sm text-muted-foreground">Every booking placed via the API or in-app, across all verticals.</p>
           </div>
-          <Link to="/book" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-95">
+          <Link to="/dashboard-book" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-95">
             <Search className="h-4 w-4" /> Book new
           </Link>
         </div>
