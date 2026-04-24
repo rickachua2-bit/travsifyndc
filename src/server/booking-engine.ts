@@ -22,6 +22,7 @@ import { searchTours as gygSearch } from "@/server/providers/getyourguide";
 import { searchTransfers as mozioSearch } from "@/server/providers/mozio";
 import { searchInsurance as swSearch } from "@/server/providers/safetywing";
 import { searchVisas as sherpaSearch } from "@/server/providers/sherpa";
+import { convert as fxConvert, SUPPORTED_CURRENCIES } from "@/server/fx";
 
 type Vertical = "flights" | "hotels" | "tours" | "transfers" | "insurance" | "visas";
 
@@ -44,15 +45,28 @@ const PROVIDER: Record<Vertical, string> = {
   visas: "sherpa",
 };
 
-/** Compose the public retail price (provider_base + Travsify markup, no partner). */
-async function publicPrice(vertical: Vertical, providerBase: number, currency: string): Promise<{
-  provider_base: number; travsify_markup: number; total: number; currency: string;
-}> {
+const DisplayCurrencyEnum = z.enum(SUPPORTED_CURRENCIES as [string, ...string[]]);
+
+/**
+ * Compose the public retail price for the user's chosen *display currency*.
+ *
+ * 1. Convert the provider's native price into `displayCurrency` (e.g. USD→NGN).
+ * 2. Run compose_price() in display currency to apply the Travsify markup.
+ *    (Markup config has its own currency; pricing function reads value as-is.)
+ */
+async function publicPrice(
+  vertical: Vertical,
+  providerBase: number,
+  providerCurrency: string,
+  displayCurrency: string = "USD",
+): Promise<{ provider_base: number; travsify_markup: number; total: number; currency: string; fx_from: string; fx_to: string }> {
+  const target = displayCurrency.toUpperCase();
+  const baseInDisplay = await fxConvert(providerBase, providerCurrency, target);
   const { data, error } = await supabaseAdmin.rpc("compose_price", {
     p_partner_id: null as unknown as string,
     p_vertical: vertical,
-    p_provider_base: providerBase,
-    p_currency: currency.toUpperCase(),
+    p_provider_base: Number(baseInDisplay.toFixed(2)),
+    p_currency: target,
   });
   if (error) throw new Error(`Price composition failed: ${error.message}`);
   const b = data as { provider_base: number; travsify_markup: number; partner_markup: number; total: number; currency: string };
@@ -61,6 +75,8 @@ async function publicPrice(vertical: Vertical, providerBase: number, currency: s
     travsify_markup: Number(b.travsify_markup),
     total: Number(b.total),
     currency: b.currency,
+    fx_from: providerCurrency.toUpperCase(),
+    fx_to: target,
   };
 }
 
@@ -84,11 +100,13 @@ export const publicSearchFlights = createServerFn({ method: "POST" })
       destination: z.string().length(3),
       departure_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     })).min(1).max(6).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).refine(
     (v) => (v.slices && v.slices.length > 0) || (v.origin && v.destination && v.departure_date),
     { message: "Provide either slices[] or origin+destination+departure_date" },
   ).parse(d))
   .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
     const res = await duffelSearch("live", {
       origin: data.origin || data.slices?.[0]?.origin || "",
       destination: data.destination || data.slices?.[0]?.destination || "",
@@ -103,16 +121,17 @@ export const publicSearchFlights = createServerFn({ method: "POST" })
     const offers = await Promise.all(res.offers.map(async (o) => {
       const base = Number(o.total_amount);
       const ccy = String(o.total_currency || "USD");
-      const price = await publicPrice("flights", base, ccy);
+      const price = await publicPrice("flights", base, ccy, display);
       return {
         ...o,
-        base_amount: base,
+        base_amount: base,         // provider native (for booking call)
+        base_currency: ccy,        // provider native currency
         total_amount: String(price.total),
-        total_currency: ccy,
+        total_currency: price.currency,
         price_breakdown: price,
       };
     }));
-    return JSON.stringify({ offers });
+    return JSON.stringify({ offers, display_currency: display });
   });
 
 export const publicSearchHotels = createServerFn({ method: "POST" })
@@ -124,15 +143,17 @@ export const publicSearchHotels = createServerFn({ method: "POST" })
     adults: z.number().int().min(1).max(8),
     children: z.number().int().min(0).max(6).optional(),
     currency: z.string().length(3).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).refine((v) => v.city_code || v.country_code, { message: "city_code or country_code required" }).parse(d))
   .handler(async ({ data }): Promise<string> => {
-    const res = await liteapiSearch(data);
+    const display = data.display_currency || "USD";
+    const res = await liteapiSearch({ ...data, currency: data.currency || "USD" });
     const hotels = await Promise.all(res.hotels.map(async (h) => {
       if (!h.price) return { ...h, price_breakdown: null };
-      const price = await publicPrice("hotels", Number(h.price), h.currency || "USD");
-      return { ...h, base_price: h.price, price: price.total, price_breakdown: price };
+      const price = await publicPrice("hotels", Number(h.price), h.currency || "USD", display);
+      return { ...h, base_price: h.price, base_currency: h.currency || "USD", price: price.total, currency: price.currency, price_breakdown: price };
     }));
-    return JSON.stringify({ hotels });
+    return JSON.stringify({ hotels, display_currency: display });
   });
 
 export const publicSearchTours = createServerFn({ method: "POST" })
@@ -141,16 +162,18 @@ export const publicSearchTours = createServerFn({ method: "POST" })
     date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     currency: z.string().length(3).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
     const res = await gygSearch(data);
     const tours = await Promise.all(res.tours.map(async (t) => {
-      const price = await publicPrice("tours", t.price, t.currency);
+      const price = await publicPrice("tours", t.price, t.currency, display);
       // Strip booking_url — guests don't redirect.
       const { booking_url: _omit, ...rest } = t;
-      return { ...rest, base_price: t.price, price: price.total, price_breakdown: price };
+      return { ...rest, base_price: t.price, base_currency: t.currency, price: price.total, currency: price.currency, price_breakdown: price };
     }));
-    return JSON.stringify({ tours });
+    return JSON.stringify({ tours, display_currency: display });
   });
 
 export const publicSearchTransfers = createServerFn({ method: "POST" })
@@ -160,14 +183,16 @@ export const publicSearchTransfers = createServerFn({ method: "POST" })
     pickup_datetime: z.string().min(10).max(40),
     num_passengers: z.number().int().min(1).max(20),
     currency: z.string().length(3).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
     const res = await mozioSearch(data);
     const quotes = await Promise.all(res.quotes.map(async (q) => {
-      const price = await publicPrice("transfers", q.total_price, q.currency);
-      return { ...q, base_price: q.total_price, total_price: price.total, price_breakdown: price };
+      const price = await publicPrice("transfers", q.total_price, q.currency, display);
+      return { ...q, base_price: q.total_price, base_currency: q.currency, total_price: price.total, currency: price.currency, price_breakdown: price };
     }));
-    return JSON.stringify({ quotes });
+    return JSON.stringify({ quotes, display_currency: display });
   });
 
 export const publicSearchInsurance = createServerFn({ method: "POST" })
@@ -178,18 +203,20 @@ export const publicSearchInsurance = createServerFn({ method: "POST" })
     end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     travelers: z.array(z.object({ age: z.number().int().min(0).max(120) })).min(1).max(10),
     coverage_type: z.enum(["nomad", "trip", "remote_health"]).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
     const res = await swSearch({
       ...data,
       nationality: data.nationality.toUpperCase(),
       destination: data.destination.toUpperCase(),
     });
     const quotes = await Promise.all(res.quotes.map(async (q) => {
-      const price = await publicPrice("insurance", q.price, q.currency);
-      return { ...q, base_price: q.price, price: price.total, price_breakdown: price };
+      const price = await publicPrice("insurance", q.price, q.currency, display);
+      return { ...q, base_price: q.price, base_currency: q.currency, price: price.total, currency: price.currency, price_breakdown: price };
     }));
-    return JSON.stringify({ quotes });
+    return JSON.stringify({ quotes, display_currency: display });
   });
 
 export const publicSearchVisas = createServerFn({ method: "POST" })
@@ -197,18 +224,20 @@ export const publicSearchVisas = createServerFn({ method: "POST" })
     nationality: z.string().length(2),
     destination: z.string().length(2),
     purpose: z.enum(["tourism", "business", "transit"]).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
     const res = await sherpaSearch({
       nationality: data.nationality.toUpperCase(),
       destination: data.destination.toUpperCase(),
       purpose: data.purpose,
     });
     const options = await Promise.all(res.options.map(async (v) => {
-      const price = await publicPrice("visas", v.price, v.currency);
-      return { ...v, base_price: v.price, price: price.total, price_breakdown: price };
+      const price = await publicPrice("visas", v.price, v.currency, display);
+      return { ...v, base_price: v.price, base_currency: v.currency, price: price.total, currency: price.currency, price_breakdown: price };
     }));
-    return JSON.stringify({ options });
+    return JSON.stringify({ options, display_currency: display });
   });
 
 // =============================================================
@@ -224,8 +253,9 @@ const ContactSchema = z.object({
 
 const GuestCheckoutSchema = z.object({
   vertical: z.enum(["flights", "hotels", "tours", "transfers", "insurance", "visas"]),
-  base_amount: z.number().positive().max(1_000_000),  // provider price (pre-markup)
-  currency: z.string().length(3),
+  base_amount: z.number().positive().max(1_000_000),  // provider price (pre-markup, in provider currency)
+  currency: z.string().length(3),                      // provider currency (e.g. "USD")
+  display_currency: DisplayCurrencyEnum.optional(),    // user-chosen settlement currency (defaults to USD)
   contact: ContactSchema,
   // Vertical-specific identifiers / payload — preserved in metadata for webhook fulfillment.
   payload: z.record(z.string(), z.unknown()),
@@ -235,7 +265,8 @@ export const guestCheckout = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => GuestCheckoutSchema.parse(d))
   .handler(async ({ data }) => {
     const vertical = data.vertical as Vertical;
-    const price = await publicPrice(vertical, data.base_amount, data.currency);
+    const display = data.display_currency || "USD";
+    const price = await publicPrice(vertical, data.base_amount, data.currency, display);
     const reference = genBookingRef();
 
     // Insert booking row in pending_payment. user_id NULL is not allowed (NOT NULL),
@@ -254,7 +285,7 @@ export const guestCheckout = createServerFn({ method: "POST" })
         fulfillment_mode: FULFILLMENT[vertical],
         customer_name: data.contact.name,
         customer_email: data.contact.email,
-        currency: data.currency.toUpperCase(),
+        currency: price.currency,
         total_amount: price.total,
         margin_amount: price.travsify_markup,
         metadata: {
@@ -262,6 +293,8 @@ export const guestCheckout = createServerFn({ method: "POST" })
           contact: data.contact,
           payload: data.payload,
           price_breakdown: price,
+          provider_currency: data.currency.toUpperCase(),
+          provider_amount: data.base_amount,
         } as never,
       })
       .select("id, reference")
@@ -269,10 +302,10 @@ export const guestCheckout = createServerFn({ method: "POST" })
 
     if (error || !booking) throw new Error(`Booking insert failed: ${error?.message}`);
 
-    // Create Stripe PaymentIntent. Amount is in smallest currency unit.
+    // Create Stripe PaymentIntent. Charge the user in their chosen display currency.
     const intent = await createPaymentIntent({
       amount: Math.round(price.total * 100),
-      currency: data.currency,
+      currency: price.currency,
       description: `Travsify ${vertical} booking ${reference}`,
       customer_email: data.contact.email,
       metadata: {

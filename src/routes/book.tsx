@@ -4,10 +4,12 @@ import { ArrowRight, Loader2, Plane, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { PageShell, PageHero } from "@/components/landing/PageShell";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import { VerticalTabs, VERTICALS, type BookingVertical } from "@/components/booking/VerticalTabs";
 import { Field, inputCls } from "@/components/booking/SearchForm";
 import { FlightSearchForm, type FlightSearchPayload } from "@/components/booking/FlightSearchForm";
 import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/components/booking/GuestCheckout";
+import { CurrencySwitcher } from "@/components/booking/CurrencySwitcher";
 import { publicSearchFlights } from "@/server/booking-engine";
 
 export const Route = createFileRoute("/book")({
@@ -23,7 +25,7 @@ export const Route = createFileRoute("/book")({
 });
 
 type FlightOffer = {
-  id: string; total_amount: string; total_currency: string; base_amount: number; owner?: string;
+  id: string; total_amount: string; total_currency: string; base_amount: number; base_currency: string; owner?: string;
   slices?: Array<{ origin?: string; destination?: string; segments?: Array<{ departing_at?: string; arriving_at?: string; marketing_carrier?: string; flight_number?: string }> }>;
 };
 
@@ -57,7 +59,12 @@ function BookPage() {
 
       <section className="border-b border-border bg-surface py-12">
         <div className="mx-auto max-w-6xl space-y-6 px-6">
-          <VerticalTabs value={tab} onChange={setTab} />
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex-1">
+              <VerticalTabs value={tab} onChange={setTab} />
+            </div>
+            <CurrencySwitcher />
+          </div>
           <div>
             <h2 className="font-display text-2xl font-extrabold text-primary">{vertical.label}</h2>
             <p className="text-sm text-muted-foreground">{vertical.tagline}</p>
@@ -80,6 +87,7 @@ function BookPage() {
 }
 
 function FlightsFlow() {
+  const { currency: displayCurrency, format } = useCurrency();
   const [busy, setBusy] = useState(false);
   const [offers, setOffers] = useState<FlightOffer[]>([]);
   const [picked, setPicked] = useState<FlightOffer | null>(null);
@@ -96,6 +104,7 @@ function FlightsFlow() {
         children: payload.children,
         infants: payload.infants,
         cabin: payload.cabin,
+        display_currency: displayCurrency,
       } });
       const parsed = JSON.parse(json) as { offers: FlightOffer[] };
       setOffers(parsed.offers || []);
@@ -119,7 +128,8 @@ function FlightsFlow() {
     setCheckout({
       vertical: "flights",
       base_amount: picked.base_amount,
-      currency: picked.total_currency,
+      currency: picked.base_currency,                 // provider native currency for compose_price input
+      display_currency: displayCurrency,              // user's chosen settlement currency
       contact: { name: `${passenger.given_name} ${passenger.family_name}`, email: passenger.email, phone: passenger.phone_number },
       payload: { offer_id: picked.id, passengers: [passenger], provider_amount: picked.base_amount },
     });
@@ -152,7 +162,7 @@ function FlightsFlow() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-display text-xl font-extrabold text-primary">{o.total_currency} {Number(o.total_amount).toLocaleString()}</div>
+                <div className="font-display text-xl font-extrabold text-primary">{format(Number(o.total_amount), o.total_currency)}</div>
                 <button onClick={() => setPicked(o)} className="mt-1 rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">Select</button>
               </div>
             </div>
@@ -162,7 +172,7 @@ function FlightsFlow() {
 
       {picked && (
         <form onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }} className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2" style={{ boxShadow: "var(--shadow-soft)" }}>
-          <h3 className="col-span-full font-display text-base font-bold text-primary">Passenger details — {picked.total_currency} {Number(picked.total_amount).toLocaleString()}</h3>
+          <h3 className="col-span-full font-display text-base font-bold text-primary">Passenger details — {format(Number(picked.total_amount), picked.total_currency)}</h3>
           <Field label="Title"><select name="title" required className={inputCls}><option value="mr">Mr</option><option value="ms">Ms</option><option value="mrs">Mrs</option><option value="miss">Miss</option><option value="dr">Dr</option></select></Field>
           <Field label="Gender"><select name="gender" required className={inputCls}><option value="m">Male</option><option value="f">Female</option></select></Field>
           <Field label="Given name"><input name="given_name" required className={inputCls} /></Field>
