@@ -150,11 +150,17 @@ function CheckoutForm({ reference, amount, currency, onSuccess }: { reference: s
   );
 }
 
-export function ConfirmationScreen({ reference, amount, currency, vertical, fulfillment, onReset }: {
+export function ConfirmationScreen({ reference, amount, currency, vertical, fulfillment, customerEmail, onReset }: {
   reference: string; amount: number; currency: string; vertical: string;
   fulfillment: "auto" | "manual";
+  customerEmail?: string;
   onReset: () => void;
 }) {
+  const isVisa = vertical === "visas";
+  const trackHref = isVisa
+    ? `/visa/track/${encodeURIComponent(reference)}${customerEmail ? `?email=${encodeURIComponent(customerEmail)}` : ""}`
+    : null;
+
   return (
     <div className="rounded-2xl border border-success/30 bg-success/5 p-8 text-center">
       <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-success/15">
@@ -165,11 +171,26 @@ export function ConfirmationScreen({ reference, amount, currency, vertical, fulf
         Reference <span className="font-mono font-bold text-foreground">{reference}</span> · {currency} {amount.toLocaleString()} · {vertical}
       </p>
       <p className="mt-4 max-w-md mx-auto text-sm text-muted-foreground">
-        {fulfillment === "auto"
-          ? "We're issuing your booking with the supplier now. A confirmation email with your ticket/voucher will arrive within minutes."
-          : "Your booking is being processed by our operations team and will be confirmed via email shortly."}
+        {isVisa
+          ? "Next: upload your supporting documents (passport scan, photo, etc.) so our ops team can submit your application to the issuing authority."
+          : fulfillment === "auto"
+            ? "We're issuing your booking with the supplier now. A confirmation email with your ticket/voucher will arrive within minutes."
+            : "Your booking is being processed by our operations team and will be confirmed via email shortly."}
       </p>
-      <button onClick={onReset} className="mt-6 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Make another booking</button>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+        {trackHref && (
+          <a
+            href={trackHref}
+            className="btn-glow inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground"
+            style={{ boxShadow: "var(--shadow-accent)" }}
+          >
+            Upload documents & track →
+          </a>
+        )}
+        <button onClick={onReset} className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:border-accent">
+          Make another booking
+        </button>
+      </div>
     </div>
   );
 }

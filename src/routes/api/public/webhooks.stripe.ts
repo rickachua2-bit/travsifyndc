@@ -101,6 +101,15 @@ async function fulfillGuestBooking(bookingId: string, paymentIntentId: string) {
     await supabaseAdmin.from("bookings")
       .update({ ...baseUpdate, status: "processing" })
       .eq("id", bookingId);
+
+    // Visas: also auto-create a structured visa_application + traveler row so
+    // the customer can immediately upload supporting documents and track status
+    // via /visa/track/$reference. Other manual verticals stay in the bookings
+    // table only — they don't need a multi-step wizard.
+    if (vertical === "visas") {
+      try { await maybeCreateVisaApplication(bookingId); }
+      catch (e) { console.error("auto-create visa application failed:", e); }
+    }
     return;
   }
 
@@ -160,4 +169,93 @@ async function fulfillGuestBooking(bookingId: string, paymentIntentId: string) {
       })
       .eq("id", bookingId);
   }
+}
+
+/**
+ * After a paid visa booking goes to `processing`, create a matching
+ * visa_application + primary traveler so the customer can immediately
+ * upload supporting documents and track status. Idempotent — re-runs of
+ * the webhook for the same booking won't create duplicates.
+ */
+async function maybeCreateVisaApplication(bookingId: string): Promise<void> {
+  // Idempotency: skip if an application already exists for this booking.
+  const { data: existing } = await supabaseAdmin
+    .from("visa_applications")
+    .select("id")
+    .eq("booking_id", bookingId)
+    .maybeSingle();
+  if (existing) return;
+
+  const { data: booking } = await supabaseAdmin
+    .from("bookings")
+    .select("id, user_id, reference, customer_name, customer_email, currency, total_amount, metadata")
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (!booking) return;
+
+  const meta = (booking.metadata as Record<string, unknown>) || {};
+  const payload = (meta.payload as Record<string, unknown>) || {};
+  const breakdown = (meta.price_breakdown as { provider_base?: number; travsify_markup?: number; total?: number }) || {};
+  const visaProductId = String(payload.visa_product_id || "");
+  if (!visaProductId) {
+    console.error(`visa booking ${booking.reference} missing visa_product_id in metadata`);
+    return;
+  }
+
+  const applicant = (payload.applicant as {
+    firstName?: string; lastName?: string; email?: string;
+    dateOfBirth?: string; passportNumber?: string; passportExpiry?: string;
+    nationality?: string;
+  }) || {};
+  const travelDates = (payload.travel_dates as { arrival?: string; departure?: string }) || {};
+
+  const reference = "VAP-" + Math.random().toString(36).slice(2, 10).toUpperCase();
+  const visa_fee = Number(breakdown.provider_base ?? booking.total_amount);
+  const service_fee = Number(breakdown.travsify_markup ?? 0);
+  const total_amount = Number(breakdown.total ?? booking.total_amount);
+  const fullName = `${applicant.firstName ?? ""} ${applicant.lastName ?? ""}`.trim() || (booking.customer_name ?? "Applicant");
+
+  const { data: app, error } = await supabaseAdmin
+    .from("visa_applications")
+    .insert({
+      reference,
+      user_id: booking.user_id,
+      visa_product_id: visaProductId,
+      booking_id: booking.id,
+      customer_email: (booking.customer_email ?? "").toLowerCase(),
+      customer_name: fullName,
+      arrival_date: travelDates.arrival || null,
+      departure_date: travelDates.departure || null,
+      currency: booking.currency,
+      visa_fee,
+      service_fee,
+      total_amount,
+      status: "submitted",
+      submitted_at: new Date().toISOString(),
+      metadata: { source: "stripe_webhook", booking_payload: payload } as never,
+    })
+    .select("id, reference")
+    .single();
+  if (error || !app) { console.error("visa app insert failed:", error); return; }
+
+  await supabaseAdmin.from("visa_application_travelers").insert({
+    application_id: app.id,
+    position: 1,
+    is_primary: true,
+    full_name: fullName,
+    given_names: applicant.firstName ?? null,
+    surname: applicant.lastName ?? null,
+    date_of_birth: applicant.dateOfBirth || null,
+    passport_number: applicant.passportNumber ?? null,
+    passport_expiry_date: applicant.passportExpiry || null,
+    nationality: applicant.nationality ?? null,
+    passport_issuing_country: applicant.nationality ?? null,
+  });
+
+  await supabaseAdmin.from("visa_application_events").insert({
+    application_id: app.id,
+    event_type: "submitted",
+    message: "Application submitted. Please upload required supporting documents.",
+    is_customer_visible: true,
+  });
 }
