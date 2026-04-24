@@ -203,7 +203,7 @@ function HotelCard({
           </div>
         )}
         <div className="flex items-center gap-2 pt-1 text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-700">Free cancellation</span>
+          <span className="inline-flex items-center gap-1 rounded bg-accent/10 px-1.5 py-0.5 font-bold text-accent">Free cancellation</span>
           <span>· Pay at booking</span>
         </div>
       </div>
