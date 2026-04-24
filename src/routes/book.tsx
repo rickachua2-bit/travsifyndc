@@ -57,7 +57,12 @@ function BookPage() {
 
       <section className="border-b border-border bg-surface py-12">
         <div className="mx-auto max-w-6xl space-y-6 px-6">
-          <VerticalTabs value={tab} onChange={setTab} />
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex-1">
+              <VerticalTabs value={tab} onChange={setTab} />
+            </div>
+            <CurrencySwitcher />
+          </div>
           <div>
             <h2 className="font-display text-2xl font-extrabold text-primary">{vertical.label}</h2>
             <p className="text-sm text-muted-foreground">{vertical.tagline}</p>
