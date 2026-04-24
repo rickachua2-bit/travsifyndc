@@ -15,8 +15,12 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { convert as fxConvert, SUPPORTED_CURRENCIES } from "@/server/fx";
-import { runSherpaScrape } from "@/server/providers/sherpa-scraper";
+import { runSherpaScrape, scrapeAndCacheCorridor } from "@/server/providers/sherpa-scraper";
 import { VISA_CORRIDORS } from "@/server/data/visa-corridors";
+import { findCountryByCode } from "@/data/countries";
+
+// Cached visa product is considered fresh for this many days.
+const VISA_CACHE_DAYS = 30;
 
 const DisplayCurrencyEnum = z.enum(SUPPORTED_CURRENCIES as [string, ...string[]]);
 
@@ -42,25 +46,59 @@ export const publicSearchVisaProducts = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }): Promise<string> => {
     const display = (data.display_currency || "USD").toUpperCase();
-    let query = supabaseAdmin
-      .from("visa_products")
-      .select("*")
-      .eq("is_active", true)
-      .eq("nationality", data.nationality.toUpperCase())
-      .order("display_order", { ascending: true });
+    const nat = data.nationality.toUpperCase();
+    const dest = data.destination?.toUpperCase();
 
-    if (data.destination) {
-      query = query.eq("destination", data.destination.toUpperCase());
+    async function fetchRows() {
+      let q = supabaseAdmin
+        .from("visa_products")
+        .select("*")
+        .eq("is_active", true)
+        .eq("nationality", nat)
+        .order("display_order", { ascending: true });
+      if (dest) q = q.eq("destination", dest);
+      const { data: rows, error } = await q;
+      if (error) throw new Error(error.message);
+      return rows ?? [];
     }
 
-    const { data: rows, error } = await query;
-    if (error) {
-      console.error("visa product search failed:", error);
-      return JSON.stringify({ products: [], display_currency: display, error: error.message });
+    let rows: Awaited<ReturnType<typeof fetchRows>> = [];
+    try {
+      rows = await fetchRows();
+    } catch (e) {
+      console.error("visa product search failed:", e);
+      return JSON.stringify({ products: [], display_currency: display, error: (e as Error).message });
+    }
+
+    // On-demand scrape: if a specific corridor was requested but we have no
+    // (or stale) data for it, scrape Sherpa now and re-query. This lets users
+    // search ANY country pair without us pre-populating it.
+    const cutoff = Date.now() - VISA_CACHE_DAYS * 86400_000;
+    const stale = rows.length === 0
+      || rows.every((r) => !r.last_scraped_at || new Date(r.last_scraped_at).getTime() < cutoff);
+    if (dest && stale) {
+      const natC = findCountryByCode(nat);
+      const destC = findCountryByCode(dest);
+      if (natC && destC) {
+        try {
+          await scrapeAndCacheCorridor({
+            nationality_iso2: natC.code,
+            nationality_name: natC.name,
+            nationality_demonym: natC.demonym,
+            destination_iso2: destC.code,
+            destination_name: destC.name,
+            destination_slug: destC.slug,
+          });
+          rows = await fetchRows();
+        } catch (e) {
+          console.warn(`on-demand scrape failed for ${nat}->${dest}:`, (e as Error).message);
+          // Fall through with whatever rows we already had.
+        }
+      }
     }
 
     const products = await Promise.all(
-      (rows ?? []).map(async (r) => {
+      rows.map(async (r) => {
         const native = String(r.currency || "USD").toUpperCase();
         const retailInDisplay = await fxConvert(Number(r.retail_price), native, display);
         const baseInDisplay = await fxConvert(Number(r.base_price), native, display);
@@ -80,11 +118,10 @@ export const publicSearchVisaProducts = createServerFn({ method: "POST" })
           description: r.description ?? "",
           image_url: r.image_url ?? null,
           sherpa_url: r.sherpa_url ?? null,
-          base_price: Number(baseInDisplay.toFixed(2)),       // for booking record
-          base_currency: display,                              // already converted
-          price: Number(retailInDisplay.toFixed(2)),           // displayed retail
+          base_price: Number(baseInDisplay.toFixed(2)),
+          base_currency: display,
+          price: Number(retailInDisplay.toFixed(2)),
           currency: display,
-          // Always show retail vs. base so partners can see implicit margin
           margin: Number((retailInDisplay - baseInDisplay).toFixed(2)),
         };
       }),
