@@ -19,6 +19,7 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SdkJsRouteImport } from './routes/sdk.js'
 import { Route as AuthenticatedPendingReviewRouteImport } from './routes/_authenticated/pending-review'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -81,6 +82,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SdkJsRoute = SdkJsRouteImport.update({
+  id: '/sdk/js',
+  path: '/sdk/js',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPendingReviewRoute =
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/sdk/js': typeof SdkJsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/sdk/js': typeof SdkJsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/sdk/js': typeof SdkJsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kyc'
     | '/pending-review'
+    | '/sdk/js'
     | '/api/public/demo-search'
     | '/api/v1/health'
     | '/api/v1/payouts'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kyc'
     | '/pending-review'
+    | '/sdk/js'
     | '/api/public/demo-search'
     | '/api/v1/health'
     | '/api/v1/payouts'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/kyc'
     | '/_authenticated/pending-review'
+    | '/sdk/js'
     | '/api/public/demo-search'
     | '/api/v1/health'
     | '/api/v1/payouts'
@@ -321,6 +333,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  SdkJsRoute: typeof SdkJsRoute
   ApiPublicDemoSearchRoute: typeof ApiPublicDemoSearchRoute
   ApiV1HealthRoute: typeof ApiV1HealthRoute
   ApiV1PayoutsRoute: typeof ApiV1PayoutsRoute
@@ -401,6 +414,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sdk/js': {
+      id: '/sdk/js'
+      path: '/sdk/js'
+      fullPath: '/sdk/js'
+      preLoaderRoute: typeof SdkJsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/pending-review': {
@@ -546,6 +566,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  SdkJsRoute: SdkJsRoute,
   ApiPublicDemoSearchRoute: ApiPublicDemoSearchRoute,
   ApiV1HealthRoute: ApiV1HealthRoute,
   ApiV1PayoutsRoute: ApiV1PayoutsRoute,

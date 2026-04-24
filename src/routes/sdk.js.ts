@@ -40,7 +40,7 @@ const SDK_SOURCE = `/* Travsify Unified API SDK v${SDK_VERSION} */
 })(typeof window !== "undefined" ? window : globalThis);
 `;
 
-export const Route = createFileRoute("/sdk.js")({
+export const Route = createFileRoute("/sdk/js")({
   server: {
     handlers: {
       GET: async ({ request }) => {
