@@ -47,7 +47,15 @@ export type TourOffer = {
 };
 
 export async function searchTours(input: TourSearchInput): Promise<{ tours: TourOffer[] }> {
-  const path = `/tours/?q=${encodeURIComponent(input.query)}` +
+  // Step 1: resolve query string → numeric location_id (GYG requires this for /tours/)
+  const locRes = await call<{ data?: { locations?: Array<{ location_id: number; name: string; country?: string }> } }>(
+    `/locations/?q=${encodeURIComponent(input.query)}&limit=1`,
+  );
+  const location = locRes.data?.locations?.[0];
+  if (!location) return { tours: [] };
+
+  // Step 2: fetch tours for that location
+  const path = `/tours/?location_ids=${location.location_id}` +
     (input.date_from ? `&date_from=${input.date_from}` : "") +
     (input.date_to ? `&date_to=${input.date_to}` : "") +
     `&currency=${input.currency || "USD"}&limit=20`;
@@ -64,7 +72,7 @@ export async function searchTours(input: TourSearchInput): Promise<{ tours: Tour
       rating: Number(t.overall_rating || 0),
       review_count: Number(t.number_of_ratings || 0),
       photo: ((t.photos as Array<Record<string, unknown>> | undefined)?.[0]?.url as string) || null,
-      city: String((t.location as Record<string, unknown> | undefined)?.city ?? ""),
+      city: String((t.location as Record<string, unknown> | undefined)?.city ?? location.name ?? ""),
       booking_url: `https://www.getyourguide.com/-t${t.tour_id}/?partner_id=${partnerId()}`,
     })),
   };
