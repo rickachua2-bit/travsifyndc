@@ -155,7 +155,8 @@ export const myWithdrawals = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
-// ---------- In-dashboard bookings ----------
+// We return a JSON string from these search endpoints because the supplier shapes are deeply typed
+// with `unknown` fields that TanStack Start's serializability check rejects. The client parses it.
 export const searchFlightsInternal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({
@@ -166,7 +167,7 @@ export const searchFlightsInternal = createServerFn({ method: "POST" })
     adults: z.number().int().min(1).max(8).optional(),
     cabin: z.enum(["economy", "premium_economy", "business", "first"]).optional(),
   }).parse(d))
-  .handler(async ({ data }) => JSON.parse(JSON.stringify(await duffelSearch("live", data))) as { offer_request_id: string; offers: Array<{ id: string; total_amount: string; total_currency: string; owner: string; slices: unknown[] }> });
+  .handler(async ({ data }): Promise<string> => JSON.stringify(await duffelSearch("live", data)));
 
 export const searchHotelsInternal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -179,7 +180,7 @@ export const searchHotelsInternal = createServerFn({ method: "POST" })
     children: z.number().int().min(0).max(6).optional(),
     currency: z.string().length(3).optional(),
   }).parse(d))
-  .handler(async ({ data }) => JSON.parse(JSON.stringify(await liteapiSearch(data))) as { hotels: Array<{ id: string; name?: string; address?: string; stars?: number; photo?: string; offer_id?: string; price?: number; currency?: string }> });
+  .handler(async ({ data }): Promise<string> => JSON.stringify(await liteapiSearch(data)));
 
 const PassengerSchema = z.object({
   given_name: z.string().min(1).max(60),
