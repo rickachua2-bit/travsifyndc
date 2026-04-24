@@ -76,7 +76,8 @@ function BookPage() {
           {tab === "flights" && <FlightsFlow />}
           {tab === "hotels" && <HotelsFlow />}
           {tab === "tours" && <ToursFlow />}
-          {tab !== "flights" && tab !== "hotels" && tab !== "tours" && (
+          {tab === "visas" && <VisasFlow />}
+          {tab !== "flights" && tab !== "hotels" && tab !== "tours" && tab !== "visas" && (
             <div className="rounded-2xl border border-dashed border-border bg-white p-10 text-center">
               <div className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent/15"><vertical.icon className="h-5 w-5 text-accent" /></div>
               <h3 className="mt-3 font-display text-lg font-bold text-primary">{vertical.label} checkout — opening soon</h3>
