@@ -346,7 +346,7 @@ const ContactSchema = z.object({
 });
 
 const GuestCheckoutSchema = z.object({
-  vertical: z.enum(["flights", "hotels", "tours", "transfers", "insurance", "visas"]),
+  vertical: z.enum(["flights", "hotels", "tours", "transfers", "insurance", "visas", "car_rentals"]),
   base_amount: z.number().positive().max(1_000_000),  // provider price (pre-markup, in provider currency)
   currency: z.string().length(3),                      // provider currency (e.g. "USD")
   display_currency: DisplayCurrencyEnum.optional(),    // user-chosen settlement currency (defaults to USD)
