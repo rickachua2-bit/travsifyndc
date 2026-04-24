@@ -111,7 +111,7 @@ function VisaProductsAdmin() {
     try {
       const r = await startScrape();
       const { run } = await getRun({ data: { id: r.run_id } });
-      setScrape(run as unknown as ScrapeRun);
+      setScrape(toScrapeRun(run));
       toast.message(r.already_running ? "A scrape is already running — attached to it." : `Started: ${r.total_corridors} corridors queued`);
     } catch (e) { toast.error((e as Error).message); }
     finally { setScrapeLoading(false); }
