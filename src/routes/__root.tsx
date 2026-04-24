@@ -72,9 +72,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <>
+    <CurrencyProvider>
       <Outlet />
       <Toaster />
-    </>
+    </CurrencyProvider>
   );
 }
