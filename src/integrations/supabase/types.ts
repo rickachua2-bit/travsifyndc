@@ -348,6 +348,42 @@ export type Database = {
         }
         Relationships: []
       }
+      insurance_quote_cache: {
+        Row: {
+          created_at: string
+          destination: string
+          duration_bucket: number
+          id: string
+          last_scraped_at: string
+          max_age: number
+          nationality: string
+          quotes: Json
+          travelers_count: number
+        }
+        Insert: {
+          created_at?: string
+          destination: string
+          duration_bucket: number
+          id?: string
+          last_scraped_at?: string
+          max_age: number
+          nationality: string
+          quotes?: Json
+          travelers_count: number
+        }
+        Update: {
+          created_at?: string
+          destination?: string
+          duration_bucket?: number
+          id?: string
+          last_scraped_at?: string
+          max_age?: number
+          nationality?: string
+          quotes?: Json
+          travelers_count?: number
+        }
+        Relationships: []
+      }
       kyc_audit_log: {
         Row: {
           action: string

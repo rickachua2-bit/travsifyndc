@@ -4,7 +4,7 @@ export type InsuranceQuote = {
   id: string;
   plan_name: string;
   coverage_type: string;
-  provider: string;
+  provider?: string;
   duration_days: number;
   price: number;
   base_price?: number;
@@ -44,7 +44,7 @@ export function InsuranceResults({
           <p className="text-xs text-muted-foreground">
             {travelersCount} traveler{travelersCount > 1 ? "s" : ""} · {quotes[0]?.duration_days ?? 0} day{(quotes[0]?.duration_days ?? 0) !== 1 ? "s" : ""}
           </p>
-          <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Fulfilled by SafetyWing · policy bound by ops within hours</p>
+          <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Policy bound by ops within hours · cover starts on your travel date</p>
         </div>
       </div>
 
@@ -67,7 +67,7 @@ export function InsuranceResults({
               </div>
               <div className="flex-1">
                 <h4 className="font-display text-base font-extrabold text-primary">{q.plan_name}</h4>
-                <p className="text-xs capitalize text-muted-foreground">{q.coverage_type.replace(/_/g, " ")} · provided by SafetyWing</p>
+                <p className="text-xs capitalize text-muted-foreground">{q.coverage_type.replace(/_/g, " ")} cover</p>
               </div>
             </div>
 
