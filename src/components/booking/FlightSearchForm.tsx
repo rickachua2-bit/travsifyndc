@@ -238,6 +238,8 @@ function Input({
   placeholder,
   maxLength,
   uppercase,
+  pattern,
+  title,
 }: {
   label: string;
   value: string;
@@ -246,6 +248,8 @@ function Input({
   placeholder?: string;
   maxLength?: number;
   uppercase?: boolean;
+  pattern?: string;
+  title?: string;
 }) {
   return (
     <label className="block">
@@ -256,6 +260,8 @@ function Input({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         maxLength={maxLength}
+        pattern={pattern}
+        title={title}
         required
         className={`mt-1 w-full rounded-md border border-border bg-white px-2.5 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent ${uppercase ? "uppercase" : ""}`}
       />
