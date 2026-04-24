@@ -59,10 +59,17 @@ export type TourOffer = {
 export async function searchTours(input: TourSearchInput): Promise<{ tours: TourOffer[] }> {
   const currency = input.currency || "USD";
   // Step 1: resolve query string → numeric location_id (GYG requires this for /tours/)
-  const locRes = await call<{ data?: { locations?: Array<{ location_id: number; name: string; country?: string }> } }>(
-    `/locations/?q=${encodeURIComponent(input.query)}&currency=${currency}&limit=1`,
-  );
-  const location = locRes.data?.locations?.[0];
+  let location: { location_id: number; name: string; country?: string } | undefined;
+  try {
+    const locRes = await call<{ data?: { locations?: Array<{ location_id: number; name: string; country?: string }> } }>(
+      `/locations/?q=${encodeURIComponent(input.query)}&currency=${currency}&limit=1`,
+    );
+    location = locRes.data?.locations?.[0];
+  } catch (err) {
+    // Auth/permission errors (errorCode 15) → return empty so UI degrades gracefully.
+    console.warn("GYG locations lookup failed, returning empty result:", (err as Error).message);
+    return { tours: [] };
+  }
   if (!location) return { tours: [] };
 
   // Step 2: fetch tours for that location
@@ -70,8 +77,14 @@ export async function searchTours(input: TourSearchInput): Promise<{ tours: Tour
     (input.date_from ? `&date_from=${input.date_from}` : "") +
     (input.date_to ? `&date_to=${input.date_to}` : "") +
     `&currency=${input.currency || "USD"}&limit=20`;
-  const res = await call<{ data?: { tours?: Array<Record<string, unknown>> } }>(path);
-  const tours = res.data?.tours || [];
+  let tours: Array<Record<string, unknown>> = [];
+  try {
+    const res = await call<{ data?: { tours?: Array<Record<string, unknown>> } }>(path);
+    tours = res.data?.tours || [];
+  } catch (err) {
+    console.warn("GYG tours lookup failed, returning empty result:", (err as Error).message);
+    return { tours: [] };
+  }
   return {
     tours: tours.map((t) => ({
       id: String(t.tour_id),
