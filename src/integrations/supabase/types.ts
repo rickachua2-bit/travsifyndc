@@ -736,6 +736,36 @@ export type Database = {
         }
         Relationships: []
       }
+      tour_quote_cache: {
+        Row: {
+          created_at: string
+          date_bucket: string
+          destination_key: string
+          id: string
+          last_scraped_at: string
+          tours: Json
+          travelers_bucket: number
+        }
+        Insert: {
+          created_at?: string
+          date_bucket: string
+          destination_key: string
+          id?: string
+          last_scraped_at?: string
+          tours?: Json
+          travelers_bucket: number
+        }
+        Update: {
+          created_at?: string
+          date_bucket?: string
+          destination_key?: string
+          id?: string
+          last_scraped_at?: string
+          tours?: Json
+          travelers_bucket?: number
+        }
+        Relationships: []
+      }
       transfer_quote_cache: {
         Row: {
           created_at: string

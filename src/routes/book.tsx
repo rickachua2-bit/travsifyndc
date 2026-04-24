@@ -322,6 +322,7 @@ function ToursFlow() {
         query: payload.query,
         date_from: payload.date_from,
         date_to: payload.date_to,
+        travelers: payload.adults + payload.children,
         currency: "USD",
         display_currency: displayCurrency,
       } });
