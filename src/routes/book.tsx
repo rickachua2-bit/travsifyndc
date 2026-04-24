@@ -20,7 +20,6 @@ import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/compone
 import { CurrencySwitcher } from "@/components/booking/CurrencySwitcher";
 import { publicSearchFlights, publicSearchHotels, publicSearchTours } from "@/server/booking-engine";
 import { publicSearchVisaProducts } from "@/server/visa-products.functions";
-import { Field, inputCls } from "@/components/booking/SearchForm";
 
 export const Route = createFileRoute("/book")({
   component: BookPage,
