@@ -172,7 +172,7 @@ function FlightsFlow() {
 
       {picked && (
         <form onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }} className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2" style={{ boxShadow: "var(--shadow-soft)" }}>
-          <h3 className="col-span-full font-display text-base font-bold text-primary">Passenger details — {picked.total_currency} {Number(picked.total_amount).toLocaleString()}</h3>
+          <h3 className="col-span-full font-display text-base font-bold text-primary">Passenger details — {format(Number(picked.total_amount), picked.total_currency)}</h3>
           <Field label="Title"><select name="title" required className={inputCls}><option value="mr">Mr</option><option value="ms">Ms</option><option value="mrs">Mrs</option><option value="miss">Miss</option><option value="dr">Dr</option></select></Field>
           <Field label="Gender"><select name="gender" required className={inputCls}><option value="m">Male</option><option value="f">Female</option></select></Field>
           <Field label="Given name"><input name="given_name" required className={inputCls} /></Field>
