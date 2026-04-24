@@ -175,10 +175,10 @@ export const adminUpdateVisaProduct = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const patch: Record<string, unknown> = { ...data.patch };
-    if (typeof patch.nationality === "string") patch.nationality = (patch.nationality as string).toUpperCase();
-    if (typeof patch.destination === "string") patch.destination = (patch.destination as string).toUpperCase();
-    if (typeof patch.currency === "string") patch.currency = (patch.currency as string).toUpperCase();
+    const patch = { ...data.patch };
+    if (patch.nationality) patch.nationality = patch.nationality.toUpperCase();
+    if (patch.destination) patch.destination = patch.destination.toUpperCase();
+    if (patch.currency) patch.currency = patch.currency.toUpperCase();
     const { data: row, error } = await supabaseAdmin
       .from("visa_products")
       .update(patch)
