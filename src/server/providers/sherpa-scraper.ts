@@ -69,6 +69,26 @@ async function scrapeOneCorridor(c: Corridor): Promise<ExtractedVisa[]> {
   return Array.isArray(visas) ? visas : [];
 }
 
+/**
+ * Scrape a single corridor on-demand and upsert results into visa_products.
+ * Used by the public search endpoint when a user picks a corridor we have not
+ * cached yet (or has stale data). Returns the number of products upserted.
+ * Throws on Firecrawl errors so the caller can surface a useful message.
+ */
+export async function scrapeAndCacheCorridor(c: Corridor): Promise<number> {
+  const visas = await scrapeOneCorridor(c);
+  let upserted = 0;
+  for (const v of visas) {
+    const row = toRow(c, v);
+    if (!row) continue;
+    const { error } = await supabaseAdmin
+      .from("visa_products")
+      .upsert(row, { onConflict: "nationality,destination,visa_type" });
+    if (!error) upserted += 1;
+  }
+  return upserted;
+}
+
 /** Sanitise extracted visa into a row we can upsert. Returns null if invalid. */
 function toRow(c: Corridor, v: ExtractedVisa) {
   const base = Number(v.price_usd);
