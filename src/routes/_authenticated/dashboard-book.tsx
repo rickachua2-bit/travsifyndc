@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { searchFlightsInternal, searchHotelsInternal, bookFlightFromWallet, bookHotelFromWallet } from "@/server/dashboard.functions";
 import { PartnerShell } from "@/components/partner/PartnerShell";
 
-export const Route = createFileRoute("/_authenticated/book")({
+export const Route = createFileRoute("/_authenticated/dashboard-book")({
   component: BookPage,
   head: () => ({ meta: [{ title: "Book — Travsify NDC" }, { name: "robots", content: "noindex" }] }),
 });
