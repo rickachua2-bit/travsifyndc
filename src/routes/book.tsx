@@ -6,7 +6,7 @@ import { PageShell, PageHero } from "@/components/landing/PageShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { VerticalTabs, VERTICALS, type BookingVertical } from "@/components/booking/VerticalTabs";
-import { Field, inputCls } from "@/components/booking/SearchForm";
+import { inputCls } from "@/components/booking/SearchForm";
 import { FlightSearchForm, type FlightSearchPayload } from "@/components/booking/FlightSearchForm";
 import { FlightResults, type FlightOffer } from "@/components/booking/FlightResults";
 import { HotelSearchForm, type HotelSearchPayload } from "@/components/booking/HotelSearchForm";
