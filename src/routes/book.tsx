@@ -468,22 +468,43 @@ function VisasFlow() {
     if (!picked) return;
     const fd = new FormData(form);
     const applicant = {
-      firstName: String(fd.get("first_name")),
-      lastName: String(fd.get("last_name")),
-      email: String(fd.get("email")),
-      phone: String(fd.get("phone")),
-      dateOfBirth: String(fd.get("dob")),
-      passportNumber: String(fd.get("passport_no")),
-      passportExpiry: String(fd.get("passport_expiry")),
+      firstName: String(fd.get("first_name") || "").trim(),
+      lastName: String(fd.get("last_name") || "").trim(),
+      email: String(fd.get("email") || "").trim(),
+      phone: String(fd.get("phone") || "").trim(),
+      dateOfBirth: String(fd.get("dob") || ""),
+      passportNumber: String(fd.get("passport_no") || "").trim(),
+      passportExpiry: String(fd.get("passport_expiry") || ""),
       nationality: picked.nationality,
     };
     const travelDates = {
       arrival: String(fd.get("arrival") || ""),
       departure: String(fd.get("departure") || ""),
     };
+
+    // Each additional traveler needs their own passport — visas are issued per
+    // person, so we collect full identity details for everyone.
+    const additionalApplicants = Array.from({ length: Math.max(0, travelerCount - 1) }, (_, i) => {
+      const idx = i + 1;
+      return {
+        firstName: String(fd.get(`tr_${idx}_first_name`) || "").trim(),
+        lastName: String(fd.get(`tr_${idx}_last_name`) || "").trim(),
+        dateOfBirth: String(fd.get(`tr_${idx}_dob`) || ""),
+        passportNumber: String(fd.get(`tr_${idx}_passport_no`) || "").trim(),
+        passportExpiry: String(fd.get(`tr_${idx}_passport_expiry`) || ""),
+        nationality: picked.nationality,
+      };
+    });
+    if (additionalApplicants.some((a) => !a.firstName || !a.lastName || !a.dateOfBirth || !a.passportNumber || !a.passportExpiry)) {
+      toast.error("Please complete every applicant's details, including passport.");
+      return;
+    }
+
+    const totalBase = Number((picked.base_price * travelerCount).toFixed(2));
+
     setCheckoutInput({
       vertical: "visas",
-      base_amount: picked.base_price,
+      base_amount: totalBase,
       currency: picked.base_currency,
       display_currency: displayCurrency,
       contact: { name: `${applicant.firstName} ${applicant.lastName}`, email: applicant.email, phone: applicant.phone },
@@ -495,15 +516,17 @@ function VisasFlow() {
         nationality: picked.nationality,
         nationality_name: picked.nationality_name,
         applicant,
+        additional_applicants: additionalApplicants,
+        travelers_count: travelerCount,
         travel_dates: travelDates,
         sherpa_url: picked.sherpa_url,
-        provider_amount: picked.base_price,
+        provider_amount: totalBase,
       },
     });
   }
 
   if (done) {
-    return <ConfirmationScreen {...done} vertical="visas" fulfillment="manual" customerEmail={checkout?.contact.email} onReset={() => { setDone(null); setProducts([]); setPicked(null); setCheckoutInput(null); }} />;
+    return <ConfirmationScreen {...done} vertical="visas" fulfillment="manual" customerEmail={checkout?.contact.email} onReset={() => { setDone(null); setProducts([]); setPicked(null); setCheckoutInput(null); setTravelerCount(1); }} />;
   }
   if (checkout) {
     return <GuestCheckout input={checkout} onCancel={() => setCheckoutInput(null)} onSuccess={(r) => { setDone(r); /* keep checkout state for email */ }} />;
