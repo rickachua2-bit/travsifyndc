@@ -94,8 +94,8 @@ function PendingReviewPage() {
             </div>
           </section>
         </div>
-      </main>
-    </div>
+      </div>
+    </PartnerShell>
   );
 }
 
