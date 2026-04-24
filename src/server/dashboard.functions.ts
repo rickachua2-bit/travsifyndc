@@ -443,8 +443,7 @@ export const bookManualFromWallet = createServerFn({ method: "POST" })
     }
     return booking;
   });
-
-
+export const myBookings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { userId } = context as unknown as { userId: string };
