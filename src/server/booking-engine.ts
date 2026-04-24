@@ -18,7 +18,7 @@ import { genBookingRef } from "@/server/gateway";
 import { createPaymentIntent } from "@/server/providers/stripe";
 import { searchFlights as duffelSearch } from "@/server/providers/duffel";
 import { searchHotelRates as liteapiSearch } from "@/server/providers/liteapi";
-import { searchTours as gygSearch } from "@/server/providers/getyourguide";
+import { getOrScrapeTours } from "@/server/providers/getyourguide-scraper";
 import { getOrScrapeTransfers } from "@/server/providers/transfers-scraper";
 import { getOrScrapeCarRentals } from "@/server/providers/car-rental-scraper";
 import { getOrScrapeInsurance } from "@/server/providers/insurance-scraper";
