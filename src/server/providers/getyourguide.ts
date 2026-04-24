@@ -47,9 +47,10 @@ export type TourOffer = {
 };
 
 export async function searchTours(input: TourSearchInput): Promise<{ tours: TourOffer[] }> {
+  const currency = input.currency || "USD";
   // Step 1: resolve query string → numeric location_id (GYG requires this for /tours/)
   const locRes = await call<{ data?: { locations?: Array<{ location_id: number; name: string; country?: string }> } }>(
-    `/locations/?q=${encodeURIComponent(input.query)}&limit=1`,
+    `/locations/?q=${encodeURIComponent(input.query)}&currency=${currency}&limit=1`,
   );
   const location = locRes.data?.locations?.[0];
   if (!location) return { tours: [] };
