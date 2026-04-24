@@ -37,19 +37,32 @@ async function call<T>(env: "sandbox" | "live", path: string, init: RequestInit 
 }
 
 export type DuffelSearchInput = {
-  origin: string;            // IATA code, e.g. "LOS"
+  origin: string;            // IATA code, e.g. "LOS" (legacy single-slice)
   destination: string;       // IATA code, e.g. "DXB"
   departure_date: string;    // YYYY-MM-DD
   return_date?: string;
   adults?: number;
+  children?: number;         // age 2–11 at travel
+  infants?: number;          // under 2, on adult's lap
   cabin?: "economy" | "premium_economy" | "business" | "first";
+  /** Optional multi-city slices. When provided, overrides origin/destination/dates. */
+  slices?: Array<{ origin: string; destination: string; departure_date: string }>;
 };
 
 export async function searchFlights(env: "sandbox" | "live", input: DuffelSearchInput) {
-  const slices = [{ origin: input.origin, destination: input.destination, departure_date: input.departure_date }];
-  if (input.return_date) slices.push({ origin: input.destination, destination: input.origin, departure_date: input.return_date });
+  const slices = input.slices && input.slices.length > 0
+    ? input.slices
+    : (() => {
+        const s = [{ origin: input.origin, destination: input.destination, departure_date: input.departure_date }];
+        if (input.return_date) s.push({ origin: input.destination, destination: input.origin, departure_date: input.return_date });
+        return s;
+      })();
 
-  const passengers = Array.from({ length: input.adults || 1 }).map(() => ({ type: "adult" }));
+  const passengers: Array<Record<string, unknown>> = [];
+  for (let i = 0; i < (input.adults || 1); i++) passengers.push({ type: "adult" });
+  for (let i = 0; i < (input.children || 0); i++) passengers.push({ age: 8 });        // Duffel uses age for children
+  for (let i = 0; i < (input.infants || 0); i++) passengers.push({ type: "infant_without_seat" });
+
   const body = {
     data: {
       slices,
