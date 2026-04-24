@@ -93,10 +93,11 @@ function VisaProductsAdmin() {
     pollRef.current = setInterval(async () => {
       try {
         const { run } = await getRun({ data: { id: scrape.id } });
-        setScrape(run as unknown as ScrapeRun);
-        if ((run as unknown as ScrapeRun).status !== "running") {
+        const next = toScrapeRun(run);
+        setScrape(next);
+        if (next.status !== "running") {
           await refresh();
-          toast.success(`Scrape complete: ${(run as unknown as ScrapeRun).upserted_count} products upserted`);
+          toast.success(`Scrape complete: ${next.upserted_count} products upserted`);
         }
       } catch { /* keep polling */ }
     }, 3000);
