@@ -186,8 +186,8 @@ export async function submitWithdrawal(input: {
     p_reference: reference,
     p_description: `Withdrawal to ${bank.bank_name || bank.account_number}`,
     p_provider: bank.currency === "NGN" ? "fincra" : "manual",
-    p_provider_reference: null,
-    p_booking_id: null,
+    p_provider_reference: undefined,
+    p_booking_id: undefined,
     p_metadata: { bank_account_id: bank.id },
   });
 
@@ -268,9 +268,9 @@ export async function rejectWithdrawal(adminId: string, withdrawalId: string, re
     p_category: "refund",
     p_reference: `refund_${w.id}`,
     p_description: `Withdrawal rejected: ${reason}`,
-    p_provider: w.provider,
-    p_provider_reference: null,
-    p_booking_id: null,
+    p_provider: w.provider ?? undefined,
+    p_provider_reference: undefined,
+    p_booking_id: undefined,
     p_metadata: { withdrawal_id: w.id },
   });
   await supabaseAdmin.from("withdrawal_requests").update({
