@@ -19,14 +19,19 @@ export function FinalCTA() {
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div className="reveal">
             <h2 className="font-display text-4xl font-extrabold leading-tight text-primary md:text-5xl">
-              Start building your<br />travel business <span className="text-gradient-accent">today.</span>
+              Ship your travel<br />product <span className="text-gradient-accent">this week.</span>
             </h2>
             <ul className="mt-6 space-y-3 text-base text-muted-foreground">
               {bullets.map((b) => <li key={b} className="flex items-center gap-3"><span className="h-1.5 w-1.5 rounded-full bg-accent" />{b}</li>)}
             </ul>
-            <Link to="/contact" className="btn-glow group mt-8 inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-accent transition hover:opacity-95" style={{ boxShadow: "var(--shadow-accent)" }}>
-              Get API Access <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/get-api-access" className="btn-glow group inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition hover:opacity-95" style={{ boxShadow: "var(--shadow-accent)" }}>
+                Get API Access <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link to="/demo" className="inline-flex items-center gap-2 rounded-md border border-border bg-white px-6 py-3 text-sm font-semibold text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent">
+                Try the live demo
+              </Link>
+            </div>
           </div>
 
           <div className="relative">

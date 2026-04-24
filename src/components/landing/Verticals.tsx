@@ -1,9 +1,10 @@
-import { Plane, Building2, Car, Globe2, Shield, ArrowRight } from "lucide-react";
+import { Plane, Building2, MapPin, Car, Globe2, Shield, ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 const verticals = [
   { icon: Plane, label: "Flights", desc: "500+ airlines, NDC ready" },
   { icon: Building2, label: "Hotels", desc: "1M+ properties worldwide" },
+  { icon: MapPin, label: "Tours", desc: "12k+ activities & experiences" },
   { icon: Car, label: "Transfers", desc: "Door-to-door in 180 cities" },
   { icon: Globe2, label: "e-Visas", desc: "Apply in under 90 seconds" },
   { icon: Shield, label: "Insurance", desc: "Cover for every trip" },
@@ -24,18 +25,22 @@ export function Verticals() {
         <div className="grid gap-12 lg:grid-cols-[1fr_2fr] lg:items-center">
           <div className="reveal">
             <h2 className="font-display text-4xl font-extrabold leading-tight text-primary md:text-5xl">
-              Everything travelers want.<br />
+              Sell every product<br />travelers actually book.<br />
               <span className="text-gradient-accent">One integration.</span>
             </h2>
             <p className="mt-4 max-w-sm text-base text-muted-foreground">
-              Sell what your customers actually book — without negotiating with five vendors.
+              Stop stitching SDKs from five vendors. Travsify ships flights, hotels, tours, transfers,
+              e-Visas and insurance behind one schema and one bill.
             </p>
+            <Link to="/demo" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-accent story-link">
+              See it live <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {verticals.map((v, i) => (
               <Link
                 key={v.label}
-                to="/developers"
+                to="/get-api-access"
                 className="reveal group rounded-xl border border-border bg-white p-5 hover-lift"
                 style={{ boxShadow: "var(--shadow-soft)", transitionDelay: `${i * 60}ms` }}
               >
