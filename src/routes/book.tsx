@@ -786,6 +786,125 @@ function TransfersFlow() {
   );
 }
 
+function CarRentalsFlow() {
+  const { currency: displayCurrency, format } = useCurrency();
+  const [busy, setBusy] = useState(false);
+  const [quotes, setQuotes] = useState<CarRentalQuote[]>([]);
+  const [searchMeta, setSearchMeta] = useState<CarRentalSearchPayload | null>(null);
+  const [picked, setPicked] = useState<CarRentalQuote | null>(null);
+  const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
+  const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
+
+  async function search(payload: CarRentalSearchPayload) {
+    setSearchMeta(payload);
+    setBusy(true); setQuotes([]); setPicked(null); setCheckoutInput(null); setDone(null);
+    try {
+      const json = await publicSearchCarRentals({ data: {
+        pickup_location: payload.pickup_location,
+        dropoff_location: payload.dropoff_location,
+        pickup_date: payload.pickup_date,
+        dropoff_date: payload.dropoff_date,
+        driver_age: payload.driver_age,
+        display_currency: displayCurrency,
+      } });
+      const parsed = JSON.parse(json) as { quotes: CarRentalQuote[]; error?: string };
+      setQuotes(parsed.quotes || []);
+      if (parsed.error) toast.error(parsed.error);
+      else if (!parsed.quotes?.length) toast.message("No rental cars available for those dates");
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  function startCheckout(form: HTMLFormElement) {
+    if (!picked || !searchMeta) return;
+    const fd = new FormData(form);
+    const driver = {
+      firstName: String(fd.get("first_name")),
+      lastName: String(fd.get("last_name")),
+      email: String(fd.get("email")),
+      phone: String(fd.get("phone")),
+    };
+    setCheckoutInput({
+      vertical: "car_rentals",
+      base_amount: Number(picked.base_price ?? picked.total_price),
+      currency: picked.base_currency || picked.currency || "USD",
+      display_currency: displayCurrency,
+      contact: { name: `${driver.firstName} ${driver.lastName}`, email: driver.email, phone: driver.phone },
+      payload: {
+        quote_id: picked.id,
+        car_class: picked.car_class,
+        car_description: picked.car_description,
+        example_model: picked.example_model,
+        provider_name: picked.provider_name,
+        pickup_location: searchMeta.pickup_location,
+        dropoff_location: searchMeta.dropoff_location,
+        pickup_date: searchMeta.pickup_date,
+        dropoff_date: searchMeta.dropoff_date,
+        rental_days: picked.rental_days,
+        driver_age: searchMeta.driver_age,
+        driver,
+        provider_amount: picked.base_price ?? picked.total_price,
+      },
+    });
+  }
+
+  if (done) {
+    return <ConfirmationScreen {...done} vertical="car_rentals" fulfillment="manual" onReset={() => { setDone(null); setQuotes([]); setPicked(null); setCheckoutInput(null); }} />;
+  }
+  if (checkout) {
+    return <GuestCheckout input={checkout} onCancel={() => setCheckoutInput(null)} onSuccess={(r) => { setDone(r); setCheckoutInput(null); }} />;
+  }
+
+  const routeLabel = searchMeta ? `${searchMeta.pickup_location.split(",")[0]} · ${searchMeta.pickup_date} → ${searchMeta.dropoff_date}` : "";
+
+  return (
+    <>
+      <CarRentalSearchForm busy={busy} onSubmit={search} />
+
+      {busy && <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Comparing rental cars across providers…</div>}
+
+      {!picked && quotes.length > 0 && searchMeta && (
+        <CarRentalResults
+          quotes={quotes}
+          routeLabel={routeLabel}
+          format={format}
+          onSelect={(q) => setPicked(q)}
+        />
+      )}
+
+      {picked && searchMeta && (
+        <form
+          onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
+          className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
+          style={{ boxShadow: "var(--shadow-soft)" }}
+        >
+          <div className="col-span-full flex items-start justify-between gap-3 border-b border-border pb-3">
+            <div>
+              <h3 className="font-display text-base font-bold text-primary">Lead driver details</h3>
+              <p className="text-xs text-muted-foreground">{picked.car_description} · {picked.rental_days} day{picked.rental_days > 1 ? "s" : ""}</p>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
+              <div className="font-display text-lg font-extrabold text-primary">{format(Number(picked.total_price), picked.currency)}</div>
+            </div>
+          </div>
+          <Field label="First name"><input name="first_name" required className={inputCls} /></Field>
+          <Field label="Last name"><input name="last_name" required className={inputCls} /></Field>
+          <Field label="Email (confirmation destination)"><input name="email" type="email" required className={inputCls} /></Field>
+          <Field label="Phone"><input name="phone" required placeholder="+234 800 000 0000" className={inputCls} /></Field>
+          <div className="col-span-full rounded-md bg-surface p-3 text-xs text-muted-foreground">
+            <strong className="text-foreground">Heads up:</strong> Car rental reservations are confirmed within a few hours by our ops team. You'll receive the pickup voucher and rental terms by email before your pickup date.
+          </div>
+          <div className="col-span-full flex gap-2">
+            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
+            <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
+          </div>
+        </form>
+      )}
+    </>
+  );
+}
+
 function InsuranceFlow() {
   const { currency: displayCurrency, format } = useCurrency();
   const [busy, setBusy] = useState(false);
