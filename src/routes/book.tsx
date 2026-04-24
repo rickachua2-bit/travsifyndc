@@ -69,7 +69,8 @@ function BookPage() {
             <p className="text-sm text-muted-foreground">{vertical.tagline}</p>
           </div>
           {tab === "flights" && <FlightsFlow />}
-          {tab !== "flights" && (
+          {tab === "hotels" && <HotelsFlow />}
+          {tab !== "flights" && tab !== "hotels" && (
             <div className="rounded-2xl border border-dashed border-border bg-white p-10 text-center">
               <div className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent/15"><vertical.icon className="h-5 w-5 text-accent" /></div>
               <h3 className="mt-3 font-display text-lg font-bold text-primary">{vertical.label} checkout — opening soon</h3>
