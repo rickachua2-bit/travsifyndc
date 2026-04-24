@@ -15,8 +15,12 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { convert as fxConvert, SUPPORTED_CURRENCIES } from "@/server/fx";
-import { runSherpaScrape } from "@/server/providers/sherpa-scraper";
+import { runSherpaScrape, scrapeAndCacheCorridor } from "@/server/providers/sherpa-scraper";
 import { VISA_CORRIDORS } from "@/server/data/visa-corridors";
+import { findCountryByCode } from "@/data/countries";
+
+// Cached visa product is considered fresh for this many days.
+const VISA_CACHE_DAYS = 30;
 
 const DisplayCurrencyEnum = z.enum(SUPPORTED_CURRENCIES as [string, ...string[]]);
 
