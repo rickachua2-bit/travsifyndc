@@ -86,16 +86,16 @@ function FlightsFlow() {
   const [checkout, setCheckout] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
 
-  async function search(form: HTMLFormElement) {
-    const fd = new FormData(form);
+  async function search(payload: FlightSearchPayload) {
     setBusy(true); setOffers([]); setPicked(null); setCheckout(null); setDone(null);
     try {
       const json = await publicSearchFlights({ data: {
-        origin: String(fd.get("origin")).toUpperCase(),
-        destination: String(fd.get("destination")).toUpperCase(),
-        departure_date: String(fd.get("departure_date")),
-        return_date: (fd.get("return_date") as string) || undefined,
-        adults: Number(fd.get("adults") || 1),
+        slices: payload.slices,
+        return_date: payload.return_date,
+        adults: payload.adults,
+        children: payload.children,
+        infants: payload.infants,
+        cabin: payload.cabin,
       } });
       const parsed = JSON.parse(json) as { offers: FlightOffer[] };
       setOffers(parsed.offers || []);
@@ -134,13 +134,7 @@ function FlightsFlow() {
 
   return (
     <>
-      <SearchForm busy={busy} onSubmit={search} cols={6}>
-        <Field label="From"><input name="origin" required maxLength={3} placeholder="LOS" className={`${inputCls} uppercase`} /></Field>
-        <Field label="To"><input name="destination" required maxLength={3} placeholder="DXB" className={`${inputCls} uppercase`} /></Field>
-        <Field label="Departure"><input name="departure_date" type="date" required className={inputCls} /></Field>
-        <Field label="Return (optional)"><input name="return_date" type="date" className={inputCls} /></Field>
-        <Field label="Adults"><input name="adults" type="number" min={1} max={8} defaultValue={1} className={inputCls} /></Field>
-      </SearchForm>
+      <FlightSearchForm busy={busy} onSubmit={search} />
 
       {busy && <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Searching live inventory…</div>}
 
