@@ -42,12 +42,22 @@ const blank: Omit<Product, "id"> = {
   is_active: true, display_order: 0,
 };
 
+type ScrapeError = { corridor: string; error: string };
 type ScrapeRun = {
   id: string; status: string;
   total_corridors: number; scraped_count: number; upserted_count: number; failed_count: number;
-  errors: Array<{ corridor: string; error: string }>;
+  errors: ScrapeError[];
   started_at: string; completed_at: string | null;
 };
+
+function toScrapeRun(run: unknown): ScrapeRun {
+  const r = run as Record<string, unknown>;
+  const rawErrors = Array.isArray(r.errors) ? (r.errors as unknown[]) : [];
+  const errors: ScrapeError[] = rawErrors
+    .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+    .map((e) => ({ corridor: String(e.corridor ?? ""), error: String(e.error ?? "") }));
+  return { ...(r as object), errors } as ScrapeRun;
+}
 
 function VisaProductsAdmin() {
   const list = useServerFn(adminListVisaProducts);
