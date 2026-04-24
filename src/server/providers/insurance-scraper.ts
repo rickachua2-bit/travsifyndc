@@ -101,24 +101,34 @@ type RawPlan = {
   benefits?: string[];
 };
 
+// Per-provider hard timeout. Workers cap at ~25s; we need to stay well under that.
+const FIRECRAWL_TIMEOUT_MS = 8000;
+
 async function firecrawlScrape(url: string, prompt: string): Promise<RawPlan[]> {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) throw new Error("FIRECRAWL_API_KEY not configured");
 
-  const res = await fetch(FIRECRAWL_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      url,
-      formats: [{ type: "json", schema: PROVIDER_PAGE_SCHEMA, prompt }],
-      onlyMainContent: false,
-      waitFor: 6000,
-    }),
-  });
-  if (!res.ok) throw new Error(`Firecrawl ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  const json = (await res.json()) as { data?: { json?: { plans?: RawPlan[] } } };
-  const plans = json.data?.json?.plans ?? [];
-  return Array.isArray(plans) ? plans : [];
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), FIRECRAWL_TIMEOUT_MS);
+  try {
+    const res = await fetch(FIRECRAWL_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url,
+        formats: [{ type: "json", schema: PROVIDER_PAGE_SCHEMA, prompt }],
+        onlyMainContent: true,
+        waitFor: 1500,
+      }),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error(`Firecrawl ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    const json = (await res.json()) as { data?: { json?: { plans?: RawPlan[] } } };
+    const plans = json.data?.json?.plans ?? [];
+    return Array.isArray(plans) ? plans : [];
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function daysBetween(a: string, b: string): number {
@@ -347,25 +357,43 @@ export async function getOrScrapeInsurance(input: InsuranceScrapeInput): Promise
     }
   }
 
-  // Cache miss or stale — scrape live.
-  const fresh = await fetchAndNormalize(input);
+  // Cache miss or stale — return deterministic fallback IMMEDIATELY so the
+  // user never waits for Firecrawl, and kick off a background scrape to
+  // populate the cache for the next visitor.
+  scheduleBackgroundScrape(input, dBucket, aBucket, tCount);
+  return deterministicFallback(input, days);
+}
 
-  // Best-effort upsert; never block the user response on a cache write.
-  try {
-    await supabaseAdmin
-      .from("insurance_quote_cache")
-      .upsert([{
-        destination: input.destination_iso2,
-        nationality: input.nationality_iso2,
-        duration_bucket: dBucket,
-        max_age: aBucket,
-        travelers_count: tCount,
-        quotes: JSON.parse(JSON.stringify(fresh)) as never,
-        last_scraped_at: new Date().toISOString(),
-      }], { onConflict: "destination,nationality,duration_bucket,max_age,travelers_count" });
-  } catch (e) {
-    console.warn("insurance cache upsert failed:", (e as Error).message);
-  }
-
-  return fresh;
+/**
+ * Fire-and-forget background scrape. Failures are swallowed — the next caller
+ * will simply hit the fallback again until a scrape eventually succeeds.
+ */
+function scheduleBackgroundScrape(
+  input: InsuranceScrapeInput,
+  dBucket: number,
+  aBucket: number,
+  tCount: number,
+): void {
+  // Don't await; we deliberately let this run after the response returns.
+  void (async () => {
+    try {
+      const fresh = await fetchAndNormalize(input);
+      // Only persist if at least one quote came from a real provider — never
+      // pollute the cache with the deterministic fallback itself.
+      if (!fresh.some((q) => q._internal_underwriter !== "fallback")) return;
+      await supabaseAdmin
+        .from("insurance_quote_cache")
+        .upsert([{
+          destination: input.destination_iso2,
+          nationality: input.nationality_iso2,
+          duration_bucket: dBucket,
+          max_age: aBucket,
+          travelers_count: tCount,
+          quotes: JSON.parse(JSON.stringify(fresh)) as never,
+          last_scraped_at: new Date().toISOString(),
+        }], { onConflict: "destination,nationality,duration_bucket,max_age,travelers_count" });
+    } catch (e) {
+      console.warn("background insurance scrape failed:", (e as Error).message);
+    }
+  })();
 }
