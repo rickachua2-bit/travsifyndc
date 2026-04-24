@@ -16,7 +16,7 @@ import type { ReactNode } from "react";
 
 type NavItem = {
   title: string;
-  to: "/dashboard" | "/book" | "/bookings" | "/wallet" | "/markups" | "/api-keys" | "/docs" | "/pending-review";
+  to: "/dashboard" | "/dashboard-book" | "/bookings" | "/wallet" | "/markups" | "/api-keys" | "/docs" | "/pending-review";
   icon: typeof LayoutDashboard;
   external?: boolean;
 };
