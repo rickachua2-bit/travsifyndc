@@ -685,6 +685,312 @@ export type Database = {
         }
         Relationships: []
       }
+      visa_application_documents: {
+        Row: {
+          application_id: string
+          document_label: string | null
+          document_type: string
+          file_name: string
+          id: string
+          metadata: Json
+          mime_type: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          size_bytes: number | null
+          status: Database["public"]["Enums"]["visa_document_status"]
+          storage_path: string
+          traveler_id: string | null
+          uploaded_at: string
+        }
+        Insert: {
+          application_id: string
+          document_label?: string | null
+          document_type: string
+          file_name: string
+          id?: string
+          metadata?: Json
+          mime_type?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          size_bytes?: number | null
+          status?: Database["public"]["Enums"]["visa_document_status"]
+          storage_path: string
+          traveler_id?: string | null
+          uploaded_at?: string
+        }
+        Update: {
+          application_id?: string
+          document_label?: string | null
+          document_type?: string
+          file_name?: string
+          id?: string
+          metadata?: Json
+          mime_type?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          size_bytes?: number | null
+          status?: Database["public"]["Enums"]["visa_document_status"]
+          storage_path?: string
+          traveler_id?: string | null
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visa_application_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "visa_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visa_application_documents_traveler_id_fkey"
+            columns: ["traveler_id"]
+            isOneToOne: false
+            referencedRelation: "visa_application_travelers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visa_application_events: {
+        Row: {
+          actor_id: string | null
+          application_id: string
+          created_at: string
+          event_type: string
+          id: string
+          is_customer_visible: boolean
+          message: string | null
+          metadata: Json
+        }
+        Insert: {
+          actor_id?: string | null
+          application_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          is_customer_visible?: boolean
+          message?: string | null
+          metadata?: Json
+        }
+        Update: {
+          actor_id?: string | null
+          application_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          is_customer_visible?: boolean
+          message?: string | null
+          metadata?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visa_application_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "visa_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visa_application_travelers: {
+        Row: {
+          application_id: string
+          created_at: string
+          date_of_birth: string | null
+          full_name: string
+          gender: string | null
+          given_names: string | null
+          id: string
+          is_primary: boolean
+          marital_status: string | null
+          metadata: Json
+          nationality: string | null
+          occupation: string | null
+          passport_expiry_date: string | null
+          passport_issue_date: string | null
+          passport_issuing_country: string | null
+          passport_number: string | null
+          position: number
+          surname: string | null
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          date_of_birth?: string | null
+          full_name: string
+          gender?: string | null
+          given_names?: string | null
+          id?: string
+          is_primary?: boolean
+          marital_status?: string | null
+          metadata?: Json
+          nationality?: string | null
+          occupation?: string | null
+          passport_expiry_date?: string | null
+          passport_issue_date?: string | null
+          passport_issuing_country?: string | null
+          passport_number?: string | null
+          position?: number
+          surname?: string | null
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string
+          gender?: string | null
+          given_names?: string | null
+          id?: string
+          is_primary?: boolean
+          marital_status?: string | null
+          metadata?: Json
+          nationality?: string | null
+          occupation?: string | null
+          passport_expiry_date?: string | null
+          passport_issue_date?: string | null
+          passport_issuing_country?: string | null
+          passport_number?: string | null
+          position?: number
+          surname?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visa_application_travelers_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "visa_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visa_applications: {
+        Row: {
+          accommodation_address: string | null
+          arrival_date: string | null
+          assigned_admin_id: string | null
+          booking_id: string | null
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          delivered_at: string | null
+          departure_date: string | null
+          documents_verified_at: string | null
+          embassy_decision_at: string | null
+          embassy_reference: string | null
+          flight_number: string | null
+          id: string
+          internal_notes: string | null
+          metadata: Json
+          purpose_of_visit: string | null
+          reference: string
+          refund_amount: number | null
+          refund_reference: string | null
+          refunded_at: string | null
+          rejection_reason: string | null
+          sent_to_embassy_at: string | null
+          service_fee: number
+          status: Database["public"]["Enums"]["visa_application_status"]
+          submitted_at: string | null
+          total_amount: number
+          updated_at: string
+          user_id: string | null
+          visa_fee: number
+          visa_pdf_path: string | null
+          visa_pdf_uploaded_at: string | null
+          visa_product_id: string
+        }
+        Insert: {
+          accommodation_address?: string | null
+          arrival_date?: string | null
+          assigned_admin_id?: string | null
+          booking_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          delivered_at?: string | null
+          departure_date?: string | null
+          documents_verified_at?: string | null
+          embassy_decision_at?: string | null
+          embassy_reference?: string | null
+          flight_number?: string | null
+          id?: string
+          internal_notes?: string | null
+          metadata?: Json
+          purpose_of_visit?: string | null
+          reference: string
+          refund_amount?: number | null
+          refund_reference?: string | null
+          refunded_at?: string | null
+          rejection_reason?: string | null
+          sent_to_embassy_at?: string | null
+          service_fee?: number
+          status?: Database["public"]["Enums"]["visa_application_status"]
+          submitted_at?: string | null
+          total_amount?: number
+          updated_at?: string
+          user_id?: string | null
+          visa_fee?: number
+          visa_pdf_path?: string | null
+          visa_pdf_uploaded_at?: string | null
+          visa_product_id: string
+        }
+        Update: {
+          accommodation_address?: string | null
+          arrival_date?: string | null
+          assigned_admin_id?: string | null
+          booking_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          delivered_at?: string | null
+          departure_date?: string | null
+          documents_verified_at?: string | null
+          embassy_decision_at?: string | null
+          embassy_reference?: string | null
+          flight_number?: string | null
+          id?: string
+          internal_notes?: string | null
+          metadata?: Json
+          purpose_of_visit?: string | null
+          reference?: string
+          refund_amount?: number | null
+          refund_reference?: string | null
+          refunded_at?: string | null
+          rejection_reason?: string | null
+          sent_to_embassy_at?: string | null
+          service_fee?: number
+          status?: Database["public"]["Enums"]["visa_application_status"]
+          submitted_at?: string | null
+          total_amount?: number
+          updated_at?: string
+          user_id?: string | null
+          visa_fee?: number
+          visa_pdf_path?: string | null
+          visa_pdf_uploaded_at?: string | null
+          visa_product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visa_applications_visa_product_id_fkey"
+            columns: ["visa_product_id"]
+            isOneToOne: false
+            referencedRelation: "visa_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visa_products: {
         Row: {
           base_price: number
@@ -1045,6 +1351,18 @@ export type Database = {
         | "tours"
         | "visas"
         | "insurance"
+      visa_application_status:
+        | "draft"
+        | "submitted"
+        | "documents_pending"
+        | "documents_verified"
+        | "sent_to_embassy"
+        | "approved"
+        | "rejected"
+        | "delivered"
+        | "refunded"
+        | "cancelled"
+      visa_document_status: "pending_review" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1190,6 +1508,19 @@ export const Constants = {
         "visas",
         "insurance",
       ],
+      visa_application_status: [
+        "draft",
+        "submitted",
+        "documents_pending",
+        "documents_verified",
+        "sent_to_embassy",
+        "approved",
+        "rejected",
+        "delivered",
+        "refunded",
+        "cancelled",
+      ],
+      visa_document_status: ["pending_review", "approved", "rejected"],
     },
   },
 } as const
