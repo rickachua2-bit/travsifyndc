@@ -200,3 +200,80 @@ export const adminDeleteVisaProduct = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ---------- SHERPA SCRAPE ----------
+
+/**
+ * Kicks off a background scrape over the curated corridor list.
+ * Returns the run id immediately; the UI then polls adminGetScrapeRun for progress.
+ * We don't await runSherpaScrape — it runs fire-and-forget and writes progress
+ * back to visa_scrape_runs as it goes.
+ */
+export const adminStartSherpaScrape = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+
+    // Don't allow two runs at once.
+    const { data: active } = await supabaseAdmin
+      .from("visa_scrape_runs")
+      .select("id")
+      .eq("status", "running")
+      .limit(1)
+      .maybeSingle();
+    if (active) {
+      return { run_id: active.id, already_running: true, total_corridors: VISA_CORRIDORS.length };
+    }
+
+    const { data: run, error } = await supabaseAdmin
+      .from("visa_scrape_runs")
+      .insert({
+        status: "running",
+        total_corridors: VISA_CORRIDORS.length,
+        started_by: context.userId,
+      })
+      .select("id")
+      .single();
+    if (error || !run) throw new Error(error?.message || "could not create run");
+
+    // Fire-and-forget. Errors are caught and recorded inside runSherpaScrape.
+    runSherpaScrape(run.id).catch(async (e) => {
+      await supabaseAdmin
+        .from("visa_scrape_runs")
+        .update({
+          status: "failed",
+          completed_at: new Date().toISOString(),
+          errors: [{ corridor: "*", error: (e as Error).message }],
+        })
+        .eq("id", run.id);
+    });
+
+    return { run_id: run.id, already_running: false, total_corridors: VISA_CORRIDORS.length };
+  });
+
+export const adminGetScrapeRun = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { data: run, error } = await supabaseAdmin
+      .from("visa_scrape_runs")
+      .select("*")
+      .eq("id", data.id)
+      .single();
+    if (error || !run) throw new Error(error?.message || "run not found");
+    return { run };
+  });
+
+export const adminListScrapeRuns = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("visa_scrape_runs")
+      .select("*")
+      .order("started_at", { ascending: false })
+      .limit(20);
+    if (error) throw new Error(error.message);
+    return { runs: data ?? [] };
+  });
