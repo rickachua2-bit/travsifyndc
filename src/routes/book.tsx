@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowRight, Loader2, Plane, ExternalLink } from "lucide-react";
+import { ArrowRight, Loader2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { PageShell, PageHero } from "@/components/landing/PageShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { VerticalTabs, VERTICALS, type BookingVertical } from "@/components/booking/VerticalTabs";
 import { Field, inputCls } from "@/components/booking/SearchForm";
 import { FlightSearchForm, type FlightSearchPayload } from "@/components/booking/FlightSearchForm";
+import { FlightResults, type FlightOffer } from "@/components/booking/FlightResults";
 import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/components/booking/GuestCheckout";
 import { CurrencySwitcher } from "@/components/booking/CurrencySwitcher";
 import { publicSearchFlights } from "@/server/booking-engine";
@@ -23,11 +24,6 @@ export const Route = createFileRoute("/book")({
     ],
   }),
 });
-
-type FlightOffer = {
-  id: string; total_amount: string; total_currency: string; base_amount: number; base_currency: string; owner?: string;
-  slices?: Array<{ origin?: string; destination?: string; segments?: Array<{ departing_at?: string; arriving_at?: string; marketing_carrier?: string; flight_number?: string }> }>;
-};
 
 function BookPage() {
   const { isAuthenticated } = useAuth();
@@ -90,11 +86,13 @@ function FlightsFlow() {
   const { currency: displayCurrency, format } = useCurrency();
   const [busy, setBusy] = useState(false);
   const [offers, setOffers] = useState<FlightOffer[]>([]);
+  const [routeLabel, setRouteLabel] = useState("");
   const [picked, setPicked] = useState<FlightOffer | null>(null);
   const [checkout, setCheckout] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
 
   async function search(payload: FlightSearchPayload) {
+    setRouteLabel(`${payload.slices[0]?.destination || ""}`);
     setBusy(true); setOffers([]); setPicked(null); setCheckout(null); setDone(null);
     try {
       const json = await publicSearchFlights({ data: {
