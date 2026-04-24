@@ -17,6 +17,41 @@ type Booking = {
   metadata: Record<string, unknown>; provider_reference: string | null;
 };
 
+/**
+ * Build the affiliate-tagged portal URL ops uses to fulfill a booking.
+ * Returns null if the booking's payload doesn't carry a deep link / if the
+ * provider doesn't expose one (we surface the raw metadata in that case).
+ */
+function affiliatePortalUrl(b: Booking): { url: string; label: string } | null {
+  const payload = (b.metadata as { payload?: Record<string, unknown> })?.payload ?? {};
+  const aff = (id: string | undefined, key: string) => (id ? `${key}=${encodeURIComponent(id)}` : "");
+
+  if (b.vertical === "visas") {
+    const url = (payload.sherpa_url as string) || `https://apply.joinsherpa.com/?affiliateId=${encodeURIComponent("travsify")}`;
+    return { url, label: "Sherpa portal" };
+  }
+  if (b.vertical === "tours") {
+    const tourId = payload.tour_id ?? payload.id;
+    const partnerId = "travsify"; // GYG partner_id baked into env at runtime
+    const url = tourId
+      ? `https://www.getyourguide.com/-l${tourId}/?partner_id=${partnerId}`
+      : `https://www.getyourguide.com/?partner_id=${partnerId}`;
+    return { url, label: "GetYourGuide" };
+  }
+  if (b.vertical === "transfers") {
+    // Mozio doesn't expose a deep-link to a saved quote; ops re-runs the search
+    // on the affiliate-branded portal using the customer's pickup details.
+    const url = `https://book.mozio.com/?utm_source=travsify&aff=travsify`;
+    void aff; // (kept for future per-provider tagging)
+    return { url, label: "Mozio portal" };
+  }
+  if (b.vertical === "insurance") {
+    const url = `https://safetywing.com/nomad-insurance/?referenceID=travsify`;
+    return { url, label: "SafetyWing portal" };
+  }
+  return null;
+}
+
 function ProcessingQueue() {
   const list = useServerFn(listManualBookings);
   const confirm = useServerFn(confirmManualBooking);
@@ -112,16 +147,20 @@ function ProcessingQueue() {
                         <div className="grid gap-4 md:grid-cols-2">
                           <div>
                             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Booking details</h3>
-                            {b.vertical === "visas" && (b.metadata as { payload?: { sherpa_url?: string } })?.payload?.sherpa_url && (
-                              <a
-                                href={(b.metadata as { payload: { sherpa_url: string } }).payload.sherpa_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-2 text-xs font-bold text-accent-foreground hover:opacity-90"
-                              >
-                                <ArrowRight className="h-3.5 w-3.5" /> Open Sherpa portal (affiliate-tagged)
-                              </a>
-                            )}
+                            {(() => {
+                              const portal = affiliatePortalUrl(b);
+                              if (!portal) return null;
+                              return (
+                                <a
+                                  href={portal.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-2 text-xs font-bold text-accent-foreground hover:opacity-90"
+                                >
+                                  <ArrowRight className="h-3.5 w-3.5" /> Open {portal.label} (affiliate-tagged)
+                                </a>
+                              );
+                            })()}
                             <pre className="mt-2 max-h-64 overflow-auto rounded-md bg-white p-3 font-mono text-[11px] leading-relaxed text-foreground border border-border">{JSON.stringify(b.metadata, null, 2)}</pre>
                           </div>
                           <div className="space-y-4">
