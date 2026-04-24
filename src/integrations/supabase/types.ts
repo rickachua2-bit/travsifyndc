@@ -213,6 +213,7 @@ export type Database = {
           customer_email: string | null
           customer_name: string | null
           environment: string
+          fulfillment_mode: string
           id: string
           margin_amount: number
           metadata: Json
@@ -233,6 +234,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           environment: string
+          fulfillment_mode?: string
           id?: string
           margin_amount?: number
           metadata?: Json
@@ -253,6 +255,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           environment?: string
+          fulfillment_mode?: string
           id?: string
           margin_amount?: number
           metadata?: Json
@@ -396,6 +399,45 @@ export type Database = {
           form_data?: Json
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      markups: {
+        Row: {
+          created_at: string
+          currency: string | null
+          id: string
+          is_active: boolean
+          markup_type: Database["public"]["Enums"]["markup_value_type"]
+          markup_value: number
+          owner_id: string | null
+          owner_type: Database["public"]["Enums"]["markup_owner_type"]
+          updated_at: string
+          vertical: Database["public"]["Enums"]["travel_vertical"]
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_active?: boolean
+          markup_type: Database["public"]["Enums"]["markup_value_type"]
+          markup_value: number
+          owner_id?: string | null
+          owner_type: Database["public"]["Enums"]["markup_owner_type"]
+          updated_at?: string
+          vertical: Database["public"]["Enums"]["travel_vertical"]
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_active?: boolean
+          markup_type?: Database["public"]["Enums"]["markup_value_type"]
+          markup_value?: number
+          owner_id?: string | null
+          owner_type?: Database["public"]["Enums"]["markup_owner_type"]
+          updated_at?: string
+          vertical?: Database["public"]["Enums"]["travel_vertical"]
         }
         Relationships: []
       }
@@ -818,6 +860,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      compose_price: {
+        Args: {
+          p_currency: string
+          p_partner_id: string
+          p_provider_base: number
+          p_vertical: Database["public"]["Enums"]["travel_vertical"]
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -910,6 +961,15 @@ export type Database = {
         | "under_review"
         | "approved"
         | "rejected"
+      markup_owner_type: "travsify" | "partner"
+      markup_value_type: "fixed" | "percentage"
+      travel_vertical:
+        | "flights"
+        | "hotels"
+        | "transfers"
+        | "tours"
+        | "visas"
+        | "insurance"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1044,6 +1104,16 @@ export const Constants = {
         "under_review",
         "approved",
         "rejected",
+      ],
+      markup_owner_type: ["travsify", "partner"],
+      markup_value_type: ["fixed", "percentage"],
+      travel_vertical: [
+        "flights",
+        "hotels",
+        "transfers",
+        "tours",
+        "visas",
+        "insurance",
       ],
     },
   },
