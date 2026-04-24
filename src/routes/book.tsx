@@ -162,7 +162,7 @@ function FlightsFlow() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-display text-xl font-extrabold text-primary">{o.total_currency} {Number(o.total_amount).toLocaleString()}</div>
+                <div className="font-display text-xl font-extrabold text-primary">{format(Number(o.total_amount), o.total_currency)}</div>
                 <button onClick={() => setPicked(o)} className="mt-1 rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">Select</button>
               </div>
             </div>
