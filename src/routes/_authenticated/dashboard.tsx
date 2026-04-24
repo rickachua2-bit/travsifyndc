@@ -201,7 +201,7 @@ function DashboardPage() {
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <ChecklistTile to="/api-keys" icon={KeyRound} title="Grab your sandbox key" desc="Two lines of code, full feature parity." />
               <ChecklistTile to="/wallet" icon={WalletIcon} title="Fund your wallet" desc="Top-up USD or NGN to enable bookings." />
-              <ChecklistTile to="/book" icon={Sparkles} title="Make your first booking" desc="Search inventory and book in-app." />
+              <ChecklistTile to="/dashboard-book" icon={Sparkles} title="Make your first booking" desc="Search inventory and book in-app." />
             </div>
           </Card>
 
@@ -292,7 +292,7 @@ function AwaitingApprovalBanner({ status, reason }: { status: string; reason: st
   );
 }
 
-function ChecklistTile({ to, icon: Icon, title, desc }: { to: "/api-keys" | "/wallet" | "/book" | "/docs" | "/contact"; icon: typeof KeyRound; title: string; desc: string }) {
+function ChecklistTile({ to, icon: Icon, title, desc }: { to: "/api-keys" | "/wallet" | "/dashboard-book" | "/docs" | "/contact"; icon: typeof KeyRound; title: string; desc: string }) {
   return (
     <Link to={to} className="hover-lift rounded-xl border border-border bg-surface p-4">
       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-deep text-white"><Icon className="h-5 w-5" /></div>

@@ -17,6 +17,7 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DevelopersRouteImport } from './routes/developers'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as BookRouteImport } from './routes/book'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SdkJsRouteImport } from './routes/sdk.js'
@@ -24,9 +25,9 @@ import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedPendingReviewRouteImport } from './routes/_authenticated/pending-review'
 import { Route as AuthenticatedMarkupsRouteImport } from './routes/_authenticated/markups'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
+import { Route as AuthenticatedDashboardBookRouteImport } from './routes/_authenticated/dashboard-book'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
-import { Route as AuthenticatedBookRouteImport } from './routes/_authenticated/book'
 import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
@@ -93,6 +94,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookRoute = BookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -128,6 +134,12 @@ const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
   path: '/kyc',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDashboardBookRoute =
+  AuthenticatedDashboardBookRouteImport.update({
+    id: '/dashboard-book',
+    path: '/dashboard-book',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -136,11 +148,6 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedBookRoute = AuthenticatedBookRouteImport.update({
-  id: '/book',
-  path: '/book',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedApiKeysRoute = AuthenticatedApiKeysRouteImport.update({
@@ -275,6 +282,7 @@ const AuthenticatedAdminApplicationsIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/book': typeof BookRoute
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
   '/developers': typeof DevelopersRoute
@@ -285,9 +293,9 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api-keys': typeof AuthenticatedApiKeysRoute
-  '/book': typeof AuthenticatedBookRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dashboard-book': typeof AuthenticatedDashboardBookRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/markups': typeof AuthenticatedMarkupsRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
@@ -319,6 +327,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/book': typeof BookRoute
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
   '/developers': typeof DevelopersRoute
@@ -328,9 +337,9 @@ export interface FileRoutesByTo {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/api-keys': typeof AuthenticatedApiKeysRoute
-  '/book': typeof AuthenticatedBookRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dashboard-book': typeof AuthenticatedDashboardBookRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/markups': typeof AuthenticatedMarkupsRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
@@ -364,6 +373,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/book': typeof BookRoute
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
   '/developers': typeof DevelopersRoute
@@ -374,9 +384,9 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/api-keys': typeof AuthenticatedApiKeysRoute
-  '/_authenticated/book': typeof AuthenticatedBookRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/dashboard-book': typeof AuthenticatedDashboardBookRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/markups': typeof AuthenticatedMarkupsRoute
   '/_authenticated/pending-review': typeof AuthenticatedPendingReviewRoute
@@ -410,6 +420,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/book'
     | '/contact'
     | '/demo'
     | '/developers'
@@ -420,9 +431,9 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/api-keys'
-    | '/book'
     | '/bookings'
     | '/dashboard'
+    | '/dashboard-book'
     | '/kyc'
     | '/markups'
     | '/pending-review'
@@ -454,6 +465,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/book'
     | '/contact'
     | '/demo'
     | '/developers'
@@ -463,9 +475,9 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/api-keys'
-    | '/book'
     | '/bookings'
     | '/dashboard'
+    | '/dashboard-book'
     | '/kyc'
     | '/markups'
     | '/pending-review'
@@ -498,6 +510,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/book'
     | '/contact'
     | '/demo'
     | '/developers'
@@ -508,9 +521,9 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_authenticated/admin'
     | '/_authenticated/api-keys'
-    | '/_authenticated/book'
     | '/_authenticated/bookings'
     | '/_authenticated/dashboard'
+    | '/_authenticated/dashboard-book'
     | '/_authenticated/kyc'
     | '/_authenticated/markups'
     | '/_authenticated/pending-review'
@@ -544,6 +557,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  BookRoute: typeof BookRoute
   ContactRoute: typeof ContactRoute
   DemoRoute: typeof DemoRoute
   DevelopersRoute: typeof DevelopersRoute
@@ -631,6 +645,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/book': {
+      id: '/book'
+      path: '/book'
+      fullPath: '/book'
+      preLoaderRoute: typeof BookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -680,6 +701,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKycRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/dashboard-book': {
+      id: '/_authenticated/dashboard-book'
+      path: '/dashboard-book'
+      fullPath: '/dashboard-book'
+      preLoaderRoute: typeof AuthenticatedDashboardBookRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -692,13 +720,6 @@ declare module '@tanstack/react-router' {
       path: '/bookings'
       fullPath: '/bookings'
       preLoaderRoute: typeof AuthenticatedBookingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/book': {
-      id: '/_authenticated/book'
-      path: '/book'
-      fullPath: '/book'
-      preLoaderRoute: typeof AuthenticatedBookRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/api-keys': {
@@ -901,9 +922,9 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedApiKeysRoute: typeof AuthenticatedApiKeysRoute
-  AuthenticatedBookRoute: typeof AuthenticatedBookRoute
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDashboardBookRoute: typeof AuthenticatedDashboardBookRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMarkupsRoute: typeof AuthenticatedMarkupsRoute
   AuthenticatedPendingReviewRoute: typeof AuthenticatedPendingReviewRoute
@@ -913,9 +934,9 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedApiKeysRoute: AuthenticatedApiKeysRoute,
-  AuthenticatedBookRoute: AuthenticatedBookRoute,
   AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDashboardBookRoute: AuthenticatedDashboardBookRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMarkupsRoute: AuthenticatedMarkupsRoute,
   AuthenticatedPendingReviewRoute: AuthenticatedPendingReviewRoute,
@@ -929,6 +950,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  BookRoute: BookRoute,
   ContactRoute: ContactRoute,
   DemoRoute: DemoRoute,
   DevelopersRoute: DevelopersRoute,

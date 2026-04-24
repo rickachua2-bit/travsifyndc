@@ -16,14 +16,14 @@ import type { ReactNode } from "react";
 
 type NavItem = {
   title: string;
-  to: "/dashboard" | "/book" | "/bookings" | "/wallet" | "/markups" | "/api-keys" | "/docs" | "/pending-review";
+  to: "/dashboard" | "/dashboard-book" | "/bookings" | "/wallet" | "/markups" | "/api-keys" | "/docs" | "/pending-review";
   icon: typeof LayoutDashboard;
   external?: boolean;
 };
 
 const PRIMARY: NavItem[] = [
   { title: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-  { title: "Book", to: "/book", icon: Search },
+  { title: "Book", to: "/dashboard-book", icon: Search },
   { title: "Bookings", to: "/bookings", icon: BookOpenCheck },
   { title: "Wallet", to: "/wallet", icon: WalletIcon },
   { title: "Markups", to: "/markups", icon: Percent },
