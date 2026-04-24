@@ -5,14 +5,15 @@ import {
   Search, ArrowRight, Loader2, Check, Zap,
 } from "lucide-react";
 import { PageShell, PageHero } from "@/components/landing/PageShell";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/demo")({
   component: DemoPage,
   head: () => ({
     meta: [
-      { title: "Live Demo — Travsify NDC" },
-      { name: "description", content: "Try the Travsify unified travel API live. Search flights, hotels, tours, transfers, e-Visas and insurance — no signup required." },
-      { property: "og:title", content: "Travsify Live Demo — One API for all travel products" },
+      { title: "Book travel — Travsify NDC" },
+      { name: "description", content: "Search and book flights, hotels, tours, transfers, e-Visas and insurance through one unified API. Try it live, no signup required." },
+      { property: "og:title", content: "Book travel with Travsify — one API, six products" },
       { property: "og:description", content: "Run a live search across 6 travel verticals and watch the API respond in milliseconds." },
     ],
   }),
