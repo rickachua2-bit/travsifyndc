@@ -92,8 +92,14 @@ export function FlightSearchForm({
       destination: s.destination.trim().toUpperCase(),
       departure_date: s.departure_date,
     }));
-    if (cleanSlices.some((s) => s.origin.length !== 3 || s.destination.length !== 3 || !s.departure_date)) {
-      alert("Please fill 3-letter IATA codes and dates for every leg.");
+    const IATA = /^[A-Z]{3}$/;
+    const bad = cleanSlices.find((s) => !IATA.test(s.origin) || !IATA.test(s.destination) || !s.departure_date);
+    if (bad) {
+      alert(`Please enter valid 3-letter IATA airport codes for every leg (e.g. LOS, DXB, LHR). Got "${bad.origin}" → "${bad.destination}".`);
+      return;
+    }
+    if (cleanSlices.some((s) => s.origin === s.destination)) {
+      alert("Origin and destination must be different airports.");
       return;
     }
     void onSubmit({
@@ -176,11 +182,11 @@ export function FlightSearchForm({
         <div className="mt-3 space-y-3">
           {slices.map((s, i) => (
             <div key={i} className="grid gap-2 sm:grid-cols-[1fr_auto_1fr_1fr_auto]">
-              <Input label={i === 0 ? "From" : `From (Leg ${i + 1})`} value={s.origin} onChange={(v) => updateSlice(i, "origin", v)} placeholder="LOS" maxLength={3} uppercase />
+              <Input label={i === 0 ? "From (IATA)" : `From Leg ${i + 1} (IATA)`} value={s.origin} onChange={(v) => updateSlice(i, "origin", v)} placeholder="LOS" maxLength={3} uppercase pattern="[A-Za-z]{3}" title="3-letter airport code, e.g. LOS, DXB, LHR" />
               <button type="button" onClick={() => swap(i)} className="mt-5 hidden h-9 w-9 items-center justify-center self-end rounded-md border border-border text-muted-foreground hover:border-accent hover:text-accent sm:inline-flex" aria-label="Swap origin and destination">
                 <ArrowLeftRight className="h-3.5 w-3.5" />
               </button>
-              <Input label="To" value={s.destination} onChange={(v) => updateSlice(i, "destination", v)} placeholder="DXB" maxLength={3} uppercase />
+              <Input label="To (IATA)" value={s.destination} onChange={(v) => updateSlice(i, "destination", v)} placeholder="DXB" maxLength={3} uppercase pattern="[A-Za-z]{3}" title="3-letter airport code, e.g. LOS, DXB, LHR" />
               <Input label="Departure" type="date" value={s.departure_date} onChange={(v) => updateSlice(i, "departure_date", v)} />
               {trip === "multicity" && slices.length > 1 ? (
                 <button type="button" onClick={() => removeSlice(i)} className="mt-5 inline-flex h-9 w-9 items-center justify-center self-end rounded-md border border-border text-destructive hover:border-destructive" aria-label="Remove leg">
@@ -232,6 +238,8 @@ function Input({
   placeholder,
   maxLength,
   uppercase,
+  pattern,
+  title,
 }: {
   label: string;
   value: string;
@@ -240,6 +248,8 @@ function Input({
   placeholder?: string;
   maxLength?: number;
   uppercase?: boolean;
+  pattern?: string;
+  title?: string;
 }) {
   return (
     <label className="block">
@@ -250,6 +260,8 @@ function Input({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         maxLength={maxLength}
+        pattern={pattern}
+        title={title}
         required
         className={`mt-1 w-full rounded-md border border-border bg-white px-2.5 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent ${uppercase ? "uppercase" : ""}`}
       />
