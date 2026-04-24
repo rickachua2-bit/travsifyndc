@@ -20,9 +20,10 @@ import { searchFlights as duffelSearch } from "@/server/providers/duffel";
 import { searchHotelRates as liteapiSearch } from "@/server/providers/liteapi";
 import { searchTours as gygSearch } from "@/server/providers/getyourguide";
 import { searchTransfers as mozioSearch } from "@/server/providers/mozio";
-import { searchInsurance as swSearch } from "@/server/providers/safetywing";
+import { getOrScrapeInsurance } from "@/server/providers/insurance-scraper";
 import { searchVisas as sherpaSearch } from "@/server/providers/sherpa";
 import { convert as fxConvert, SUPPORTED_CURRENCIES } from "@/server/fx";
+import { findCountryByCode } from "@/data/countries";
 
 type Vertical = "flights" | "hotels" | "tours" | "transfers" | "insurance" | "visas";
 
