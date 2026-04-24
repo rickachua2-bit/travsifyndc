@@ -1,4 +1,15 @@
-const partners = ["IATA", "STAR ALLIANCE", "EMIRATES", "VISA", "Flutterwave", "paystack", "amadeus"];
+const partners = [
+  "IATA",
+  "STAR ALLIANCE",
+  "EMIRATES",
+  "VISA",
+  "Flutterwave",
+  "Paystack",
+  "Amadeus",
+  "Sabre",
+  "Mastercard",
+  "Stripe",
+];
 
 export function TrustStrip() {
   return (
@@ -7,12 +18,25 @@ export function TrustStrip() {
         <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           Powering the next generation of travel companies
         </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-70">
-          {partners.map((p) => (
-            <div key={p} className="font-display text-xl font-bold tracking-tight text-primary/80 grayscale">
-              {p}
-            </div>
-          ))}
+        <div
+          className="group relative mt-8 overflow-hidden"
+          style={{
+            maskImage:
+              "linear-gradient(90deg, transparent, black 12%, black 88%, transparent)",
+            WebkitMaskImage:
+              "linear-gradient(90deg, transparent, black 12%, black 88%, transparent)",
+          }}
+        >
+          <div className="flex w-max animate-ticker gap-12 group-hover:[animation-play-state:paused]">
+            {[...partners, ...partners].map((p, i) => (
+              <div
+                key={`${p}-${i}`}
+                className="font-display text-xl font-bold tracking-tight text-primary/70 transition hover:text-accent"
+              >
+                {p}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
