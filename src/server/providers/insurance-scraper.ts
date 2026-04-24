@@ -101,24 +101,34 @@ type RawPlan = {
   benefits?: string[];
 };
 
+// Per-provider hard timeout. Workers cap at ~25s; we need to stay well under that.
+const FIRECRAWL_TIMEOUT_MS = 8000;
+
 async function firecrawlScrape(url: string, prompt: string): Promise<RawPlan[]> {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) throw new Error("FIRECRAWL_API_KEY not configured");
 
-  const res = await fetch(FIRECRAWL_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      url,
-      formats: [{ type: "json", schema: PROVIDER_PAGE_SCHEMA, prompt }],
-      onlyMainContent: false,
-      waitFor: 6000,
-    }),
-  });
-  if (!res.ok) throw new Error(`Firecrawl ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  const json = (await res.json()) as { data?: { json?: { plans?: RawPlan[] } } };
-  const plans = json.data?.json?.plans ?? [];
-  return Array.isArray(plans) ? plans : [];
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), FIRECRAWL_TIMEOUT_MS);
+  try {
+    const res = await fetch(FIRECRAWL_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url,
+        formats: [{ type: "json", schema: PROVIDER_PAGE_SCHEMA, prompt }],
+        onlyMainContent: true,
+        waitFor: 1500,
+      }),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error(`Firecrawl ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    const json = (await res.json()) as { data?: { json?: { plans?: RawPlan[] } } };
+    const plans = json.data?.json?.plans ?? [];
+    return Array.isArray(plans) ? plans : [];
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function daysBetween(a: string, b: string): number {
