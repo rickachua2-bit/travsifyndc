@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { ArrowLeftRight, Loader2, Plane, Plus, Search, Trash2, Users, Briefcase, ShieldCheck, Clock, Sparkles } from "lucide-react";
+import { AirportInput } from "@/components/booking/AirportInput";
 
 export type TripType = "oneway" | "roundtrip" | "multicity";
 export type CabinClass = "economy" | "premium_economy" | "business" | "first";
@@ -182,11 +183,23 @@ export function FlightSearchForm({
         <div className="mt-3 space-y-3">
           {slices.map((s, i) => (
             <div key={i} className="grid gap-2 sm:grid-cols-[1fr_auto_1fr_1fr_auto]">
-              <Input label={i === 0 ? "From (IATA)" : `From Leg ${i + 1} (IATA)`} value={s.origin} onChange={(v) => updateSlice(i, "origin", v)} placeholder="LOS" maxLength={3} uppercase pattern="[A-Za-z]{3}" title="3-letter airport code, e.g. LOS, DXB, LHR" />
+              <AirportInput
+                label={i === 0 ? "From" : `From — Leg ${i + 1}`}
+                value={s.origin}
+                onChange={(code) => updateSlice(i, "origin", code)}
+                placeholder="City or airport"
+                exclude={s.destination}
+              />
               <button type="button" onClick={() => swap(i)} className="mt-5 hidden h-9 w-9 items-center justify-center self-end rounded-md border border-border text-muted-foreground hover:border-accent hover:text-accent sm:inline-flex" aria-label="Swap origin and destination">
                 <ArrowLeftRight className="h-3.5 w-3.5" />
               </button>
-              <Input label="To (IATA)" value={s.destination} onChange={(v) => updateSlice(i, "destination", v)} placeholder="DXB" maxLength={3} uppercase pattern="[A-Za-z]{3}" title="3-letter airport code, e.g. LOS, DXB, LHR" />
+              <AirportInput
+                label="To"
+                value={s.destination}
+                onChange={(code) => updateSlice(i, "destination", code)}
+                placeholder="City or airport"
+                exclude={s.origin}
+              />
               <Input label="Departure" type="date" value={s.departure_date} onChange={(v) => updateSlice(i, "departure_date", v)} />
               {trip === "multicity" && slices.length > 1 ? (
                 <button type="button" onClick={() => removeSlice(i)} className="mt-5 inline-flex h-9 w-9 items-center justify-center self-end rounded-md border border-border text-destructive hover:border-destructive" aria-label="Remove leg">
