@@ -38,6 +38,8 @@ function AdminLayout() {
           </div>
           <nav className="flex items-center gap-4 text-sm font-medium text-muted-foreground">
             <Link to="/admin" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }} className="hover:text-foreground">KYC queue</Link>
+            <Link to="/admin/processing" activeProps={{ className: "text-foreground" }} className="hover:text-foreground">Fulfillment</Link>
+            <Link to="/admin/visa-products" activeProps={{ className: "text-foreground" }} className="hover:text-foreground">Visa products</Link>
             <Link to="/admin/withdrawals" activeProps={{ className: "text-foreground" }} className="hover:text-foreground">Withdrawals</Link>
             <Link to="/dashboard" className="hover:text-foreground">My dashboard</Link>
           </nav>
