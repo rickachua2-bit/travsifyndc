@@ -22,6 +22,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SdkJsRouteImport } from './routes/sdk.js'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedPendingReviewRouteImport } from './routes/_authenticated/pending-review'
+import { Route as AuthenticatedMarkupsRouteImport } from './routes/_authenticated/markups'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
@@ -32,6 +33,14 @@ import { Route as ApiV1PayoutsRouteImport } from './routes/api/v1/payouts'
 import { Route as ApiV1HealthRouteImport } from './routes/api/v1/health'
 import { Route as ApiPublicDemoSearchRouteImport } from './routes/api/public/demo-search'
 import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin/withdrawals'
+import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
+import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
+import { Route as ApiV1VisasSearchRouteImport } from './routes/api/v1/visas.search'
+import { Route as ApiV1VisasBookingsRouteImport } from './routes/api/v1/visas.bookings'
+import { Route as ApiV1TransfersSearchRouteImport } from './routes/api/v1/transfers.search'
+import { Route as ApiV1TransfersBookingsRouteImport } from './routes/api/v1/transfers.bookings'
+import { Route as ApiV1ToursSearchRouteImport } from './routes/api/v1/tours.search'
+import { Route as ApiV1ToursBookingsRouteImport } from './routes/api/v1/tours.bookings'
 import { Route as ApiV1PaymentsIntentsRouteImport } from './routes/api/v1/payments.intents'
 import { Route as ApiV1HotelsSearchRouteImport } from './routes/api/v1/hotels.search'
 import { Route as ApiV1HotelsBookingsRouteImport } from './routes/api/v1/hotels.bookings'
@@ -106,6 +115,11 @@ const AuthenticatedPendingReviewRoute =
     path: '/pending-review',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMarkupsRoute = AuthenticatedMarkupsRouteImport.update({
+  id: '/markups',
+  path: '/markups',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
   id: '/kyc',
   path: '/kyc',
@@ -157,6 +171,48 @@ const AuthenticatedAdminWithdrawalsRoute =
     path: '/withdrawals',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminProcessingRoute =
+  AuthenticatedAdminProcessingRouteImport.update({
+    id: '/processing',
+    path: '/processing',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminMarkupsRoute =
+  AuthenticatedAdminMarkupsRouteImport.update({
+    id: '/markups',
+    path: '/markups',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const ApiV1VisasSearchRoute = ApiV1VisasSearchRouteImport.update({
+  id: '/api/v1/visas/search',
+  path: '/api/v1/visas/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1VisasBookingsRoute = ApiV1VisasBookingsRouteImport.update({
+  id: '/api/v1/visas/bookings',
+  path: '/api/v1/visas/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1TransfersSearchRoute = ApiV1TransfersSearchRouteImport.update({
+  id: '/api/v1/transfers/search',
+  path: '/api/v1/transfers/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1TransfersBookingsRoute = ApiV1TransfersBookingsRouteImport.update({
+  id: '/api/v1/transfers/bookings',
+  path: '/api/v1/transfers/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1ToursSearchRoute = ApiV1ToursSearchRouteImport.update({
+  id: '/api/v1/tours/search',
+  path: '/api/v1/tours/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1ToursBookingsRoute = ApiV1ToursBookingsRouteImport.update({
+  id: '/api/v1/tours/bookings',
+  path: '/api/v1/tours/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1PaymentsIntentsRoute = ApiV1PaymentsIntentsRouteImport.update({
   id: '/api/v1/payments/intents',
   path: '/api/v1/payments/intents',
@@ -214,9 +270,12 @@ export interface FileRoutesByFullPath {
   '/bookings': typeof AuthenticatedBookingsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
+  '/markups': typeof AuthenticatedMarkupsRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
+  '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
+  '/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -230,6 +289,12 @@ export interface FileRoutesByFullPath {
   '/api/v1/hotels/bookings': typeof ApiV1HotelsBookingsRoute
   '/api/v1/hotels/search': typeof ApiV1HotelsSearchRoute
   '/api/v1/payments/intents': typeof ApiV1PaymentsIntentsRoute
+  '/api/v1/tours/bookings': typeof ApiV1ToursBookingsRoute
+  '/api/v1/tours/search': typeof ApiV1ToursSearchRoute
+  '/api/v1/transfers/bookings': typeof ApiV1TransfersBookingsRoute
+  '/api/v1/transfers/search': typeof ApiV1TransfersSearchRoute
+  '/api/v1/visas/bookings': typeof ApiV1VisasBookingsRoute
+  '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -245,9 +310,12 @@ export interface FileRoutesByTo {
   '/bookings': typeof AuthenticatedBookingsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
+  '/markups': typeof AuthenticatedMarkupsRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
+  '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
+  '/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -261,6 +329,12 @@ export interface FileRoutesByTo {
   '/api/v1/hotels/bookings': typeof ApiV1HotelsBookingsRoute
   '/api/v1/hotels/search': typeof ApiV1HotelsSearchRoute
   '/api/v1/payments/intents': typeof ApiV1PaymentsIntentsRoute
+  '/api/v1/tours/bookings': typeof ApiV1ToursBookingsRoute
+  '/api/v1/tours/search': typeof ApiV1ToursSearchRoute
+  '/api/v1/transfers/bookings': typeof ApiV1TransfersBookingsRoute
+  '/api/v1/transfers/search': typeof ApiV1TransfersSearchRoute
+  '/api/v1/visas/bookings': typeof ApiV1VisasBookingsRoute
+  '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -279,9 +353,12 @@ export interface FileRoutesById {
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
+  '/_authenticated/markups': typeof AuthenticatedMarkupsRoute
   '/_authenticated/pending-review': typeof AuthenticatedPendingReviewRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
+  '/_authenticated/admin/markups': typeof AuthenticatedAdminMarkupsRoute
+  '/_authenticated/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -295,6 +372,12 @@ export interface FileRoutesById {
   '/api/v1/hotels/bookings': typeof ApiV1HotelsBookingsRoute
   '/api/v1/hotels/search': typeof ApiV1HotelsSearchRoute
   '/api/v1/payments/intents': typeof ApiV1PaymentsIntentsRoute
+  '/api/v1/tours/bookings': typeof ApiV1ToursBookingsRoute
+  '/api/v1/tours/search': typeof ApiV1ToursSearchRoute
+  '/api/v1/transfers/bookings': typeof ApiV1TransfersBookingsRoute
+  '/api/v1/transfers/search': typeof ApiV1TransfersSearchRoute
+  '/api/v1/visas/bookings': typeof ApiV1VisasBookingsRoute
+  '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -313,9 +396,12 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/dashboard'
     | '/kyc'
+    | '/markups'
     | '/pending-review'
     | '/wallet'
     | '/sdk/js'
+    | '/admin/markups'
+    | '/admin/processing'
     | '/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -329,6 +415,12 @@ export interface FileRouteTypes {
     | '/api/v1/hotels/bookings'
     | '/api/v1/hotels/search'
     | '/api/v1/payments/intents'
+    | '/api/v1/tours/bookings'
+    | '/api/v1/tours/search'
+    | '/api/v1/transfers/bookings'
+    | '/api/v1/transfers/search'
+    | '/api/v1/visas/bookings'
+    | '/api/v1/visas/search'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -344,9 +436,12 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/dashboard'
     | '/kyc'
+    | '/markups'
     | '/pending-review'
     | '/wallet'
     | '/sdk/js'
+    | '/admin/markups'
+    | '/admin/processing'
     | '/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -360,6 +455,12 @@ export interface FileRouteTypes {
     | '/api/v1/hotels/bookings'
     | '/api/v1/hotels/search'
     | '/api/v1/payments/intents'
+    | '/api/v1/tours/bookings'
+    | '/api/v1/tours/search'
+    | '/api/v1/transfers/bookings'
+    | '/api/v1/transfers/search'
+    | '/api/v1/visas/bookings'
+    | '/api/v1/visas/search'
   id:
     | '__root__'
     | '/'
@@ -377,9 +478,12 @@ export interface FileRouteTypes {
     | '/_authenticated/bookings'
     | '/_authenticated/dashboard'
     | '/_authenticated/kyc'
+    | '/_authenticated/markups'
     | '/_authenticated/pending-review'
     | '/_authenticated/wallet'
     | '/sdk/js'
+    | '/_authenticated/admin/markups'
+    | '/_authenticated/admin/processing'
     | '/_authenticated/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -393,6 +497,12 @@ export interface FileRouteTypes {
     | '/api/v1/hotels/bookings'
     | '/api/v1/hotels/search'
     | '/api/v1/payments/intents'
+    | '/api/v1/tours/bookings'
+    | '/api/v1/tours/search'
+    | '/api/v1/transfers/bookings'
+    | '/api/v1/transfers/search'
+    | '/api/v1/visas/bookings'
+    | '/api/v1/visas/search'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -417,6 +527,12 @@ export interface RootRouteChildren {
   ApiV1HotelsBookingsRoute: typeof ApiV1HotelsBookingsRoute
   ApiV1HotelsSearchRoute: typeof ApiV1HotelsSearchRoute
   ApiV1PaymentsIntentsRoute: typeof ApiV1PaymentsIntentsRoute
+  ApiV1ToursBookingsRoute: typeof ApiV1ToursBookingsRoute
+  ApiV1ToursSearchRoute: typeof ApiV1ToursSearchRoute
+  ApiV1TransfersBookingsRoute: typeof ApiV1TransfersBookingsRoute
+  ApiV1TransfersSearchRoute: typeof ApiV1TransfersSearchRoute
+  ApiV1VisasBookingsRoute: typeof ApiV1VisasBookingsRoute
+  ApiV1VisasSearchRoute: typeof ApiV1VisasSearchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -512,6 +628,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPendingReviewRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/markups': {
+      id: '/_authenticated/markups'
+      path: '/markups'
+      fullPath: '/markups'
+      preLoaderRoute: typeof AuthenticatedMarkupsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/kyc': {
       id: '/_authenticated/kyc'
       path: '/kyc'
@@ -582,6 +705,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWithdrawalsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/processing': {
+      id: '/_authenticated/admin/processing'
+      path: '/processing'
+      fullPath: '/admin/processing'
+      preLoaderRoute: typeof AuthenticatedAdminProcessingRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/markups': {
+      id: '/_authenticated/admin/markups'
+      path: '/markups'
+      fullPath: '/admin/markups'
+      preLoaderRoute: typeof AuthenticatedAdminMarkupsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/api/v1/visas/search': {
+      id: '/api/v1/visas/search'
+      path: '/api/v1/visas/search'
+      fullPath: '/api/v1/visas/search'
+      preLoaderRoute: typeof ApiV1VisasSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/visas/bookings': {
+      id: '/api/v1/visas/bookings'
+      path: '/api/v1/visas/bookings'
+      fullPath: '/api/v1/visas/bookings'
+      preLoaderRoute: typeof ApiV1VisasBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/transfers/search': {
+      id: '/api/v1/transfers/search'
+      path: '/api/v1/transfers/search'
+      fullPath: '/api/v1/transfers/search'
+      preLoaderRoute: typeof ApiV1TransfersSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/transfers/bookings': {
+      id: '/api/v1/transfers/bookings'
+      path: '/api/v1/transfers/bookings'
+      fullPath: '/api/v1/transfers/bookings'
+      preLoaderRoute: typeof ApiV1TransfersBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/tours/search': {
+      id: '/api/v1/tours/search'
+      path: '/api/v1/tours/search'
+      fullPath: '/api/v1/tours/search'
+      preLoaderRoute: typeof ApiV1ToursSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/tours/bookings': {
+      id: '/api/v1/tours/bookings'
+      path: '/api/v1/tours/bookings'
+      fullPath: '/api/v1/tours/bookings'
+      preLoaderRoute: typeof ApiV1ToursBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/payments/intents': {
       id: '/api/v1/payments/intents'
       path: '/api/v1/payments/intents'
@@ -642,12 +821,16 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminMarkupsRoute: typeof AuthenticatedAdminMarkupsRoute
+  AuthenticatedAdminProcessingRoute: typeof AuthenticatedAdminProcessingRoute
   AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminApplicationsIdRoute: typeof AuthenticatedAdminApplicationsIdRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminMarkupsRoute: AuthenticatedAdminMarkupsRoute,
+  AuthenticatedAdminProcessingRoute: AuthenticatedAdminProcessingRoute,
   AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminApplicationsIdRoute: AuthenticatedAdminApplicationsIdRoute,
@@ -662,6 +845,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
+  AuthenticatedMarkupsRoute: typeof AuthenticatedMarkupsRoute
   AuthenticatedPendingReviewRoute: typeof AuthenticatedPendingReviewRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
 }
@@ -672,6 +856,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
+  AuthenticatedMarkupsRoute: AuthenticatedMarkupsRoute,
   AuthenticatedPendingReviewRoute: AuthenticatedPendingReviewRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
 }
@@ -702,6 +887,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1HotelsBookingsRoute: ApiV1HotelsBookingsRoute,
   ApiV1HotelsSearchRoute: ApiV1HotelsSearchRoute,
   ApiV1PaymentsIntentsRoute: ApiV1PaymentsIntentsRoute,
+  ApiV1ToursBookingsRoute: ApiV1ToursBookingsRoute,
+  ApiV1ToursSearchRoute: ApiV1ToursSearchRoute,
+  ApiV1TransfersBookingsRoute: ApiV1TransfersBookingsRoute,
+  ApiV1TransfersSearchRoute: ApiV1TransfersSearchRoute,
+  ApiV1VisasBookingsRoute: ApiV1VisasBookingsRoute,
+  ApiV1VisasSearchRoute: ApiV1VisasSearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

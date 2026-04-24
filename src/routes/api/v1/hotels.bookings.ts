@@ -1,8 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS, genBookingRef } from "@/server/gateway";
+import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
 import { prebookHotel, bookHotel } from "@/server/providers/liteapi";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import {
+  createBookingAndDebit,
+  confirmBooking,
+  failAndRefundBooking,
+  InsufficientFundsError,
+} from "@/server/bookings";
 
 const Schema = z.object({
   offer_id: z.string().min(1).max(300),
@@ -16,7 +21,7 @@ const Schema = z.object({
     lastName: z.string().min(1).max(80),
     email: z.string().email().max(255),
   })).min(1).max(8),
-  total_amount: z.number().positive().max(1_000_000),
+  base_amount: z.number().positive().max(1_000_000),
   currency: z.string().length(3),
 });
 
@@ -31,35 +36,63 @@ export const Route = createFileRoute("/api/v1/hotels/bookings")({
           const parsed = Schema.safeParse(body);
           if (!parsed.success) return errorResponse("validation_error", parsed.error.issues[0].message, 400);
 
-          const prebook = await prebookHotel(parsed.data.offer_id) as { data?: { prebookId?: string } };
-          const prebookId = prebook?.data?.prebookId;
-          if (!prebookId) return errorResponse("prebook_failed", "Could not lock the rate.", 502);
+          // 1. Markup + wallet debit
+          let created;
+          try {
+            created = await createBookingAndDebit({
+              key,
+              vertical: "hotels",
+              provider: "liteapi",
+              fulfillmentMode: "auto",
+              providerBase: parsed.data.base_amount,
+              currency: parsed.data.currency,
+              customer: {
+                name: `${parsed.data.holder.firstName} ${parsed.data.holder.lastName}`,
+                email: parsed.data.holder.email,
+              },
+              metadata: { offer_id: parsed.data.offer_id, holder: parsed.data.holder, guests: parsed.data.guests },
+            });
+          } catch (e) {
+            if (e instanceof InsufficientFundsError) {
+              return errorResponse("insufficient_funds", e.message, 402);
+            }
+            throw e;
+          }
 
-          const booked = await bookHotel({
-            prebookId,
-            guests: parsed.data.guests,
-            holder: parsed.data.holder,
-            payment: { method: "ACC_CREDIT_CARD" },
-          }) as { data?: { bookingId?: string } };
+          // 2. Pre-book + book on LiteAPI
+          try {
+            const prebook = await prebookHotel(parsed.data.offer_id) as { data?: { prebookId?: string } };
+            const prebookId = prebook?.data?.prebookId;
+            if (!prebookId) throw new Error("prebook_failed: could not lock the rate");
 
-          const ref = genBookingRef();
-          await supabaseAdmin.from("bookings").insert({
-            user_id: key.userId,
-            api_key_id: key.apiKeyId,
-            environment: key.environment,
-            vertical: "hotels",
-            provider: "liteapi",
-            provider_reference: booked.data?.bookingId,
-            reference: ref,
-            status: "confirmed",
-            customer_email: parsed.data.holder.email,
-            customer_name: `${parsed.data.holder.firstName} ${parsed.data.holder.lastName}`,
-            currency: parsed.data.currency,
-            total_amount: parsed.data.total_amount,
-            metadata: { offer_id: parsed.data.offer_id },
-          });
+            const booked = await bookHotel({
+              prebookId,
+              guests: parsed.data.guests,
+              holder: parsed.data.holder,
+              payment: { method: "ACC_CREDIT_CARD" },
+            }) as { data?: { bookingId?: string } };
 
-          return jsonResponse({ data: { reference: ref, provider_booking: booked.data, status: "confirmed" } }, 201);
+            const providerRef = booked.data?.bookingId || prebookId;
+            await confirmBooking(created.bookingId, providerRef, { liteapi_booking: booked.data });
+            return jsonResponse({
+              data: {
+                reference: created.reference,
+                status: "confirmed",
+                price: created.price,
+                provider_booking: booked.data,
+              },
+            }, 201);
+          } catch (e) {
+            await failAndRefundBooking({
+              bookingId: created.bookingId,
+              reference: created.reference,
+              userId: key.userId,
+              currency: parsed.data.currency,
+              amount: created.price.total,
+              reason: (e as Error).message,
+            });
+            return errorResponse("supplier_error", `Booking failed at supplier: ${(e as Error).message}. Wallet refunded.`, 502);
+          }
         }),
     },
   },
