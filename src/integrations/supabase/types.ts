@@ -685,6 +685,81 @@ export type Database = {
         }
         Relationships: []
       }
+      visa_products: {
+        Row: {
+          base_price: number
+          created_at: string
+          currency: string
+          description: string | null
+          destination: string
+          destination_name: string
+          display_order: number
+          entry_type: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          max_stay_days: number
+          nationality: string
+          nationality_name: string
+          processing_days_max: number
+          processing_days_min: number
+          requirements: Json
+          retail_price: number
+          sherpa_url: string | null
+          updated_at: string
+          validity_days: number
+          visa_type: string
+        }
+        Insert: {
+          base_price: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          destination: string
+          destination_name: string
+          display_order?: number
+          entry_type?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          max_stay_days: number
+          nationality: string
+          nationality_name: string
+          processing_days_max: number
+          processing_days_min: number
+          requirements?: Json
+          retail_price: number
+          sherpa_url?: string | null
+          updated_at?: string
+          validity_days: number
+          visa_type: string
+        }
+        Update: {
+          base_price?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          destination?: string
+          destination_name?: string
+          display_order?: number
+          entry_type?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          max_stay_days?: number
+          nationality?: string
+          nationality_name?: string
+          processing_days_max?: number
+          processing_days_min?: number
+          requirements?: Json
+          retail_price?: number
+          sherpa_url?: string | null
+          updated_at?: string
+          validity_days?: number
+          visa_type?: string
+        }
+        Relationships: []
+      }
       wallet_transactions: {
         Row: {
           amount: number
