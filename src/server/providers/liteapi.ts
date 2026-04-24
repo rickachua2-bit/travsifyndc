@@ -29,8 +29,9 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export type HotelSearchInput = {
-  city_code?: string;     // e.g. "DXB"
-  country_code?: string;  // e.g. "AE"
+  city_code?: string;     // legacy, ignored
+  city_name?: string;     // e.g. "Dubai"
+  country_code?: string;  // ISO-2, e.g. "AE" — required by LiteAPI
   checkin: string;        // YYYY-MM-DD
   checkout: string;
   adults: number;
@@ -39,10 +40,12 @@ export type HotelSearchInput = {
 };
 
 export async function searchHotelRates(input: HotelSearchInput) {
-  // Step 1: get hotel IDs in destination
-  const hotelsListPath = input.city_code
-    ? `/data/hotels?cityCode=${encodeURIComponent(input.city_code)}&limit=20`
-    : `/data/hotels?countryCode=${encodeURIComponent(input.country_code || "AE")}&limit=20`;
+  // LiteAPI /data/hotels requires countryCode (mandatory). cityName is optional but recommended.
+  const country = input.country_code;
+  if (!country) throw new Error("country_code is required for hotel search");
+  const params = new URLSearchParams({ countryCode: country, limit: "20" });
+  if (input.city_name) params.set("cityName", input.city_name);
+  const hotelsListPath = `/data/hotels?${params.toString()}`;
   const hotelsRes = await call<{ data: Array<{ id: string; name: string; address?: string; stars?: number; main_photo?: string }> }>(hotelsListPath);
   const hotelIds = hotelsRes.data.slice(0, 20).map((h) => h.id);
   if (hotelIds.length === 0) return { hotels: [] };

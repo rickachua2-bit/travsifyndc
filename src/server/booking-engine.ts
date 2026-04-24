@@ -137,23 +137,30 @@ export const publicSearchFlights = createServerFn({ method: "POST" })
 export const publicSearchHotels = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({
     city_code: z.string().min(2).max(8).optional(),
-    country_code: z.string().length(2).optional(),
+    city_name: z.string().min(2).max(80).optional(),
+    country_code: z.string().length(2),
     checkin: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     checkout: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     adults: z.number().int().min(1).max(8),
     children: z.number().int().min(0).max(6).optional(),
     currency: z.string().length(3).optional(),
     display_currency: DisplayCurrencyEnum.optional(),
-  }).refine((v) => v.city_code || v.country_code, { message: "city_code or country_code required" }).parse(d))
+  }).parse(d))
   .handler(async ({ data }): Promise<string> => {
     const display = data.display_currency || "USD";
-    const res = await liteapiSearch({ ...data, currency: data.currency || "USD" });
-    const hotels = await Promise.all(res.hotels.map(async (h) => {
-      if (!h.price) return { ...h, price_breakdown: null };
-      const price = await publicPrice("hotels", Number(h.price), h.currency || "USD", display);
-      return { ...h, base_price: h.price, base_currency: h.currency || "USD", price: price.total, currency: price.currency, price_breakdown: price };
-    }));
-    return JSON.stringify({ hotels, display_currency: display });
+    try {
+      const res = await liteapiSearch({ ...data, currency: data.currency || "USD" });
+      const hotels = await Promise.all(res.hotels.map(async (h) => {
+        if (!h.price) return { ...h, price_breakdown: null };
+        const price = await publicPrice("hotels", Number(h.price), h.currency || "USD", display);
+        return { ...h, base_price: h.price, base_currency: h.currency || "USD", price: price.total, currency: price.currency, price_breakdown: price };
+      }));
+      return JSON.stringify({ hotels, display_currency: display });
+    } catch (err) {
+      console.error("Hotel search failed:", err);
+      const message = err instanceof Error ? err.message : "Hotel search unavailable";
+      return JSON.stringify({ hotels: [], display_currency: display, error: message });
+    }
   });
 
 export const publicSearchTours = createServerFn({ method: "POST" })

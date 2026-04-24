@@ -193,7 +193,8 @@ function HotelsFlow() {
     try {
       const json = await publicSearchHotels({ data: {
         city_code: payload.city_code,
-        country_code: city?.country,
+        city_name: payload.city_name,
+        country_code: payload.country_code,
         checkin: payload.checkin,
         checkout: payload.checkout,
         adults: payload.adults * payload.rooms,
@@ -201,9 +202,10 @@ function HotelsFlow() {
         currency: "USD",
         display_currency: displayCurrency,
       } });
-      const parsed = JSON.parse(json) as { hotels: Hotel[] };
+      const parsed = JSON.parse(json) as { hotels: Hotel[]; error?: string };
       setHotels(parsed.hotels || []);
-      if (!parsed.hotels?.length) toast.message("No hotels available for those dates");
+      if (parsed.error) toast.error(parsed.error);
+      else if (!parsed.hotels?.length) toast.message("No hotels available for those dates");
     } catch (e) { toast.error((e as Error).message); }
     finally { setBusy(false); }
   }
