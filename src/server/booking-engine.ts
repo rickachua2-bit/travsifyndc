@@ -22,6 +22,7 @@ import { searchTours as gygSearch } from "@/server/providers/getyourguide";
 import { searchTransfers as mozioSearch } from "@/server/providers/mozio";
 import { searchInsurance as swSearch } from "@/server/providers/safetywing";
 import { searchVisas as sherpaSearch } from "@/server/providers/sherpa";
+import { convert as fxConvert, SUPPORTED_CURRENCIES } from "@/server/fx";
 
 type Vertical = "flights" | "hotels" | "tours" | "transfers" | "insurance" | "visas";
 
@@ -44,15 +45,28 @@ const PROVIDER: Record<Vertical, string> = {
   visas: "sherpa",
 };
 
-/** Compose the public retail price (provider_base + Travsify markup, no partner). */
-async function publicPrice(vertical: Vertical, providerBase: number, currency: string): Promise<{
-  provider_base: number; travsify_markup: number; total: number; currency: string;
-}> {
+const DisplayCurrencyEnum = z.enum(SUPPORTED_CURRENCIES as [string, ...string[]]);
+
+/**
+ * Compose the public retail price for the user's chosen *display currency*.
+ *
+ * 1. Convert the provider's native price into `displayCurrency` (e.g. USD→NGN).
+ * 2. Run compose_price() in display currency to apply the Travsify markup.
+ *    (Markup config has its own currency; pricing function reads value as-is.)
+ */
+async function publicPrice(
+  vertical: Vertical,
+  providerBase: number,
+  providerCurrency: string,
+  displayCurrency: string = "USD",
+): Promise<{ provider_base: number; travsify_markup: number; total: number; currency: string; fx_from: string; fx_to: string }> {
+  const target = displayCurrency.toUpperCase();
+  const baseInDisplay = await fxConvert(providerBase, providerCurrency, target);
   const { data, error } = await supabaseAdmin.rpc("compose_price", {
     p_partner_id: null as unknown as string,
     p_vertical: vertical,
-    p_provider_base: providerBase,
-    p_currency: currency.toUpperCase(),
+    p_provider_base: Number(baseInDisplay.toFixed(2)),
+    p_currency: target,
   });
   if (error) throw new Error(`Price composition failed: ${error.message}`);
   const b = data as { provider_base: number; travsify_markup: number; partner_markup: number; total: number; currency: string };
@@ -61,6 +75,8 @@ async function publicPrice(vertical: Vertical, providerBase: number, currency: s
     travsify_markup: Number(b.travsify_markup),
     total: Number(b.total),
     currency: b.currency,
+    fx_from: providerCurrency.toUpperCase(),
+    fx_to: target,
   };
 }
 
