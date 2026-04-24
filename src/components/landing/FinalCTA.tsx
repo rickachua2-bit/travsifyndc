@@ -1,27 +1,32 @@
 import { ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import ctaPeople from "@/assets/cta-people.jpg";
 
-const bullets = ["Powerful APIs", "Global reach", "Infinite possibilities"];
+const bullets = [
+  "One API. Every travel product.",
+  "Local payments. Global reach.",
+  "Live in days, not quarters.",
+];
 
 export function FinalCTA() {
   return (
     <section id="cta" className="border-b border-border bg-background py-20">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-10 flex items-center gap-3">
+        <div className="reveal mb-10 flex items-center gap-3">
           <span className="rounded bg-primary px-2 py-1 font-mono text-[10px] font-bold text-primary-foreground">16</span>
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Final CTA</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Ready when you are</span>
         </div>
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-          <div>
+          <div className="reveal">
             <h2 className="font-display text-4xl font-extrabold leading-tight text-primary md:text-5xl">
-              Start building your<br />travel business today.
+              Start building your<br />travel business <span className="text-gradient-accent">today.</span>
             </h2>
             <ul className="mt-6 space-y-3 text-base text-muted-foreground">
               {bullets.map((b) => <li key={b} className="flex items-center gap-3"><span className="h-1.5 w-1.5 rounded-full bg-accent" />{b}</li>)}
             </ul>
-            <a href="#" className="mt-8 inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-accent transition hover:opacity-90" style={{ boxShadow: "var(--shadow-accent)" }}>
-              Get API Access <ArrowRight className="h-4 w-4" />
-            </a>
+            <Link to="/contact" className="btn-glow group mt-8 inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-accent transition hover:opacity-95" style={{ boxShadow: "var(--shadow-accent)" }}>
+              Get API Access <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
 
           <div className="relative">
