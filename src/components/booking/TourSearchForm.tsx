@@ -69,8 +69,7 @@ export function TourSearchForm({
       style={{ boxShadow: "var(--shadow-soft)" }}
     >
       <div className="sm:col-span-5">
-        <FieldLabel>Destination</FieldLabel>
-        <CityInput value={city} onChange={setCity} placeholder="Where are you going?" />
+        <CityInput label="Destination" value={city} onChange={setCity} placeholder="Where are you going?" />
       </div>
 
       <div className="sm:col-span-2">
