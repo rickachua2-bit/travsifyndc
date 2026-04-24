@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { DashboardMock } from "./DashboardMock";
 
 const trustChips = [
-  { icon: Zap, label: "Sandbox in 60s" },
+  { icon: Zap, label: "Sandbox the moment you sign up" },
   { icon: ShieldCheck, label: "PCI-DSS · SOC 2" },
   { icon: Sparkles, label: "6 verticals · 1 schema" },
 ];
@@ -47,11 +47,11 @@ export function Hero() {
 
           <div className="animate-fade-in-up delay-300 mt-8 flex flex-wrap items-center gap-3">
             <Link
-              to="/get-api-access"
+              to="/signup"
               className="btn-glow group inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-accent transition hover:opacity-95"
               style={{ boxShadow: "var(--shadow-accent)" }}
             >
-              Get API Access
+              Apply for API access
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
@@ -61,6 +61,9 @@ export function Hero() {
               Try the live demo
             </Link>
           </div>
+          <p className="animate-fade-in-up delay-400 mt-3 text-xs text-muted-foreground">
+            Business KYC required · Sandbox keys instantly · Live access in 24–72h
+          </p>
 
           <div className="animate-fade-in-up delay-500 mt-8 flex flex-wrap gap-2">
             {trustChips.map((c) => (

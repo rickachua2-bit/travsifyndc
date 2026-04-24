@@ -2,9 +2,9 @@ import { ArrowRight, KeyRound, Code2, Rocket } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 const steps = [
-  { n: 1, title: "Get your API key", desc: "Sign up free. Sandbox in 60 seconds — no card required.", color: "bg-accent", Icon: KeyRound },
-  { n: 2, title: "Integrate", desc: "Drop in our SDK. Books a flight in under 50 lines of code.", color: "bg-primary", Icon: Code2 },
-  { n: 3, title: "Go live & earn", desc: "Switch to live mode and start collecting margin from day one.", color: "bg-success", Icon: Rocket },
+  { n: 1, title: "Apply & complete KYC", desc: "Sign up and complete a 5-step business KYC. Sandbox keys are issued instantly.", color: "bg-accent", Icon: KeyRound },
+  { n: 2, title: "Build in sandbox", desc: "Integrate against the full API while we review (typically 24–72h).", color: "bg-primary", Icon: Code2 },
+  { n: 3, title: "Go live", desc: "Once approved, live keys unlock and you can start collecting margin.", color: "bg-success", Icon: Rocket },
 ];
 
 export function HowItWorks() {
