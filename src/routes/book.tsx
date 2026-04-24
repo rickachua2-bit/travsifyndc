@@ -587,14 +587,39 @@ function VisasFlow() {
           className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
           style={{ boxShadow: "var(--shadow-soft)" }}
         >
-          <div className="col-span-full flex items-start justify-between gap-3 border-b border-border pb-3">
+          <div className="col-span-full flex flex-wrap items-start justify-between gap-3 border-b border-border pb-3">
             <div>
               <h3 className="font-display text-base font-bold text-primary">Applicant details</h3>
               <p className="text-xs text-muted-foreground">{picked.destination_name} {picked.visa_type} · processing {picked.processing_days_min}–{picked.processing_days_max} days</p>
             </div>
-            <div className="text-right">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
-              <div className="font-display text-lg font-extrabold text-primary">{format(picked.price, picked.currency)}</div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Travelers</span>
+                <div className="inline-flex items-center overflow-hidden rounded-md border border-border bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setTravelerCount((n) => Math.max(1, n - 1))}
+                    disabled={travelerCount <= 1}
+                    className="px-2 py-1 text-sm font-bold text-foreground disabled:opacity-40"
+                    aria-label="Remove traveler"
+                  >−</button>
+                  <span className="min-w-[1.75rem] text-center text-sm font-bold text-foreground">{travelerCount}</span>
+                  <button
+                    type="button"
+                    onClick={() => setTravelerCount((n) => Math.min(10, n + 1))}
+                    disabled={travelerCount >= 10}
+                    className="px-2 py-1 text-sm font-bold text-foreground disabled:opacity-40"
+                    aria-label="Add traveler"
+                  >+</button>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total · {travelerCount} applicant{travelerCount > 1 ? "s" : ""}</div>
+                <div className="font-display text-lg font-extrabold text-primary">{format(picked.price * travelerCount, picked.currency)}</div>
+                {travelerCount > 1 && (
+                  <div className="text-[11px] text-muted-foreground">{format(picked.price, picked.currency)} × {travelerCount}</div>
+                )}
+              </div>
             </div>
           </div>
           <Field label="First name (as on passport)"><input name="first_name" required className={inputCls} /></Field>
@@ -606,6 +631,24 @@ function VisasFlow() {
           <Field label="Phone"><input name="phone" required placeholder="+234 800 000 0000" className={inputCls} /></Field>
           <Field label="Intended arrival date"><input name="arrival" type="date" required min={todayPlus(picked.processing_days_max)} className={inputCls} /></Field>
           <Field label="Intended departure date"><input name="departure" type="date" required className={inputCls} /></Field>
+
+          {Array.from({ length: Math.max(0, travelerCount - 1) }, (_, i) => {
+            const idx = i + 1;
+            return (
+              <div key={idx} className="col-span-full grid gap-3 rounded-xl border border-dashed border-border bg-surface/40 p-3 sm:grid-cols-2">
+                <div className="col-span-full flex items-baseline justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Applicant {idx + 1}</h4>
+                  <span className="text-[11px] text-muted-foreground">Same nationality · {picked.nationality_name}</span>
+                </div>
+                <Field label="First name (as on passport)"><input name={`tr_${idx}_first_name`} required className={inputCls} /></Field>
+                <Field label="Last name (as on passport)"><input name={`tr_${idx}_last_name`} required className={inputCls} /></Field>
+                <Field label="Date of birth"><input name={`tr_${idx}_dob`} type="date" required max={todayPlus(-365 * 16)} className={inputCls} /></Field>
+                <Field label="Passport number"><input name={`tr_${idx}_passport_no`} required minLength={4} maxLength={20} className={inputCls} /></Field>
+                <Field label="Passport expiry date"><input name={`tr_${idx}_passport_expiry`} type="date" required min={todayPlus(180)} className={inputCls} /></Field>
+              </div>
+            );
+          })}
+
           <div className="col-span-full rounded-md bg-surface p-3 text-xs text-muted-foreground">
             <strong className="text-foreground">Heads up:</strong> Visa applications are reviewed and submitted to the issuing authority by our ops team within 24 hours. Your eVisa PDF will be emailed to you in {picked.processing_days_min}–{picked.processing_days_max} business days. We'll request additional documents (photo, supporting letters) by email if needed.
           </div>
