@@ -67,7 +67,9 @@ export function applyMarkup(baseUsd: number): number {
   return Math.round(baseUsd * 1.3 + 20);
 }
 
-async function scrapeOneCorridor(c: Corridor): Promise<ExtractedVisa[]> {
+async function scrapeOneCorridor(
+  c: Corridor,
+): Promise<{ visas: ExtractedVisa[]; visaRequired: boolean | null }> {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) throw new Error("FIRECRAWL_API_KEY not configured");
 
@@ -79,7 +81,7 @@ async function scrapeOneCorridor(c: Corridor): Promise<ExtractedVisa[]> {
     },
     body: JSON.stringify({
       url: buildSherpaUrl(c),
-      formats: [{ type: "json", prompt: EXTRACTION_PROMPT }],
+      formats: [{ type: "json", schema: EXTRACTION_SCHEMA, prompt: EXTRACTION_PROMPT }],
       onlyMainContent: false,
       waitFor: 6000,
     }),
@@ -89,19 +91,27 @@ async function scrapeOneCorridor(c: Corridor): Promise<ExtractedVisa[]> {
     const text = await res.text();
     throw new Error(`Firecrawl ${res.status}: ${text.slice(0, 200)}`);
   }
-  const json = (await res.json()) as { data?: { json?: { visa_options?: ExtractedVisa[] } } };
+  const json = (await res.json()) as {
+    data?: { json?: { visa_options?: ExtractedVisa[]; visa_required?: boolean } };
+  };
   const visas = json.data?.json?.visa_options ?? [];
-  return Array.isArray(visas) ? visas : [];
+  const visaRequired =
+    typeof json.data?.json?.visa_required === "boolean" ? json.data.json.visa_required : null;
+  return {
+    visas: Array.isArray(visas) ? visas : [],
+    visaRequired,
+  };
 }
 
 /**
  * Scrape a single corridor on-demand and upsert results into visa_products.
- * Used by the public search endpoint when a user picks a corridor we have not
- * cached yet (or has stale data). Returns the number of products upserted.
- * Throws on Firecrawl errors so the caller can surface a useful message.
+ * Returns the count of products upserted plus the visa_required signal so the
+ * caller can show "visa-free" messaging when Sherpa has no products for the page.
  */
-export async function scrapeAndCacheCorridor(c: Corridor): Promise<number> {
-  const visas = await scrapeOneCorridor(c);
+export async function scrapeAndCacheCorridor(
+  c: Corridor,
+): Promise<{ upserted: number; visaRequired: boolean | null }> {
+  const { visas, visaRequired } = await scrapeOneCorridor(c);
   let upserted = 0;
   for (const v of visas) {
     const row = toRow(c, v);
@@ -111,7 +121,7 @@ export async function scrapeAndCacheCorridor(c: Corridor): Promise<number> {
       .upsert(row, { onConflict: "nationality,destination,visa_type" });
     if (!error) upserted += 1;
   }
-  return upserted;
+  return { upserted, visaRequired };
 }
 
 /** Sanitise extracted visa into a row we can upsert. Returns null if invalid. */
