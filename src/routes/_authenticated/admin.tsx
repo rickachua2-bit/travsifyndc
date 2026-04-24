@@ -38,6 +38,7 @@ function AdminLayout() {
           </div>
           <nav className="flex items-center gap-4 text-sm font-medium text-muted-foreground">
             <Link to="/admin" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }} className="hover:text-foreground">KYC queue</Link>
+            <Link to="/admin/withdrawals" activeProps={{ className: "text-foreground" }} className="hover:text-foreground">Withdrawals</Link>
             <Link to="/dashboard" className="hover:text-foreground">My dashboard</Link>
           </nav>
         </div>
