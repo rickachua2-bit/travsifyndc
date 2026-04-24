@@ -13,16 +13,41 @@ import { VISA_CORRIDORS, buildSherpaUrl, type Corridor } from "@/server/data/vis
 
 const FIRECRAWL_URL = "https://api.firecrawl.dev/v2/scrape";
 
-// Extraction schema we ask the LLM to populate from each page.
+// JSON schema we ask Firecrawl to populate. A schema is more reliable than a
+// prose prompt because the LLM can't drift on key names.
+const EXTRACTION_SCHEMA = {
+  type: "object",
+  properties: {
+    visa_options: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          visa_type: { type: "string", description: "tourist, business, or transit" },
+          entry_type: { type: "string", description: "single or multiple" },
+          validity_days: { type: "number" },
+          max_stay_days: { type: "number" },
+          processing_days_min: { type: "number" },
+          processing_days_max: { type: "number" },
+          price_usd: { type: "number", description: "Customer-facing visa fee in USD" },
+          required_documents: { type: "array", items: { type: "string" } },
+          short_description: { type: "string" },
+        },
+      },
+    },
+    visa_required: {
+      type: "boolean",
+      description: "True if a visa is required for this nationality to enter this destination. False if visa-free / visa-on-arrival without a Sherpa product.",
+    },
+  },
+  required: ["visa_options"],
+};
+
 const EXTRACTION_PROMPT =
-  "Extract every visa option offered on this page. For each visa return: " +
-  "name (string), visa_type (one of: tourist, business, transit), " +
-  "entry_type (one of: single, multiple), validity_days (integer), " +
-  "max_stay_days (integer), processing_days_min (integer), processing_days_max (integer), " +
-  "price_usd (number, the customer-facing visa fee in USD), " +
-  "required_documents (array of short plain-English strings, max 8), " +
-  "short_description (one sentence). " +
-  "If a value is not stated on the page, omit it. Return an empty list if no visas are sold.";
+  "Read the page and populate visa_options with EVERY purchasable visa product Sherpa sells here. " +
+  "If the page indicates the traveller doesn't need a visa (visa-free, visa-on-arrival, or no products available), " +
+  "set visa_required=false and return an empty visa_options array.";
 
 type ExtractedVisa = {
   name?: string;
@@ -42,7 +67,9 @@ export function applyMarkup(baseUsd: number): number {
   return Math.round(baseUsd * 1.3 + 20);
 }
 
-async function scrapeOneCorridor(c: Corridor): Promise<ExtractedVisa[]> {
+async function scrapeOneCorridor(
+  c: Corridor,
+): Promise<{ visas: ExtractedVisa[]; visaRequired: boolean | null }> {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) throw new Error("FIRECRAWL_API_KEY not configured");
 
@@ -54,7 +81,7 @@ async function scrapeOneCorridor(c: Corridor): Promise<ExtractedVisa[]> {
     },
     body: JSON.stringify({
       url: buildSherpaUrl(c),
-      formats: [{ type: "json", prompt: EXTRACTION_PROMPT }],
+      formats: [{ type: "json", schema: EXTRACTION_SCHEMA, prompt: EXTRACTION_PROMPT }],
       onlyMainContent: false,
       waitFor: 6000,
     }),
@@ -64,19 +91,27 @@ async function scrapeOneCorridor(c: Corridor): Promise<ExtractedVisa[]> {
     const text = await res.text();
     throw new Error(`Firecrawl ${res.status}: ${text.slice(0, 200)}`);
   }
-  const json = (await res.json()) as { data?: { json?: { visa_options?: ExtractedVisa[] } } };
+  const json = (await res.json()) as {
+    data?: { json?: { visa_options?: ExtractedVisa[]; visa_required?: boolean } };
+  };
   const visas = json.data?.json?.visa_options ?? [];
-  return Array.isArray(visas) ? visas : [];
+  const visaRequired =
+    typeof json.data?.json?.visa_required === "boolean" ? json.data.json.visa_required : null;
+  return {
+    visas: Array.isArray(visas) ? visas : [],
+    visaRequired,
+  };
 }
 
 /**
  * Scrape a single corridor on-demand and upsert results into visa_products.
- * Used by the public search endpoint when a user picks a corridor we have not
- * cached yet (or has stale data). Returns the number of products upserted.
- * Throws on Firecrawl errors so the caller can surface a useful message.
+ * Returns the count of products upserted plus the visa_required signal so the
+ * caller can show "visa-free" messaging when Sherpa has no products for the page.
  */
-export async function scrapeAndCacheCorridor(c: Corridor): Promise<number> {
-  const visas = await scrapeOneCorridor(c);
+export async function scrapeAndCacheCorridor(
+  c: Corridor,
+): Promise<{ upserted: number; visaRequired: boolean | null }> {
+  const { visas, visaRequired } = await scrapeOneCorridor(c);
   let upserted = 0;
   for (const v of visas) {
     const row = toRow(c, v);
@@ -86,7 +121,7 @@ export async function scrapeAndCacheCorridor(c: Corridor): Promise<number> {
       .upsert(row, { onConflict: "nationality,destination,visa_type" });
     if (!error) upserted += 1;
   }
-  return upserted;
+  return { upserted, visaRequired };
 }
 
 /** Sanitise extracted visa into a row we can upsert. Returns null if invalid. */
@@ -145,7 +180,7 @@ export async function runSherpaScrape(runId: string): Promise<void> {
   for (const c of VISA_CORRIDORS) {
     const corridorLabel = `${c.nationality_iso2}->${c.destination_iso2}`;
     try {
-      const visas = await scrapeOneCorridor(c);
+      const { visas } = await scrapeOneCorridor(c);
       scraped += 1;
 
       for (const v of visas) {
