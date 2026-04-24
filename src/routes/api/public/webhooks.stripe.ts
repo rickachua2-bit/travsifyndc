@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verifyStripeSignature, retrievePaymentMethod } from "@/server/providers/stripe";
+import { createOrder as duffelOrder } from "@/server/providers/duffel";
+import { prebookHotel as liteapiPrebook, bookHotel as liteapiBook } from "@/server/providers/liteapi";
 
 export const Route = createFileRoute("/api/public/webhooks/stripe")({
   server: {
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
           if (event.type === "payment_intent.succeeded") {
             const pi = event.data.object as { id: string; amount: number; currency: string; metadata?: Record<string, string> };
             const meta = pi.metadata || {};
+
             if (meta.kind === "wallet_funding" && meta.user_id && meta.currency && meta.reference) {
               await supabaseAdmin.rpc("wallet_credit", {
                 p_user_id: meta.user_id,
@@ -32,9 +35,19 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
                 p_booking_id: undefined,
                 p_metadata: { stripe_payment_intent: pi.id },
               });
+            } else if (meta.kind === "guest_booking" && meta.booking_id) {
+              await fulfillGuestBooking(meta.booking_id, pi.id);
             } else if (meta.booking_reference) {
               await supabaseAdmin.from("bookings").update({ status: "confirmed", stripe_payment_intent: pi.id })
                 .eq("reference", meta.booking_reference);
+            }
+          } else if (event.type === "payment_intent.payment_failed") {
+            const pi = event.data.object as { id: string; metadata?: Record<string, string> };
+            const meta = pi.metadata || {};
+            if (meta.kind === "guest_booking" && meta.booking_id) {
+              await supabaseAdmin.from("bookings")
+                .update({ status: "failed", metadata: { failure_reason: "Stripe payment failed" } as never })
+                .eq("id", meta.booking_id);
             }
           } else if (event.type === "setup_intent.succeeded") {
             const si = event.data.object as { id: string; payment_method: string; metadata?: Record<string, string> };
@@ -60,3 +73,91 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
     },
   },
 });
+
+/**
+ * Promote a paid guest booking. For auto verticals (flights, hotels) issue the
+ * supplier order now. For manual verticals, mark `processing` so ops fulfills.
+ * Errors are caught and stored on the booking — refunds are handled manually
+ * for guest flow (Stripe refund) by ops.
+ */
+async function fulfillGuestBooking(bookingId: string, paymentIntentId: string) {
+  const { data: booking } = await supabaseAdmin
+    .from("bookings")
+    .select("*")
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (!booking) return;
+
+  const meta = (booking.metadata as Record<string, unknown>) || {};
+  const payload = (meta.payload as Record<string, unknown>) || {};
+  const vertical = booking.vertical as string;
+  const fulfillment = booking.fulfillment_mode as "auto" | "manual";
+
+  // Always record the payment intent so finance can reconcile.
+  const baseUpdate = { stripe_payment_intent: paymentIntentId };
+
+  if (fulfillment === "manual") {
+    // Manual verticals: mark processing for ops.
+    await supabaseAdmin.from("bookings")
+      .update({ ...baseUpdate, status: "processing" })
+      .eq("id", bookingId);
+    return;
+  }
+
+  // Auto verticals: call supplier now.
+  try {
+    if (vertical === "flights") {
+      const order = await duffelOrder("live", {
+        offer_id: String(payload.offer_id || ""),
+        passengers: (payload.passengers as Array<{
+          given_name: string; family_name: string; born_on: string;
+          gender: "m" | "f"; title: "mr" | "ms" | "mrs" | "miss" | "dr";
+          email: string; phone_number: string;
+        }>) || [],
+        payment_amount: String((meta as Record<string, unknown>).provider_amount ?? booking.total_amount),
+        payment_currency: String(booking.currency),
+      });
+      const orderData = order.data as Record<string, unknown>;
+      await supabaseAdmin.from("bookings")
+        .update({
+          ...baseUpdate,
+          status: "confirmed",
+          provider_reference: (orderData.id as string) || null,
+          metadata: { ...meta, supplier_order: orderData } as never,
+        })
+        .eq("id", bookingId);
+    } else if (vertical === "hotels") {
+      const pre = await liteapiPrebook(String(payload.offer_id || "")) as { data?: { prebookId?: string } };
+      const prebookId = pre.data?.prebookId;
+      if (!prebookId) throw new Error("Prebook failed");
+      const holder = (payload.holder as { firstName: string; lastName: string; email: string }) || {
+        firstName: String(booking.customer_name || "Guest").split(" ")[0],
+        lastName: String(booking.customer_name || "Guest").split(" ")[1] || "Guest",
+        email: String(booking.customer_email || ""),
+      };
+      const guests = (payload.guests as Array<{ firstName: string; lastName: string; email: string }>) || [holder];
+      const booked = await liteapiBook({
+        prebookId,
+        guests,
+        holder,
+        payment: { method: "WALLET" },
+      }) as { data?: { bookingId?: string } };
+      await supabaseAdmin.from("bookings")
+        .update({
+          ...baseUpdate,
+          status: "confirmed",
+          provider_reference: booked.data?.bookingId || prebookId,
+          metadata: { ...meta, supplier_order: booked.data } as never,
+        })
+        .eq("id", bookingId);
+    }
+  } catch (e) {
+    await supabaseAdmin.from("bookings")
+      .update({
+        ...baseUpdate,
+        status: "failed",
+        metadata: { ...meta, failure_reason: (e as Error).message } as never,
+      })
+      .eq("id", bookingId);
+  }
+}
