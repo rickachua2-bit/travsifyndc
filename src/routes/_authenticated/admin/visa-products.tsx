@@ -42,12 +42,22 @@ const blank: Omit<Product, "id"> = {
   is_active: true, display_order: 0,
 };
 
+type ScrapeError = { corridor: string; error: string };
 type ScrapeRun = {
   id: string; status: string;
   total_corridors: number; scraped_count: number; upserted_count: number; failed_count: number;
-  errors: Array<{ corridor: string; error: string }>;
+  errors: ScrapeError[];
   started_at: string; completed_at: string | null;
 };
+
+function toScrapeRun(run: unknown): ScrapeRun {
+  const r = run as Record<string, unknown>;
+  const rawErrors = Array.isArray(r.errors) ? (r.errors as unknown[]) : [];
+  const errors: ScrapeError[] = rawErrors
+    .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+    .map((e) => ({ corridor: String(e.corridor ?? ""), error: String(e.error ?? "") }));
+  return { ...(r as object), errors } as ScrapeRun;
+}
 
 function VisaProductsAdmin() {
   const list = useServerFn(adminListVisaProducts);
@@ -83,10 +93,11 @@ function VisaProductsAdmin() {
     pollRef.current = setInterval(async () => {
       try {
         const { run } = await getRun({ data: { id: scrape.id } });
-        setScrape(run as unknown as ScrapeRun);
-        if ((run as unknown as ScrapeRun).status !== "running") {
+        const next = toScrapeRun(run);
+        setScrape(next);
+        if (next.status !== "running") {
           await refresh();
-          toast.success(`Scrape complete: ${(run as unknown as ScrapeRun).upserted_count} products upserted`);
+          toast.success(`Scrape complete: ${next.upserted_count} products upserted`);
         }
       } catch { /* keep polling */ }
     }, 3000);
@@ -100,7 +111,7 @@ function VisaProductsAdmin() {
     try {
       const r = await startScrape();
       const { run } = await getRun({ data: { id: r.run_id } });
-      setScrape(run as unknown as ScrapeRun);
+      setScrape(toScrapeRun(run));
       toast.message(r.already_running ? "A scrape is already running — attached to it." : `Started: ${r.total_corridors} corridors queued`);
     } catch (e) { toast.error((e as Error).message); }
     finally { setScrapeLoading(false); }
