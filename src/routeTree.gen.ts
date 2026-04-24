@@ -36,6 +36,7 @@ import { Route as ApiV1PayoutsRouteImport } from './routes/api/v1/payouts'
 import { Route as ApiV1HealthRouteImport } from './routes/api/v1/health'
 import { Route as ApiPublicDemoSearchRouteImport } from './routes/api/public/demo-search'
 import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin/withdrawals'
+import { Route as AuthenticatedAdminVisaQueueRouteImport } from './routes/_authenticated/admin/visa-queue'
 import { Route as AuthenticatedAdminVisaProductsRouteImport } from './routes/_authenticated/admin/visa-products'
 import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
 import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
@@ -54,6 +55,7 @@ import { Route as ApiV1FlightsSearchRouteImport } from './routes/api/v1/flights.
 import { Route as ApiV1FlightsOrdersRouteImport } from './routes/api/v1/flights.orders'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks.stripe'
 import { Route as ApiPublicWebhooksFincraRouteImport } from './routes/api/public/webhooks.fincra'
+import { Route as AuthenticatedAdminVisaQueueIdRouteImport } from './routes/_authenticated/admin/visa-queue.$id'
 import { Route as AuthenticatedAdminApplicationsIdRouteImport } from './routes/_authenticated/admin/applications.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -193,6 +195,12 @@ const AuthenticatedAdminWithdrawalsRoute =
     path: '/withdrawals',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminVisaQueueRoute =
+  AuthenticatedAdminVisaQueueRouteImport.update({
+    id: '/visa-queue',
+    path: '/visa-queue',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminVisaProductsRoute =
   AuthenticatedAdminVisaProductsRouteImport.update({
     id: '/visa-products',
@@ -286,6 +294,12 @@ const ApiPublicWebhooksFincraRoute = ApiPublicWebhooksFincraRouteImport.update({
   path: '/api/public/webhooks/fincra',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminVisaQueueIdRoute =
+  AuthenticatedAdminVisaQueueIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminVisaQueueRoute,
+  } as any)
 const AuthenticatedAdminApplicationsIdRoute =
   AuthenticatedAdminApplicationsIdRouteImport.update({
     id: '/applications/$id',
@@ -317,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
+  '/admin/visa-queue': typeof AuthenticatedAdminVisaQueueRouteWithChildren
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -324,6 +339,7 @@ export interface FileRoutesByFullPath {
   '/visa/track/$reference': typeof VisaTrackReferenceRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
+  '/admin/visa-queue/$id': typeof AuthenticatedAdminVisaQueueIdRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
@@ -363,6 +379,7 @@ export interface FileRoutesByTo {
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
+  '/admin/visa-queue': typeof AuthenticatedAdminVisaQueueRouteWithChildren
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -370,6 +387,7 @@ export interface FileRoutesByTo {
   '/visa/track/$reference': typeof VisaTrackReferenceRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
+  '/admin/visa-queue/$id': typeof AuthenticatedAdminVisaQueueIdRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
@@ -412,6 +430,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/_authenticated/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/_authenticated/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
+  '/_authenticated/admin/visa-queue': typeof AuthenticatedAdminVisaQueueRouteWithChildren
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -419,6 +438,7 @@ export interface FileRoutesById {
   '/visa/track/$reference': typeof VisaTrackReferenceRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
+  '/_authenticated/admin/visa-queue/$id': typeof AuthenticatedAdminVisaQueueIdRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
@@ -461,6 +481,7 @@ export interface FileRouteTypes {
     | '/admin/markups'
     | '/admin/processing'
     | '/admin/visa-products'
+    | '/admin/visa-queue'
     | '/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -468,6 +489,7 @@ export interface FileRouteTypes {
     | '/visa/track/$reference'
     | '/admin/'
     | '/admin/applications/$id'
+    | '/admin/visa-queue/$id'
     | '/api/public/webhooks/fincra'
     | '/api/public/webhooks/stripe'
     | '/api/v1/flights/orders'
@@ -507,6 +529,7 @@ export interface FileRouteTypes {
     | '/admin/markups'
     | '/admin/processing'
     | '/admin/visa-products'
+    | '/admin/visa-queue'
     | '/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -514,6 +537,7 @@ export interface FileRouteTypes {
     | '/visa/track/$reference'
     | '/admin'
     | '/admin/applications/$id'
+    | '/admin/visa-queue/$id'
     | '/api/public/webhooks/fincra'
     | '/api/public/webhooks/stripe'
     | '/api/v1/flights/orders'
@@ -555,6 +579,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/markups'
     | '/_authenticated/admin/processing'
     | '/_authenticated/admin/visa-products'
+    | '/_authenticated/admin/visa-queue'
     | '/_authenticated/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -562,6 +587,7 @@ export interface FileRouteTypes {
     | '/visa/track/$reference'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/applications/$id'
+    | '/_authenticated/admin/visa-queue/$id'
     | '/api/public/webhooks/fincra'
     | '/api/public/webhooks/stripe'
     | '/api/v1/flights/orders'
@@ -804,6 +830,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWithdrawalsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/visa-queue': {
+      id: '/_authenticated/admin/visa-queue'
+      path: '/visa-queue'
+      fullPath: '/admin/visa-queue'
+      preLoaderRoute: typeof AuthenticatedAdminVisaQueueRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/visa-products': {
       id: '/_authenticated/admin/visa-products'
       path: '/visa-products'
@@ -930,6 +963,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksFincraRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/visa-queue/$id': {
+      id: '/_authenticated/admin/visa-queue/$id'
+      path: '/$id'
+      fullPath: '/admin/visa-queue/$id'
+      preLoaderRoute: typeof AuthenticatedAdminVisaQueueIdRouteImport
+      parentRoute: typeof AuthenticatedAdminVisaQueueRoute
+    }
     '/_authenticated/admin/applications/$id': {
       id: '/_authenticated/admin/applications/$id'
       path: '/applications/$id'
@@ -940,10 +980,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminVisaQueueRouteChildren {
+  AuthenticatedAdminVisaQueueIdRoute: typeof AuthenticatedAdminVisaQueueIdRoute
+}
+
+const AuthenticatedAdminVisaQueueRouteChildren: AuthenticatedAdminVisaQueueRouteChildren =
+  {
+    AuthenticatedAdminVisaQueueIdRoute: AuthenticatedAdminVisaQueueIdRoute,
+  }
+
+const AuthenticatedAdminVisaQueueRouteWithChildren =
+  AuthenticatedAdminVisaQueueRoute._addFileChildren(
+    AuthenticatedAdminVisaQueueRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminMarkupsRoute: typeof AuthenticatedAdminMarkupsRoute
   AuthenticatedAdminProcessingRoute: typeof AuthenticatedAdminProcessingRoute
   AuthenticatedAdminVisaProductsRoute: typeof AuthenticatedAdminVisaProductsRoute
+  AuthenticatedAdminVisaQueueRoute: typeof AuthenticatedAdminVisaQueueRouteWithChildren
   AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminApplicationsIdRoute: typeof AuthenticatedAdminApplicationsIdRoute
@@ -953,6 +1008,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminMarkupsRoute: AuthenticatedAdminMarkupsRoute,
   AuthenticatedAdminProcessingRoute: AuthenticatedAdminProcessingRoute,
   AuthenticatedAdminVisaProductsRoute: AuthenticatedAdminVisaProductsRoute,
+  AuthenticatedAdminVisaQueueRoute:
+    AuthenticatedAdminVisaQueueRouteWithChildren,
   AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminApplicationsIdRoute: AuthenticatedAdminApplicationsIdRoute,
