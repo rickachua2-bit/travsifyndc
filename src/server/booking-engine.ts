@@ -197,18 +197,30 @@ export const publicSearchTours = createServerFn({ method: "POST" })
     query: z.string().min(2).max(100),
     date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    travelers: z.number().int().min(1).max(20).optional(),
     currency: z.string().length(3).optional(),
     display_currency: DisplayCurrencyEnum.optional(),
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
     const display = data.display_currency || "USD";
     try {
-      const res = await gygSearch(data);
-      const tours = await Promise.all(res.tours.map(async (t) => {
+      const normalized = await getOrScrapeTours({
+        destination: data.query,
+        date_from: data.date_from,
+        date_to: data.date_to,
+        travelers: data.travelers ?? 2,
+      });
+      const tours = await Promise.all(normalized.map(async (t) => {
         const price = await publicPrice("tours", t.price, t.currency, display);
-        // Strip booking_url — guests don't redirect.
-        const { booking_url: _omit, ...rest } = t;
-        return { ...rest, base_price: t.price, base_currency: t.currency, price: price.total, currency: price.currency, price_breakdown: price };
+        const { _internal_underwriter: _u, ...publicTour } = t;
+        return {
+          ...publicTour,
+          base_price: t.price,
+          base_currency: t.currency,
+          price: price.total,
+          currency: price.currency,
+          price_breakdown: price,
+        };
       }));
       return JSON.stringify({ tours, display_currency: display });
     } catch (err) {
