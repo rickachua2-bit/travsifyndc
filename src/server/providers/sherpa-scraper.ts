@@ -180,7 +180,7 @@ export async function runSherpaScrape(runId: string): Promise<void> {
   for (const c of VISA_CORRIDORS) {
     const corridorLabel = `${c.nationality_iso2}->${c.destination_iso2}`;
     try {
-      const visas = await scrapeOneCorridor(c);
+      const { visas } = await scrapeOneCorridor(c);
       scraped += 1;
 
       for (const v of visas) {
