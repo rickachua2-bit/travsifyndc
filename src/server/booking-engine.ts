@@ -243,14 +243,25 @@ export const publicSearchInsurance = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
     const display = data.display_currency || "USD";
-    const res = await swSearch({
-      ...data,
-      nationality: data.nationality.toUpperCase(),
-      destination: data.destination.toUpperCase(),
+    const nat = data.nationality.toUpperCase();
+    const dest = data.destination.toUpperCase();
+    const destCountry = findCountryByCode(dest);
+    const destinationName = destCountry?.name ?? (dest === "WW" ? "Worldwide" : dest);
+
+    const normalized = await getOrScrapeInsurance({
+      nationality_iso2: nat,
+      destination_iso2: dest,
+      destination_name: destinationName,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      travelers: data.travelers,
     });
-    const quotes = await Promise.all(res.quotes.map(async (q) => {
+
+    const quotes = await Promise.all(normalized.map(async (q) => {
       const price = await publicPrice("insurance", q.price, q.currency, display);
-      return { ...q, base_price: q.price, base_currency: q.currency, price: price.total, currency: price.currency, price_breakdown: price };
+      // Strip the internal underwriter field — never sent to clients.
+      const { _internal_underwriter: _u, ...publicQuote } = q;
+      return { ...publicQuote, base_price: q.price, base_currency: q.currency, price: price.total, currency: price.currency, price_breakdown: price };
     }));
     return JSON.stringify({ quotes, display_currency: display });
   });
