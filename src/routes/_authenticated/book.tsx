@@ -16,17 +16,8 @@ type HotelOffer = { id: string; name?: string; address?: string; stars?: number;
 function BookPage() {
   const [tab, setTab] = useState<"flights" | "hotels">("flights");
   return (
-    <div className="min-h-screen bg-surface">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <Link to="/"><Logo /></Link>
-          <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Dashboard
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-6 py-10">
+    <PartnerShell>
+      <div className="mx-auto max-w-7xl px-6 py-8">
         <h1 className="font-display text-3xl font-extrabold text-primary">Book — pay from wallet</h1>
         <p className="mt-1 text-sm text-muted-foreground">Search live inventory and pay instantly from your USD or NGN wallet.</p>
 
@@ -36,8 +27,8 @@ function BookPage() {
         </div>
 
         {tab === "flights" ? <FlightsPanel /> : <HotelsPanel />}
-      </main>
-    </div>
+      </div>
+    </PartnerShell>
   );
 }
 
