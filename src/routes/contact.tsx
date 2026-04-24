@@ -1,23 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Mail, Phone, MapPin, ArrowRight, Check, MessageSquare, Calendar, Briefcase } from "lucide-react";
+import { z } from "zod";
+import { Mail, Phone, MapPin, ArrowRight, Check, MessageSquare, Calendar, Briefcase, Loader2 } from "lucide-react";
 import { PageShell, PageHero } from "@/components/landing/PageShell";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/contact")({
   component: ContactPage,
   head: () => ({
     meta: [
       { title: "Contact us — Travsify NDC" },
-      {
-        name: "description",
-        content:
-          "Talk to Travsify NDC. Get API access, request a demo, or speak with our solutions engineers about scaling your travel business.",
-      },
+      { name: "description", content: "Talk to Travsify NDC. Get API access, request a demo, or speak with our solutions engineers about scaling your travel business." },
       { property: "og:title", content: "Contact Travsify — Let's build together" },
-      {
-        property: "og:description",
-        content: "Talk to sales, get API access or schedule a technical walkthrough.",
-      },
+      { property: "og:description", content: "Talk to sales, get API access or schedule a technical walkthrough." },
     ],
   }),
 });
@@ -28,13 +24,53 @@ const reasons = [
   { value: "support", label: "Technical question", icon: MessageSquare },
 ];
 
+const schema = z.object({
+  name: z.string().trim().min(2, "Required").max(80),
+  email: z.string().trim().email("Enter a valid email").max(255),
+  company: z.string().trim().max(120).optional(),
+  country: z.string().trim().max(80).optional(),
+  message: z.string().trim().min(10, "Please add a few more details").max(1000),
+});
+
 function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [reason, setReason] = useState("api");
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+  const [country, setCountry] = useState("");
+  const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+    const parsed = schema.safeParse({ name, email, company, country, message });
+    if (!parsed.success) {
+      const fe: Record<string, string> = {};
+      parsed.error.issues.forEach((i) => (fe[i.path[0] as string] = i.message));
+      setErrors(fe);
+      return;
+    }
+    setLoading(true);
+    const { data: sess } = await supabase.auth.getSession();
+    const userId = sess.session?.user?.id ?? null;
+    const { error } = await supabase.from("contact_submissions").insert({
+      user_id: userId,
+      name: parsed.data.name,
+      email: parsed.data.email,
+      company: parsed.data.company || null,
+      inquiry_type: reason,
+      message: parsed.data.message + (parsed.data.country ? `\n\nCountry: ${parsed.data.country}` : ""),
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setSubmitted(true);
+    toast.success("Message received");
   };
 
   return (
@@ -155,12 +191,12 @@ function ContactPage() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Full name" placeholder="Ada Lovelace" required />
-                  <Field label="Work email" placeholder="ada@company.com" type="email" required />
+                  <Field label="Full name" placeholder="Ada Lovelace" value={name} onChange={setName} error={errors.name} />
+                  <Field label="Work email" type="email" placeholder="ada@company.com" value={email} onChange={setEmail} error={errors.email} />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Company" placeholder="Travsify Travel Co." />
-                  <Field label="Country" placeholder="Nigeria" />
+                  <Field label="Company" placeholder="Travsify Travel Co." value={company} onChange={setCompany} error={errors.company} />
+                  <Field label="Country" placeholder="Nigeria" value={country} onChange={setCountry} error={errors.country} />
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -168,16 +204,24 @@ function ContactPage() {
                   </label>
                   <textarea
                     rows={4}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    maxLength={1000}
                     placeholder="What are you building? Expected monthly volume?"
-                    className="mt-2 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+                    className={`mt-2 w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 ${errors.message ? "border-destructive" : "border-border"}`}
                   />
+                  {errors.message && <p className="mt-1 text-xs font-medium text-destructive">{errors.message}</p>}
                 </div>
 
                 <button
                   type="submit"
-                  className="btn-glow group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition hover:opacity-95"
+                  disabled={loading}
+                  className="btn-glow group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition hover:opacity-95 disabled:opacity-60"
+                  style={{ boxShadow: "var(--shadow-accent)" }}
                 >
-                  Send message <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                    <>Send message <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>
+                  )}
                 </button>
                 <p className="text-center text-[11px] text-muted-foreground">
                   By submitting you agree to our terms. We never share your data.
@@ -192,16 +236,18 @@ function ContactPage() {
 }
 
 function Field({
-  label,
-  ...props
-}: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  label, value, onChange, error, ...props
+}: { label: string; value: string; onChange: (v: string) => void; error?: string } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
   return (
     <div>
       <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</label>
       <input
         {...props}
-        className="mt-2 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`mt-2 w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 ${error ? "border-destructive" : "border-border"}`}
       />
+      {error && <p className="mt-1 text-xs font-medium text-destructive">{error}</p>}
     </div>
   );
 }
