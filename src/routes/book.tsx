@@ -87,6 +87,7 @@ function BookPage() {
 }
 
 function FlightsFlow() {
+  const { currency: displayCurrency, format } = useCurrency();
   const [busy, setBusy] = useState(false);
   const [offers, setOffers] = useState<FlightOffer[]>([]);
   const [picked, setPicked] = useState<FlightOffer | null>(null);
@@ -103,6 +104,7 @@ function FlightsFlow() {
         children: payload.children,
         infants: payload.infants,
         cabin: payload.cabin,
+        display_currency: displayCurrency,
       } });
       const parsed = JSON.parse(json) as { offers: FlightOffer[] };
       setOffers(parsed.offers || []);
@@ -126,7 +128,8 @@ function FlightsFlow() {
     setCheckout({
       vertical: "flights",
       base_amount: picked.base_amount,
-      currency: picked.total_currency,
+      currency: picked.base_currency,                 // provider native currency for compose_price input
+      display_currency: displayCurrency,              // user's chosen settlement currency
       contact: { name: `${passenger.given_name} ${passenger.family_name}`, email: passenger.email, phone: passenger.phone_number },
       payload: { offer_id: picked.id, passengers: [passenger], provider_amount: picked.base_amount },
     });
