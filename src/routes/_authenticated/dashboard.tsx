@@ -292,7 +292,7 @@ function AwaitingApprovalBanner({ status, reason }: { status: string; reason: st
   );
 }
 
-function ChecklistTile({ to, icon: Icon, title, desc }: { to: "/api-keys" | "/wallet" | "/book" | "/docs" | "/contact"; icon: typeof KeyRound; title: string; desc: string }) {
+function ChecklistTile({ to, icon: Icon, title, desc }: { to: "/api-keys" | "/wallet" | "/dashboard-book" | "/docs" | "/contact"; icon: typeof KeyRound; title: string; desc: string }) {
   return (
     <Link to={to} className="hover-lift rounded-xl border border-border bg-surface p-4">
       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-deep text-white"><Icon className="h-5 w-5" /></div>
