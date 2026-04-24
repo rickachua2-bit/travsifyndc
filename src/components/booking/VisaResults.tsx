@@ -45,7 +45,7 @@ export function VisaResults({
             {destinationLabel !== "Any destination" && <> → {destinationLabel}</>}
           </h3>
           <p className="text-xs text-muted-foreground">All-inclusive pricing — government fees, processing & service.</p>
-          <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Fulfilled by Sherpa · ops-confirmed within hours</p>
+          <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Ops-confirmed within hours</p>
         </div>
       </div>
 
