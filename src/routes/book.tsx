@@ -429,6 +429,9 @@ function VisasFlow() {
   const [picked, setPicked] = useState<VisaProduct | null>(null);
   const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
+  // How many people are applying together. Each traveler pays the full visa
+  // fee (visas are per-person), so the total scales linearly.
+  const [travelerCount, setTravelerCount] = useState(1);
   const [emptyState, setEmptyState] = useState<{
     visaRequired: boolean | null;
     sherpaUrl: string | null;
