@@ -201,7 +201,7 @@ function DashboardPage() {
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <ChecklistTile to="/api-keys" icon={KeyRound} title="Grab your sandbox key" desc="Two lines of code, full feature parity." />
               <ChecklistTile to="/wallet" icon={WalletIcon} title="Fund your wallet" desc="Top-up USD or NGN to enable bookings." />
-              <ChecklistTile to="/book" icon={Sparkles} title="Make your first booking" desc="Search inventory and book in-app." />
+              <ChecklistTile to="/dashboard-book" icon={Sparkles} title="Make your first booking" desc="Search inventory and book in-app." />
             </div>
           </Card>
 
