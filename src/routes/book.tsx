@@ -42,7 +42,7 @@ function BookPage() {
       >
         {isAuthenticated && (
           <button
-            onClick={() => navigate({ to: "/book" as never })}
+            onClick={() => navigate({ to: "/dashboard-book" })}
             className="btn-glow inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground"
             style={{ boxShadow: "var(--shadow-accent)" }}
           >
