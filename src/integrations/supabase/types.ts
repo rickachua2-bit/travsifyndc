@@ -157,6 +157,54 @@ export type Database = {
           },
         ]
       }
+      bank_accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          bank_code: string | null
+          bank_name: string | null
+          country: string | null
+          created_at: string
+          currency: string
+          iban: string | null
+          id: string
+          is_default: boolean
+          routing_number: string | null
+          swift_code: string | null
+          user_id: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          bank_code?: string | null
+          bank_name?: string | null
+          country?: string | null
+          created_at?: string
+          currency: string
+          iban?: string | null
+          id?: string
+          is_default?: boolean
+          routing_number?: string | null
+          swift_code?: string | null
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          bank_code?: string | null
+          bank_name?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string
+          iban?: string | null
+          id?: string
+          is_default?: boolean
+          routing_number?: string | null
+          swift_code?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           api_key_id: string | null
@@ -258,6 +306,42 @@ export type Database = {
           message?: string
           name?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      fincra_virtual_accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          bank_code: string | null
+          bank_name: string
+          created_at: string
+          currency: string
+          provider_reference: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          bank_code?: string | null
+          bank_name: string
+          created_at?: string
+          currency?: string
+          provider_reference: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          bank_code?: string | null
+          bank_name?: string
+          created_at?: string
+          currency?: string
+          provider_reference?: string
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -481,6 +565,63 @@ export type Database = {
           },
         ]
       }
+      saved_cards: {
+        Row: {
+          brand: string | null
+          created_at: string
+          exp_month: number | null
+          exp_year: number | null
+          id: string
+          is_default: boolean
+          last4: string | null
+          provider: string
+          provider_payment_method_id: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          exp_month?: number | null
+          exp_year?: number | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          provider?: string
+          provider_payment_method_id: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          exp_month?: number | null
+          exp_year?: number | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          provider?: string
+          provider_payment_method_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stripe_customers: {
+        Row: {
+          created_at: string
+          stripe_customer_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          stripe_customer_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          stripe_customer_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -502,6 +643,176 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          booking_id: string | null
+          category: string
+          created_at: string
+          currency: string
+          description: string | null
+          direction: string
+          id: string
+          metadata: Json
+          provider: string | null
+          provider_reference: string | null
+          reference: string
+          status: string
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          booking_id?: string | null
+          category: string
+          created_at?: string
+          currency: string
+          description?: string | null
+          direction: string
+          id?: string
+          metadata?: Json
+          provider?: string | null
+          provider_reference?: string | null
+          reference: string
+          status?: string
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          booking_id?: string | null
+          category?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          direction?: string
+          id?: string
+          metadata?: Json
+          provider?: string | null
+          provider_reference?: string | null
+          reference?: string
+          status?: string
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          currency: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          currency: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      withdrawal_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          bank_account_id: string
+          created_at: string
+          currency: string
+          fee: number
+          id: string
+          net_amount: number
+          paid_at: string | null
+          provider: string | null
+          provider_reference: string | null
+          rejection_reason: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_account_id: string
+          created_at?: string
+          currency: string
+          fee?: number
+          id?: string
+          net_amount: number
+          paid_at?: string | null
+          provider?: string | null
+          provider_reference?: string | null
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_account_id?: string
+          created_at?: string
+          currency?: string
+          fee?: number
+          id?: string
+          net_amount?: number
+          paid_at?: string | null
+          provider?: string | null
+          provider_reference?: string | null
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawal_requests_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -513,6 +824,82 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      wallet_credit: {
+        Args: {
+          p_amount: number
+          p_booking_id?: string
+          p_category: string
+          p_currency: string
+          p_description?: string
+          p_metadata?: Json
+          p_provider?: string
+          p_provider_reference?: string
+          p_reference: string
+          p_user_id: string
+        }
+        Returns: {
+          amount: number
+          balance_after: number
+          booking_id: string | null
+          category: string
+          created_at: string
+          currency: string
+          description: string | null
+          direction: string
+          id: string
+          metadata: Json
+          provider: string | null
+          provider_reference: string | null
+          reference: string
+          status: string
+          user_id: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      wallet_debit: {
+        Args: {
+          p_amount: number
+          p_booking_id?: string
+          p_category: string
+          p_currency: string
+          p_description?: string
+          p_metadata?: Json
+          p_provider?: string
+          p_provider_reference?: string
+          p_reference: string
+          p_user_id: string
+        }
+        Returns: {
+          amount: number
+          balance_after: number
+          booking_id: string | null
+          category: string
+          created_at: string
+          currency: string
+          description: string | null
+          direction: string
+          id: string
+          metadata: Json
+          provider: string | null
+          provider_reference: string | null
+          reference: string
+          status: string
+          user_id: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
