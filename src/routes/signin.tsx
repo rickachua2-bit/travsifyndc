@@ -12,8 +12,8 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/signin")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    redirect: typeof s.redirect === "string" ? s.redirect : "/dashboard",
+  validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
   }),
   component: SignInPage,
   head: () => ({

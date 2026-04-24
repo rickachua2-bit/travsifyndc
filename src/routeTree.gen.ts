@@ -20,6 +20,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SdkJsRouteImport } from './routes/sdk.js'
+import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedPendingReviewRouteImport } from './routes/_authenticated/pending-review'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -33,6 +34,8 @@ import { Route as ApiV1HotelsSearchRouteImport } from './routes/api/v1/hotels.se
 import { Route as ApiV1HotelsBookingsRouteImport } from './routes/api/v1/hotels.bookings'
 import { Route as ApiV1FlightsSearchRouteImport } from './routes/api/v1/flights.search'
 import { Route as ApiV1FlightsOrdersRouteImport } from './routes/api/v1/flights.orders'
+import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks.stripe'
+import { Route as ApiPublicWebhooksFincraRouteImport } from './routes/api/public/webhooks.fincra'
 import { Route as AuthenticatedAdminApplicationsIdRouteImport } from './routes/_authenticated/admin/applications.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -88,6 +91,11 @@ const SdkJsRoute = SdkJsRouteImport.update({
   id: '/sdk/js',
   path: '/sdk/js',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPendingReviewRoute =
   AuthenticatedPendingReviewRouteImport.update({
@@ -155,6 +163,16 @@ const ApiV1FlightsOrdersRoute = ApiV1FlightsOrdersRouteImport.update({
   path: '/api/v1/flights/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
+  id: '/api/public/webhooks/stripe',
+  path: '/api/public/webhooks/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWebhooksFincraRoute = ApiPublicWebhooksFincraRouteImport.update({
+  id: '/api/public/webhooks/fincra',
+  path: '/api/public/webhooks/fincra',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminApplicationsIdRoute =
   AuthenticatedAdminApplicationsIdRouteImport.update({
     id: '/applications/$id',
@@ -176,12 +194,15 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
+  '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
   '/api/v1/flights/search': typeof ApiV1FlightsSearchRoute
   '/api/v1/hotels/bookings': typeof ApiV1HotelsBookingsRoute
@@ -201,12 +222,15 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
+  '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
   '/api/v1/flights/search': typeof ApiV1FlightsSearchRoute
   '/api/v1/hotels/bookings': typeof ApiV1HotelsBookingsRoute
@@ -229,12 +253,15 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
+  '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
   '/api/v1/flights/search': typeof ApiV1FlightsSearchRoute
   '/api/v1/hotels/bookings': typeof ApiV1HotelsBookingsRoute
@@ -257,12 +284,15 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kyc'
     | '/pending-review'
+    | '/wallet'
     | '/sdk/js'
     | '/api/public/demo-search'
     | '/api/v1/health'
     | '/api/v1/payouts'
     | '/admin/'
     | '/admin/applications/$id'
+    | '/api/public/webhooks/fincra'
+    | '/api/public/webhooks/stripe'
     | '/api/v1/flights/orders'
     | '/api/v1/flights/search'
     | '/api/v1/hotels/bookings'
@@ -282,12 +312,15 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kyc'
     | '/pending-review'
+    | '/wallet'
     | '/sdk/js'
     | '/api/public/demo-search'
     | '/api/v1/health'
     | '/api/v1/payouts'
     | '/admin'
     | '/admin/applications/$id'
+    | '/api/public/webhooks/fincra'
+    | '/api/public/webhooks/stripe'
     | '/api/v1/flights/orders'
     | '/api/v1/flights/search'
     | '/api/v1/hotels/bookings'
@@ -309,12 +342,15 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/kyc'
     | '/_authenticated/pending-review'
+    | '/_authenticated/wallet'
     | '/sdk/js'
     | '/api/public/demo-search'
     | '/api/v1/health'
     | '/api/v1/payouts'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/applications/$id'
+    | '/api/public/webhooks/fincra'
+    | '/api/public/webhooks/stripe'
     | '/api/v1/flights/orders'
     | '/api/v1/flights/search'
     | '/api/v1/hotels/bookings'
@@ -337,6 +373,8 @@ export interface RootRouteChildren {
   ApiPublicDemoSearchRoute: typeof ApiPublicDemoSearchRoute
   ApiV1HealthRoute: typeof ApiV1HealthRoute
   ApiV1PayoutsRoute: typeof ApiV1PayoutsRoute
+  ApiPublicWebhooksFincraRoute: typeof ApiPublicWebhooksFincraRoute
+  ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
   ApiV1FlightsOrdersRoute: typeof ApiV1FlightsOrdersRoute
   ApiV1FlightsSearchRoute: typeof ApiV1FlightsSearchRoute
   ApiV1HotelsBookingsRoute: typeof ApiV1HotelsBookingsRoute
@@ -422,6 +460,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sdk/js'
       preLoaderRoute: typeof SdkJsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/wallet': {
+      id: '/_authenticated/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/pending-review': {
       id: '/_authenticated/pending-review'
@@ -514,6 +559,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1FlightsOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/stripe': {
+      id: '/api/public/webhooks/stripe'
+      path: '/api/public/webhooks/stripe'
+      fullPath: '/api/public/webhooks/stripe'
+      preLoaderRoute: typeof ApiPublicWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/fincra': {
+      id: '/api/public/webhooks/fincra'
+      path: '/api/public/webhooks/fincra'
+      fullPath: '/api/public/webhooks/fincra'
+      preLoaderRoute: typeof ApiPublicWebhooksFincraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/applications/$id': {
       id: '/_authenticated/admin/applications/$id'
       path: '/applications/$id'
@@ -542,6 +601,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedPendingReviewRoute: typeof AuthenticatedPendingReviewRoute
+  AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -549,6 +609,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedPendingReviewRoute: AuthenticatedPendingReviewRoute,
+  AuthenticatedWalletRoute: AuthenticatedWalletRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -570,6 +631,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDemoSearchRoute: ApiPublicDemoSearchRoute,
   ApiV1HealthRoute: ApiV1HealthRoute,
   ApiV1PayoutsRoute: ApiV1PayoutsRoute,
+  ApiPublicWebhooksFincraRoute: ApiPublicWebhooksFincraRoute,
+  ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
   ApiV1FlightsOrdersRoute: ApiV1FlightsOrdersRoute,
   ApiV1FlightsSearchRoute: ApiV1FlightsSearchRoute,
   ApiV1HotelsBookingsRoute: ApiV1HotelsBookingsRoute,
@@ -579,3 +642,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
