@@ -512,7 +512,58 @@ function VisasFlow() {
     <>
       <VisaSearchForm busy={busy} onSubmit={search} />
 
-      {busy && <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading visa options…</div>}
+      {busy && (
+        <div className="mt-6 rounded-xl border border-border bg-white p-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" /> Checking visa requirements & live pricing…
+          </div>
+          <p className="mt-1 text-xs">First lookup for a new corridor takes ~10–20 seconds while we fetch fresh data from Sherpa.</p>
+        </div>
+      )}
+
+      {!busy && emptyState && searchMeta && (
+        <div className="mt-6 rounded-xl border border-border bg-white p-6 text-sm">
+          {emptyState.visaRequired === false ? (
+            <>
+              <h3 className="font-display text-base font-extrabold text-primary">
+                Good news — no visa needed
+              </h3>
+              <p className="mt-1 text-muted-foreground">
+                {searchMeta.nationality_name} passport holders can usually enter {searchMeta.destination_name} visa-free or get a visa on arrival. No application is required through us.
+              </p>
+              {emptyState.sherpaUrl && (
+                <a
+                  href={emptyState.sherpaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline"
+                >
+                  Verify on Sherpa →
+                </a>
+              )}
+            </>
+          ) : (
+            <>
+              <h3 className="font-display text-base font-extrabold text-primary">
+                No visa products available for this corridor yet
+              </h3>
+              <p className="mt-1 text-muted-foreground">
+                We couldn't find any purchasable visa for {searchMeta.nationality_name} → {searchMeta.destination_name} via our partner. This usually means it isn't an e-visa corridor (you'd need to apply directly at the embassy) or our data source doesn't list it.
+              </p>
+              {emptyState.sherpaUrl && (
+                <a
+                  href={emptyState.sherpaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline"
+                >
+                  Check requirements on Sherpa →
+                </a>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {!picked && products.length > 0 && searchMeta && (
         <VisaResults
