@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Plane, Hotel, Inbox, Search } from "lucide-react";
-import { Logo } from "@/components/landing/Logo";
+import { Plane, Hotel, Inbox, Search } from "lucide-react";
 import { myBookings } from "@/server/dashboard.functions";
+import { PartnerShell } from "@/components/partner/PartnerShell";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   component: BookingsPage,
