@@ -13,16 +13,41 @@ import { VISA_CORRIDORS, buildSherpaUrl, type Corridor } from "@/server/data/vis
 
 const FIRECRAWL_URL = "https://api.firecrawl.dev/v2/scrape";
 
-// Extraction schema we ask the LLM to populate from each page.
+// JSON schema we ask Firecrawl to populate. A schema is more reliable than a
+// prose prompt because the LLM can't drift on key names.
+const EXTRACTION_SCHEMA = {
+  type: "object",
+  properties: {
+    visa_options: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          visa_type: { type: "string", description: "tourist, business, or transit" },
+          entry_type: { type: "string", description: "single or multiple" },
+          validity_days: { type: "number" },
+          max_stay_days: { type: "number" },
+          processing_days_min: { type: "number" },
+          processing_days_max: { type: "number" },
+          price_usd: { type: "number", description: "Customer-facing visa fee in USD" },
+          required_documents: { type: "array", items: { type: "string" } },
+          short_description: { type: "string" },
+        },
+      },
+    },
+    visa_required: {
+      type: "boolean",
+      description: "True if a visa is required for this nationality to enter this destination. False if visa-free / visa-on-arrival without a Sherpa product.",
+    },
+  },
+  required: ["visa_options"],
+};
+
 const EXTRACTION_PROMPT =
-  "Extract every visa option offered on this page. For each visa return: " +
-  "name (string), visa_type (one of: tourist, business, transit), " +
-  "entry_type (one of: single, multiple), validity_days (integer), " +
-  "max_stay_days (integer), processing_days_min (integer), processing_days_max (integer), " +
-  "price_usd (number, the customer-facing visa fee in USD), " +
-  "required_documents (array of short plain-English strings, max 8), " +
-  "short_description (one sentence). " +
-  "If a value is not stated on the page, omit it. Return an empty list if no visas are sold.";
+  "Read the page and populate visa_options with EVERY purchasable visa product Sherpa sells here. " +
+  "If the page indicates the traveller doesn't need a visa (visa-free, visa-on-arrival, or no products available), " +
+  "set visa_required=false and return an empty visa_options array.";
 
 type ExtractedVisa = {
   name?: string;
