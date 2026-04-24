@@ -3,6 +3,7 @@ import { z } from "zod";
 import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
 import { searchFlights } from "@/server/providers/duffel";
 import { ndcSearch, isNdcEnabled } from "@/server/providers/ndc";
+import { composePrice } from "@/server/bookings";
 
 const Schema = z.object({
   origin: z.string().trim().length(3).regex(/^[A-Z]{3}$/i),
@@ -45,12 +46,32 @@ export const Route = createFileRoute("/api/v1/flights/search")({
             return errorResponse("supplier_error", (duffelRes.reason as Error).message, 502);
           }
 
+          // Apply two-tier markup so partners see customer-facing totals.
+          const allOffers = [
+            ...duffelOffers.map((o) => ({ ...o, source: "duffel" })),
+            ...ndcOffers.map((o) => ({ ...o, source: "ndc" })),
+          ];
+          const priced = await Promise.all(allOffers.map(async (o) => {
+            const baseAmount = Number((o as Record<string, unknown>).total_amount);
+            const currency = String((o as Record<string, unknown>).total_currency || "USD");
+            if (!Number.isFinite(baseAmount) || baseAmount <= 0) return o;
+            const price = await composePrice({
+              partnerId: key.userId,
+              vertical: "flights",
+              providerBase: baseAmount,
+              currency,
+            });
+            return {
+              ...o,
+              base_amount: baseAmount.toFixed(2),
+              total_amount: price.total.toFixed(2),
+              price_breakdown: price,
+            };
+          }));
+
           return jsonResponse({
             data: {
-              flights: [
-                ...duffelOffers.map((o) => ({ ...o, source: "duffel" })),
-                ...ndcOffers.map((o) => ({ ...o, source: "ndc" })),
-              ],
+              flights: priced,
               suppliers_called: ["duffel", ...(isNdcEnabled() ? ["ndc"] : [])],
             },
           });
