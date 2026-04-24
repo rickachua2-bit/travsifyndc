@@ -56,6 +56,178 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          environment: string
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string | null
+          rate_limit_per_minute: number
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          environment: string
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name?: string | null
+          rate_limit_per_minute?: number
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string | null
+          rate_limit_per_minute?: number
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      api_logs: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          endpoint: string
+          environment: string
+          error_code: string | null
+          id: string
+          ip_address: string | null
+          latency_ms: number | null
+          method: string
+          provider: string | null
+          request_id: string | null
+          status_code: number
+          user_agent: string | null
+          user_id: string | null
+          vertical: string | null
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          endpoint: string
+          environment: string
+          error_code?: string | null
+          id?: string
+          ip_address?: string | null
+          latency_ms?: number | null
+          method: string
+          provider?: string | null
+          request_id?: string | null
+          status_code: number
+          user_agent?: string | null
+          user_id?: string | null
+          vertical?: string | null
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          endpoint?: string
+          environment?: string
+          error_code?: string | null
+          id?: string
+          ip_address?: string | null
+          latency_ms?: number | null
+          method?: string
+          provider?: string | null
+          request_id?: string | null
+          status_code?: number
+          user_agent?: string | null
+          user_id?: string | null
+          vertical?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_logs_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookings: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          environment: string
+          id: string
+          margin_amount: number
+          metadata: Json
+          provider: string
+          provider_reference: string | null
+          reference: string
+          status: string
+          stripe_payment_intent: string | null
+          total_amount: number
+          updated_at: string
+          user_id: string
+          vertical: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          environment: string
+          id?: string
+          margin_amount?: number
+          metadata?: Json
+          provider: string
+          provider_reference?: string | null
+          reference: string
+          status?: string
+          stripe_payment_intent?: string | null
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+          vertical: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          environment?: string
+          id?: string
+          margin_amount?: number
+          metadata?: Json
+          provider?: string
+          provider_reference?: string | null
+          reference?: string
+          status?: string
+          stripe_payment_intent?: string | null
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+          vertical?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_submissions: {
         Row: {
           company: string | null
@@ -142,6 +314,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      payouts: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json
+          provider: string
+          provider_reference: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          booking_id?: string | null
+          created_at?: string
+          currency: string
+          id?: string
+          metadata?: Json
+          provider?: string
+          provider_reference?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json
+          provider?: string
+          provider_reference?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -232,6 +454,32 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      rate_limit_buckets: {
+        Row: {
+          api_key_id: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          api_key_id: string
+          request_count?: number
+          window_start: string
+        }
+        Update: {
+          api_key_id?: string
+          request_count?: number
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_limit_buckets_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
