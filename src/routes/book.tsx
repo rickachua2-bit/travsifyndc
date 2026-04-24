@@ -423,3 +423,130 @@ function ToursFlow() {
     </>
   );
 }
+
+function VisasFlow() {
+  const { currency: displayCurrency, format } = useCurrency();
+  const [busy, setBusy] = useState(false);
+  const [products, setProducts] = useState<VisaProduct[]>([]);
+  const [searchMeta, setSearchMeta] = useState<VisaSearchPayload | null>(null);
+  const [picked, setPicked] = useState<VisaProduct | null>(null);
+  const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
+  const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
+
+  async function search(payload: VisaSearchPayload) {
+    setSearchMeta(payload);
+    setBusy(true); setProducts([]); setPicked(null); setCheckoutInput(null); setDone(null);
+    try {
+      const json = await publicSearchVisaProducts({ data: {
+        nationality: payload.nationality,
+        destination: payload.destination || undefined,
+        display_currency: displayCurrency,
+      } });
+      const parsed = JSON.parse(json) as { products: VisaProduct[]; error?: string };
+      setProducts(parsed.products || []);
+      if (parsed.error) toast.error(parsed.error);
+      else if (!parsed.products?.length) toast.message("No visa corridors available for this combination yet");
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  function startCheckout(form: HTMLFormElement) {
+    if (!picked) return;
+    const fd = new FormData(form);
+    const applicant = {
+      firstName: String(fd.get("first_name")),
+      lastName: String(fd.get("last_name")),
+      email: String(fd.get("email")),
+      phone: String(fd.get("phone")),
+      dateOfBirth: String(fd.get("dob")),
+      passportNumber: String(fd.get("passport_no")),
+      passportExpiry: String(fd.get("passport_expiry")),
+      nationality: picked.nationality,
+    };
+    const travelDates = {
+      arrival: String(fd.get("arrival") || ""),
+      departure: String(fd.get("departure") || ""),
+    };
+    setCheckoutInput({
+      vertical: "visas",
+      base_amount: picked.base_price,
+      currency: picked.base_currency,
+      display_currency: displayCurrency,
+      contact: { name: `${applicant.firstName} ${applicant.lastName}`, email: applicant.email, phone: applicant.phone },
+      payload: {
+        visa_product_id: picked.id,
+        visa_type: picked.visa_type,
+        destination: picked.destination,
+        destination_name: picked.destination_name,
+        nationality: picked.nationality,
+        nationality_name: picked.nationality_name,
+        applicant,
+        travel_dates: travelDates,
+        sherpa_url: picked.sherpa_url,
+        provider_amount: picked.base_price,
+      },
+    });
+  }
+
+  if (done) {
+    return <ConfirmationScreen {...done} vertical="visas" fulfillment="manual" onReset={() => { setDone(null); setProducts([]); setPicked(null); setCheckoutInput(null); }} />;
+  }
+  if (checkout) {
+    return <GuestCheckout input={checkout} onCancel={() => setCheckoutInput(null)} onSuccess={(r) => { setDone(r); setCheckoutInput(null); }} />;
+  }
+
+  const todayPlus = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return d.toISOString().slice(0, 10); };
+
+  return (
+    <>
+      <VisaSearchForm busy={busy} onSubmit={search} />
+
+      {busy && <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading visa options…</div>}
+
+      {!picked && products.length > 0 && searchMeta && (
+        <VisaResults
+          products={products}
+          nationalityLabel={searchMeta.nationality_name}
+          destinationLabel={searchMeta.destination_name}
+          format={format}
+          onSelect={(p) => setPicked(p)}
+        />
+      )}
+
+      {picked && (
+        <form
+          onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
+          className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
+          style={{ boxShadow: "var(--shadow-soft)" }}
+        >
+          <div className="col-span-full flex items-start justify-between gap-3 border-b border-border pb-3">
+            <div>
+              <h3 className="font-display text-base font-bold text-primary">Applicant details</h3>
+              <p className="text-xs text-muted-foreground">{picked.destination_name} {picked.visa_type} · processing {picked.processing_days_min}–{picked.processing_days_max} days</p>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
+              <div className="font-display text-lg font-extrabold text-primary">{format(picked.price, picked.currency)}</div>
+            </div>
+          </div>
+          <Field label="First name (as on passport)"><input name="first_name" required className={inputCls} /></Field>
+          <Field label="Last name (as on passport)"><input name="last_name" required className={inputCls} /></Field>
+          <Field label="Date of birth"><input name="dob" type="date" required max={todayPlus(-365 * 16)} className={inputCls} /></Field>
+          <Field label="Passport number"><input name="passport_no" required minLength={4} maxLength={20} className={inputCls} /></Field>
+          <Field label="Passport expiry date"><input name="passport_expiry" type="date" required min={todayPlus(180)} className={inputCls} /></Field>
+          <Field label="Email (eVisa destination)"><input name="email" type="email" required className={inputCls} /></Field>
+          <Field label="Phone"><input name="phone" required placeholder="+234 800 000 0000" className={inputCls} /></Field>
+          <Field label="Intended arrival date"><input name="arrival" type="date" required min={todayPlus(picked.processing_days_max)} className={inputCls} /></Field>
+          <Field label="Intended departure date"><input name="departure" type="date" required className={inputCls} /></Field>
+          <div className="col-span-full rounded-md bg-surface p-3 text-xs text-muted-foreground">
+            <strong className="text-foreground">Heads up:</strong> Visa applications are reviewed and submitted to the issuing authority by our ops team within 24 hours. Your eVisa PDF will be emailed to you in {picked.processing_days_min}–{picked.processing_days_max} business days. We'll request additional documents (photo, supporting letters) by email if needed.
+          </div>
+          <div className="col-span-full flex gap-2">
+            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
+            <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
+          </div>
+        </form>
+      )}
+    </>
+  );
+}
