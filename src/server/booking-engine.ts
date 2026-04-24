@@ -100,11 +100,13 @@ export const publicSearchFlights = createServerFn({ method: "POST" })
       destination: z.string().length(3),
       departure_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     })).min(1).max(6).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).refine(
     (v) => (v.slices && v.slices.length > 0) || (v.origin && v.destination && v.departure_date),
     { message: "Provide either slices[] or origin+destination+departure_date" },
   ).parse(d))
   .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
     const res = await duffelSearch("live", {
       origin: data.origin || data.slices?.[0]?.origin || "",
       destination: data.destination || data.slices?.[0]?.destination || "",
@@ -119,16 +121,17 @@ export const publicSearchFlights = createServerFn({ method: "POST" })
     const offers = await Promise.all(res.offers.map(async (o) => {
       const base = Number(o.total_amount);
       const ccy = String(o.total_currency || "USD");
-      const price = await publicPrice("flights", base, ccy);
+      const price = await publicPrice("flights", base, ccy, display);
       return {
         ...o,
-        base_amount: base,
+        base_amount: base,         // provider native (for booking call)
+        base_currency: ccy,        // provider native currency
         total_amount: String(price.total),
-        total_currency: ccy,
+        total_currency: price.currency,
         price_breakdown: price,
       };
     }));
-    return JSON.stringify({ offers });
+    return JSON.stringify({ offers, display_currency: display });
   });
 
 export const publicSearchHotels = createServerFn({ method: "POST" })
@@ -140,15 +143,17 @@ export const publicSearchHotels = createServerFn({ method: "POST" })
     adults: z.number().int().min(1).max(8),
     children: z.number().int().min(0).max(6).optional(),
     currency: z.string().length(3).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).refine((v) => v.city_code || v.country_code, { message: "city_code or country_code required" }).parse(d))
   .handler(async ({ data }): Promise<string> => {
-    const res = await liteapiSearch(data);
+    const display = data.display_currency || "USD";
+    const res = await liteapiSearch({ ...data, currency: data.currency || "USD" });
     const hotels = await Promise.all(res.hotels.map(async (h) => {
       if (!h.price) return { ...h, price_breakdown: null };
-      const price = await publicPrice("hotels", Number(h.price), h.currency || "USD");
-      return { ...h, base_price: h.price, price: price.total, price_breakdown: price };
+      const price = await publicPrice("hotels", Number(h.price), h.currency || "USD", display);
+      return { ...h, base_price: h.price, base_currency: h.currency || "USD", price: price.total, currency: price.currency, price_breakdown: price };
     }));
-    return JSON.stringify({ hotels });
+    return JSON.stringify({ hotels, display_currency: display });
   });
 
 export const publicSearchTours = createServerFn({ method: "POST" })
@@ -157,16 +162,18 @@ export const publicSearchTours = createServerFn({ method: "POST" })
     date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     currency: z.string().length(3).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
     const res = await gygSearch(data);
     const tours = await Promise.all(res.tours.map(async (t) => {
-      const price = await publicPrice("tours", t.price, t.currency);
+      const price = await publicPrice("tours", t.price, t.currency, display);
       // Strip booking_url — guests don't redirect.
       const { booking_url: _omit, ...rest } = t;
-      return { ...rest, base_price: t.price, price: price.total, price_breakdown: price };
+      return { ...rest, base_price: t.price, base_currency: t.currency, price: price.total, currency: price.currency, price_breakdown: price };
     }));
-    return JSON.stringify({ tours });
+    return JSON.stringify({ tours, display_currency: display });
   });
 
 export const publicSearchTransfers = createServerFn({ method: "POST" })
@@ -176,14 +183,16 @@ export const publicSearchTransfers = createServerFn({ method: "POST" })
     pickup_datetime: z.string().min(10).max(40),
     num_passengers: z.number().int().min(1).max(20),
     currency: z.string().length(3).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
     const res = await mozioSearch(data);
     const quotes = await Promise.all(res.quotes.map(async (q) => {
-      const price = await publicPrice("transfers", q.total_price, q.currency);
-      return { ...q, base_price: q.total_price, total_price: price.total, price_breakdown: price };
+      const price = await publicPrice("transfers", q.total_price, q.currency, display);
+      return { ...q, base_price: q.total_price, base_currency: q.currency, total_price: price.total, currency: price.currency, price_breakdown: price };
     }));
-    return JSON.stringify({ quotes });
+    return JSON.stringify({ quotes, display_currency: display });
   });
 
 export const publicSearchInsurance = createServerFn({ method: "POST" })
@@ -194,18 +203,20 @@ export const publicSearchInsurance = createServerFn({ method: "POST" })
     end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     travelers: z.array(z.object({ age: z.number().int().min(0).max(120) })).min(1).max(10),
     coverage_type: z.enum(["nomad", "trip", "remote_health"]).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
     const res = await swSearch({
       ...data,
       nationality: data.nationality.toUpperCase(),
       destination: data.destination.toUpperCase(),
     });
     const quotes = await Promise.all(res.quotes.map(async (q) => {
-      const price = await publicPrice("insurance", q.price, q.currency);
-      return { ...q, base_price: q.price, price: price.total, price_breakdown: price };
+      const price = await publicPrice("insurance", q.price, q.currency, display);
+      return { ...q, base_price: q.price, base_currency: q.currency, price: price.total, currency: price.currency, price_breakdown: price };
     }));
-    return JSON.stringify({ quotes });
+    return JSON.stringify({ quotes, display_currency: display });
   });
 
 export const publicSearchVisas = createServerFn({ method: "POST" })
@@ -213,18 +224,20 @@ export const publicSearchVisas = createServerFn({ method: "POST" })
     nationality: z.string().length(2),
     destination: z.string().length(2),
     purpose: z.enum(["tourism", "business", "transit"]).optional(),
+    display_currency: DisplayCurrencyEnum.optional(),
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
     const res = await sherpaSearch({
       nationality: data.nationality.toUpperCase(),
       destination: data.destination.toUpperCase(),
       purpose: data.purpose,
     });
     const options = await Promise.all(res.options.map(async (v) => {
-      const price = await publicPrice("visas", v.price, v.currency);
-      return { ...v, base_price: v.price, price: price.total, price_breakdown: price };
+      const price = await publicPrice("visas", v.price, v.currency, display);
+      return { ...v, base_price: v.price, base_currency: v.currency, price: price.total, currency: price.currency, price_breakdown: price };
     }));
-    return JSON.stringify({ options });
+    return JSON.stringify({ options, display_currency: display });
   });
 
 // =============================================================
