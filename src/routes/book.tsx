@@ -11,10 +11,12 @@ import { FlightSearchForm, type FlightSearchPayload } from "@/components/booking
 import { FlightResults, type FlightOffer } from "@/components/booking/FlightResults";
 import { HotelSearchForm, type HotelSearchPayload } from "@/components/booking/HotelSearchForm";
 import { HotelResults, type Hotel } from "@/components/booking/HotelResults";
+import { TourSearchForm, type TourSearchPayload } from "@/components/booking/TourSearchForm";
+import { TourResults, type Tour } from "@/components/booking/TourResults";
 import { findCityByCode } from "@/data/cities";
 import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/components/booking/GuestCheckout";
 import { CurrencySwitcher } from "@/components/booking/CurrencySwitcher";
-import { publicSearchFlights, publicSearchHotels } from "@/server/booking-engine";
+import { publicSearchFlights, publicSearchHotels, publicSearchTours } from "@/server/booking-engine";
 
 export const Route = createFileRoute("/book")({
   component: BookPage,
