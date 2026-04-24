@@ -486,10 +486,10 @@ function VisasFlow() {
   }
 
   if (done) {
-    return <ConfirmationScreen {...done} vertical="visas" fulfillment="manual" onReset={() => { setDone(null); setProducts([]); setPicked(null); setCheckoutInput(null); }} />;
+    return <ConfirmationScreen {...done} vertical="visas" fulfillment="manual" customerEmail={checkout?.contact.email} onReset={() => { setDone(null); setProducts([]); setPicked(null); setCheckoutInput(null); }} />;
   }
   if (checkout) {
-    return <GuestCheckout input={checkout} onCancel={() => setCheckoutInput(null)} onSuccess={(r) => { setDone(r); setCheckoutInput(null); }} />;
+    return <GuestCheckout input={checkout} onCancel={() => setCheckoutInput(null)} onSuccess={(r) => { setDone(r); /* keep checkout state for email */ }} />;
   }
 
   const todayPlus = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return d.toISOString().slice(0, 10); };
