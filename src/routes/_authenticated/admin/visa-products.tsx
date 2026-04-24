@@ -83,10 +83,10 @@ function VisaProductsAdmin() {
     pollRef.current = setInterval(async () => {
       try {
         const { run } = await getRun({ data: { id: scrape.id } });
-        setScrape(run as ScrapeRun);
-        if ((run as ScrapeRun).status !== "running") {
+        setScrape(run as unknown as ScrapeRun);
+        if ((run as unknown as ScrapeRun).status !== "running") {
           await refresh();
-          toast.success(`Scrape complete: ${(run as ScrapeRun).upserted_count} products upserted`);
+          toast.success(`Scrape complete: ${(run as unknown as ScrapeRun).upserted_count} products upserted`);
         }
       } catch { /* keep polling */ }
     }, 3000);
@@ -100,7 +100,7 @@ function VisaProductsAdmin() {
     try {
       const r = await startScrape();
       const { run } = await getRun({ data: { id: r.run_id } });
-      setScrape(run as ScrapeRun);
+      setScrape(run as unknown as ScrapeRun);
       toast.message(r.already_running ? "A scrape is already running — attached to it." : `Started: ${r.total_corridors} corridors queued`);
     } catch (e) { toast.error((e as Error).message); }
     finally { setScrapeLoading(false); }
