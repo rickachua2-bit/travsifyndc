@@ -36,6 +36,7 @@ interface Result {
 }
 
 function DemoPage() {
+  const { isAuthenticated } = useAuth();
   const [tab, setTab] = useState<Vertical>("flights");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Result[] | null>(null);
