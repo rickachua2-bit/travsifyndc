@@ -1,26 +1,63 @@
-import { Logo } from "./Logo";
+import { Link } from "@tanstack/react-router";
 import { Twitter, Linkedin, Github, Youtube } from "lucide-react";
+import { Logo } from "./Logo";
 
-const cols = [
-  { title: "Product", links: ["APIs", "Documentation", "Status"] },
-  { title: "Company", links: ["About Us", "Careers", "Press"] },
-  { title: "Resources", links: ["Guides", "Changelog", "Blog", "Support"] },
-  { title: "Legal", links: ["Privacy Policy", "Terms of Service", "Data Protection"] },
+const cols: { title: string; links: { label: string; to: "/developers" | "/docs" | "/demo" | "/contact" | "/" }[] }[] = [
+  {
+    title: "Platform",
+    links: [
+      { label: "Developers", to: "/developers" },
+      { label: "Documentation", to: "/docs" },
+      { label: "Live Demo", to: "/demo" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "Contact us", to: "/contact" },
+      { label: "Home", to: "/" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "API Reference", to: "/docs" },
+      { label: "Sandbox", to: "/developers" },
+      { label: "Status", to: "/docs" },
+    ],
+  },
+  {
+    title: "Get started",
+    links: [
+      { label: "Book a demo", to: "/demo" },
+      { label: "Talk to sales", to: "/contact" },
+    ],
+  },
 ];
 
 export function Footer() {
   return (
-    <footer className="bg-primary-deep py-16 text-white">
-      <div className="mx-auto max-w-7xl px-6">
+    <footer className="relative overflow-hidden bg-primary-deep py-16 text-white">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 right-0 h-[420px] w-[420px] rounded-full opacity-30 blur-3xl"
+        style={{ background: "var(--gradient-accent)" }}
+      />
+      <div className="relative mx-auto max-w-7xl px-6">
         <div className="grid gap-10 lg:grid-cols-[1.5fr_3fr]">
           <div>
             <Logo invert />
             <p className="mt-4 max-w-xs text-sm text-white/60">
-              The complete travel infrastructure for the world.
+              The travel infrastructure powering the next billion bookings — built for Africa, ready for the world.
             </p>
             <div className="mt-6 flex gap-3">
               {[Twitter, Linkedin, Github, Youtube].map((Ic, i) => (
-                <a key={i} href="#" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/70 transition hover:bg-accent hover:text-white">
+                <a
+                  key={i}
+                  href="#"
+                  aria-label="Social link"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/70 transition hover:scale-110 hover:bg-accent hover:text-white"
+                >
                   <Ic className="h-4 w-4" />
                 </a>
               ))}
@@ -31,14 +68,24 @@ export function Footer() {
               <div key={c.title}>
                 <div className="mb-4 font-display text-sm font-bold text-white">{c.title}</div>
                 <ul className="space-y-2 text-sm text-white/60">
-                  {c.links.map((l) => <li key={l}><a href="#" className="hover:text-accent">{l}</a></li>)}
+                  {c.links.map((l) => (
+                    <li key={l.label}>
+                      <Link to={l.to} className="transition hover:text-accent">
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}
           </div>
         </div>
-        <div className="mt-12 border-t border-white/10 pt-6 text-center text-xs text-white/50">
-          © 2024 Travsify NDC. All rights reserved.
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row">
+          <div>© {new Date().getFullYear()} Travsify NDC. All rights reserved.</div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-2 w-2 animate-pulse-glow rounded-full bg-success" />
+            All systems operational
+          </div>
         </div>
       </div>
     </footer>
