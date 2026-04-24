@@ -11,10 +11,12 @@ import { FlightSearchForm, type FlightSearchPayload } from "@/components/booking
 import { FlightResults, type FlightOffer } from "@/components/booking/FlightResults";
 import { HotelSearchForm, type HotelSearchPayload } from "@/components/booking/HotelSearchForm";
 import { HotelResults, type Hotel } from "@/components/booking/HotelResults";
+import { TourSearchForm, type TourSearchPayload } from "@/components/booking/TourSearchForm";
+import { TourResults, type Tour } from "@/components/booking/TourResults";
 import { findCityByCode } from "@/data/cities";
 import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/components/booking/GuestCheckout";
 import { CurrencySwitcher } from "@/components/booking/CurrencySwitcher";
-import { publicSearchFlights, publicSearchHotels } from "@/server/booking-engine";
+import { publicSearchFlights, publicSearchHotels, publicSearchTours } from "@/server/booking-engine";
 
 export const Route = createFileRoute("/book")({
   component: BookPage,
@@ -70,7 +72,8 @@ function BookPage() {
           </div>
           {tab === "flights" && <FlightsFlow />}
           {tab === "hotels" && <HotelsFlow />}
-          {tab !== "flights" && tab !== "hotels" && (
+          {tab === "tours" && <ToursFlow />}
+          {tab !== "flights" && tab !== "hotels" && tab !== "tours" && (
             <div className="rounded-2xl border border-dashed border-border bg-white p-10 text-center">
               <div className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent/15"><vertical.icon className="h-5 w-5 text-accent" /></div>
               <h3 className="mt-3 font-display text-lg font-bold text-primary">{vertical.label} checkout — opening soon</h3>
@@ -286,6 +289,127 @@ function HotelsFlow() {
           <Field label="Last name"><input name="last_name" required className={inputCls} /></Field>
           <Field label="Email (voucher destination)"><input name="email" type="email" required className={inputCls} /></Field>
           <Field label="Phone"><input name="phone" required placeholder="+234 800 000 0000" className={inputCls} /></Field>
+          <div className="col-span-full flex gap-2">
+            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
+            <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
+          </div>
+        </form>
+      )}
+    </>
+  );
+}
+
+function ToursFlow() {
+  const { currency: displayCurrency, format } = useCurrency();
+  const [busy, setBusy] = useState(false);
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [destLabel, setDestLabel] = useState("");
+  const [searchMeta, setSearchMeta] = useState<{ adults: number; children: number; date_from: string; date_to: string } | null>(null);
+  const [picked, setPicked] = useState<Tour | null>(null);
+  const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
+  const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
+
+  async function search(payload: TourSearchPayload) {
+    setDestLabel(payload.destination_label);
+    setSearchMeta({ adults: payload.adults, children: payload.children, date_from: payload.date_from, date_to: payload.date_to });
+    setBusy(true); setTours([]); setPicked(null); setCheckoutInput(null); setDone(null);
+    try {
+      const json = await publicSearchTours({ data: {
+        query: payload.query,
+        date_from: payload.date_from,
+        date_to: payload.date_to,
+        currency: "USD",
+        display_currency: displayCurrency,
+      } });
+      const parsed = JSON.parse(json) as { tours: Tour[]; error?: string };
+      setTours(parsed.tours || []);
+      if (parsed.error) toast.error(parsed.error);
+      else if (!parsed.tours?.length) toast.message("No experiences for those dates");
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  function startCheckout(form: HTMLFormElement) {
+    if (!picked || !searchMeta) return;
+    const fd = new FormData(form);
+    const lead = {
+      firstName: String(fd.get("first_name")),
+      lastName: String(fd.get("last_name")),
+      email: String(fd.get("email")),
+      phone: String(fd.get("phone")),
+    };
+    const tourDate = String(fd.get("tour_date") || searchMeta.date_from);
+    const totalTravelers = searchMeta.adults + searchMeta.children;
+    const baseTotal = Number(picked.base_price ?? picked.price) * totalTravelers;
+    setCheckoutInput({
+      vertical: "tours",
+      base_amount: baseTotal,
+      currency: picked.base_currency || picked.currency || "USD",
+      display_currency: displayCurrency,
+      contact: { name: `${lead.firstName} ${lead.lastName}`, email: lead.email, phone: lead.phone },
+      payload: {
+        tour_id: picked.id,
+        tour_title: picked.title,
+        tour_date: tourDate,
+        travelers: { adults: searchMeta.adults, children: searchMeta.children },
+        lead,
+        provider_amount_per_person: picked.base_price ?? picked.price,
+        provider_total_amount: baseTotal,
+      },
+    });
+  }
+
+  if (done) {
+    return <ConfirmationScreen {...done} vertical="tours" fulfillment="manual" onReset={() => { setDone(null); setTours([]); setPicked(null); setCheckoutInput(null); }} />;
+  }
+  if (checkout) {
+    return <GuestCheckout input={checkout} onCancel={() => setCheckoutInput(null)} onSuccess={(r) => { setDone(r); setCheckoutInput(null); }} />;
+  }
+
+  const totalTravelers = searchMeta ? searchMeta.adults + searchMeta.children : 0;
+
+  return (
+    <>
+      <TourSearchForm busy={busy} onSubmit={search} />
+
+      {busy && <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Searching live experiences…</div>}
+
+      {!picked && tours.length > 0 && searchMeta && (
+        <TourResults
+          tours={tours}
+          destinationLabel={destLabel}
+          travelers={totalTravelers}
+          format={format}
+          onSelect={(t) => setPicked(t)}
+        />
+      )}
+
+      {picked && searchMeta && (
+        <form
+          onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
+          className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
+          style={{ boxShadow: "var(--shadow-soft)" }}
+        >
+          <div className="col-span-full flex items-start justify-between gap-3 border-b border-border pb-3">
+            <div>
+              <h3 className="font-display text-base font-bold text-primary">Lead traveler details</h3>
+              <p className="text-xs text-muted-foreground">{picked.title} · {totalTravelers} traveler{totalTravelers > 1 ? "s" : ""}</p>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
+              <div className="font-display text-lg font-extrabold text-primary">{format(Number(picked.price) * totalTravelers, picked.currency)}</div>
+            </div>
+          </div>
+          <Field label="Tour date">
+            <input name="tour_date" type="date" required min={searchMeta.date_from} max={searchMeta.date_to} defaultValue={searchMeta.date_from} className={inputCls} />
+          </Field>
+          <Field label="Email (voucher destination)"><input name="email" type="email" required className={inputCls} /></Field>
+          <Field label="First name"><input name="first_name" required className={inputCls} /></Field>
+          <Field label="Last name"><input name="last_name" required className={inputCls} /></Field>
+          <Field label="Phone"><input name="phone" required placeholder="+234 800 000 0000" className={inputCls} /></Field>
+          <div className="col-span-full rounded-md bg-surface p-3 text-xs text-muted-foreground">
+            <strong className="text-foreground">Heads up:</strong> Tours are confirmed within a few hours after payment. Your voucher will be emailed to you once the operator confirms availability.
+          </div>
           <div className="col-span-full flex gap-2">
             <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
             <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
