@@ -19,13 +19,14 @@ import { createPaymentIntent } from "@/server/providers/stripe";
 import { searchFlights as duffelSearch } from "@/server/providers/duffel";
 import { searchHotelRates as liteapiSearch } from "@/server/providers/liteapi";
 import { searchTours as gygSearch } from "@/server/providers/getyourguide";
-import { searchTransfers as mozioSearch } from "@/server/providers/mozio";
+import { getOrScrapeTransfers } from "@/server/providers/transfers-scraper";
+import { getOrScrapeCarRentals } from "@/server/providers/car-rental-scraper";
 import { getOrScrapeInsurance } from "@/server/providers/insurance-scraper";
 import { searchVisas as sherpaSearch } from "@/server/providers/sherpa";
 import { convert as fxConvert, SUPPORTED_CURRENCIES } from "@/server/fx";
 import { findCountryByCode } from "@/data/countries";
 
-type Vertical = "flights" | "hotels" | "tours" | "transfers" | "insurance" | "visas";
+type Vertical = "flights" | "hotels" | "tours" | "transfers" | "insurance" | "visas" | "car_rentals";
 
 /** Auto verticals settle immediately on payment; manual ones wait for ops fulfillment. */
 const FULFILLMENT: Record<Vertical, "auto" | "manual"> = {
@@ -35,23 +36,27 @@ const FULFILLMENT: Record<Vertical, "auto" | "manual"> = {
   transfers: "manual",
   insurance: "manual",
   visas: "manual",
+  car_rentals: "manual",
 };
 
 /**
- * Affiliate verticals: we earn commission via the supplier's affiliate program
- * after manual fulfillment, so the public /book flow must NOT add any Travsify
- * markup. Customer pays the raw provider price (FX-converted to display ccy).
- * Partner API still applies markups normally — that's a separate code path.
+ * Affiliate / scraped verticals: we either earn commission via the supplier's
+ * affiliate program after manual fulfillment, or we aggregate quotes via
+ * scrape and settle the actual booking on the supplier site. Either way the
+ * public /book flow does NOT add Travsify markup. Customer pays the raw
+ * provider price (FX-converted to display ccy). Partner API still applies
+ * markups normally — that's a separate code path.
  */
-const AFFILIATE_VERTICALS: Set<Vertical> = new Set(["tours", "transfers", "insurance", "visas"]);
+const AFFILIATE_VERTICALS: Set<Vertical> = new Set(["tours", "transfers", "insurance", "visas", "car_rentals"]);
 
 const PROVIDER: Record<Vertical, string> = {
   flights: "duffel",
   hotels: "liteapi",
   tours: "getyourguide",
-  transfers: "mozio",
-  insurance: "safetywing",
+  transfers: "scraped",
+  insurance: "scraped",
   visas: "sherpa",
+  car_rentals: "scraped",
 };
 
 const DisplayCurrencyEnum = z.enum(SUPPORTED_CURRENCIES as [string, ...string[]]);
