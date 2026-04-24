@@ -5,14 +5,15 @@ import {
   Search, ArrowRight, Loader2, Check, Zap,
 } from "lucide-react";
 import { PageShell, PageHero } from "@/components/landing/PageShell";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/demo")({
   component: DemoPage,
   head: () => ({
     meta: [
-      { title: "Live Demo — Travsify NDC" },
-      { name: "description", content: "Try the Travsify unified travel API live. Search flights, hotels, tours, transfers, e-Visas and insurance — no signup required." },
-      { property: "og:title", content: "Travsify Live Demo — One API for all travel products" },
+      { title: "Book travel — Travsify NDC" },
+      { name: "description", content: "Search and book flights, hotels, tours, transfers, e-Visas and insurance through one unified API. Try it live, no signup required." },
+      { property: "og:title", content: "Book travel with Travsify — one API, six products" },
       { property: "og:description", content: "Run a live search across 6 travel verticals and watch the API respond in milliseconds." },
     ],
   }),
@@ -35,6 +36,7 @@ interface Result {
 }
 
 function DemoPage() {
+  const { isAuthenticated } = useAuth();
   const [tab, setTab] = useState<Vertical>("flights");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Result[] | null>(null);
@@ -66,18 +68,28 @@ function DemoPage() {
   return (
     <PageShell>
       <PageHero
-        eyebrow="Live demo · No signup"
+        eyebrow={isAuthenticated ? "Try it live · Open to your dashboard to book for real" : "Live demo · No signup"}
         title="One API."
         highlight="Six travel products. Live."
-        description="Try the same API our customers use in production — flights, hotels, tours, transfers, e-Visas and insurance — all behind one schema."
+        description="Search flights, hotels, tours, transfers, e-Visas and insurance — all behind one schema. Test here, then go live with your wallet."
       >
-        <Link
-          to="/get-api-access"
-          className="btn-glow group inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground"
-          style={{ boxShadow: "var(--shadow-accent)" }}
-        >
-          Get my API key <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </Link>
+        {isAuthenticated ? (
+          <Link
+            to="/book"
+            className="btn-glow group inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground"
+            style={{ boxShadow: "var(--shadow-accent)" }}
+          >
+            Book from your wallet <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        ) : (
+          <Link
+            to="/get-api-access"
+            className="btn-glow group inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground"
+            style={{ boxShadow: "var(--shadow-accent)" }}
+          >
+            Get my API key <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        )}
         <Link
           to="/docs"
           className="inline-flex items-center gap-2 rounded-md border border-border bg-white px-6 py-3 text-sm font-semibold text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
