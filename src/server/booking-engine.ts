@@ -71,15 +71,35 @@ async function publicPrice(vertical: Vertical, providerBase: number, currency: s
 
 export const publicSearchFlights = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({
-    origin: z.string().length(3),
-    destination: z.string().length(3),
-    departure_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    origin: z.string().length(3).optional(),
+    destination: z.string().length(3).optional(),
+    departure_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     return_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-    adults: z.number().int().min(1).max(8).optional(),
+    adults: z.number().int().min(1).max(9).optional(),
+    children: z.number().int().min(0).max(8).optional(),
+    infants: z.number().int().min(0).max(4).optional(),
     cabin: z.enum(["economy", "premium_economy", "business", "first"]).optional(),
-  }).parse(d))
+    slices: z.array(z.object({
+      origin: z.string().length(3),
+      destination: z.string().length(3),
+      departure_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    })).min(1).max(6).optional(),
+  }).refine(
+    (v) => (v.slices && v.slices.length > 0) || (v.origin && v.destination && v.departure_date),
+    { message: "Provide either slices[] or origin+destination+departure_date" },
+  ).parse(d))
   .handler(async ({ data }): Promise<string> => {
-    const res = await duffelSearch("live", data);
+    const res = await duffelSearch("live", {
+      origin: data.origin || data.slices?.[0]?.origin || "",
+      destination: data.destination || data.slices?.[0]?.destination || "",
+      departure_date: data.departure_date || data.slices?.[0]?.departure_date || "",
+      return_date: data.return_date,
+      adults: data.adults,
+      children: data.children,
+      infants: data.infants,
+      cabin: data.cabin,
+      slices: data.slices,
+    });
     const offers = await Promise.all(res.offers.map(async (o) => {
       const base = Number(o.total_amount);
       const ccy = String(o.total_currency || "USD");
