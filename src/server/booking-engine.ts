@@ -36,6 +36,14 @@ const FULFILLMENT: Record<Vertical, "auto" | "manual"> = {
   visas: "manual",
 };
 
+/**
+ * Affiliate verticals: we earn commission via the supplier's affiliate program
+ * after manual fulfillment, so the public /book flow must NOT add any Travsify
+ * markup. Customer pays the raw provider price (FX-converted to display ccy).
+ * Partner API still applies markups normally — that's a separate code path.
+ */
+const AFFILIATE_VERTICALS: Set<Vertical> = new Set(["tours", "transfers", "insurance", "visas"]);
+
 const PROVIDER: Record<Vertical, string> = {
   flights: "duffel",
   hotels: "liteapi",
@@ -62,10 +70,25 @@ async function publicPrice(
 ): Promise<{ provider_base: number; travsify_markup: number; total: number; currency: string; fx_from: string; fx_to: string }> {
   const target = displayCurrency.toUpperCase();
   const baseInDisplay = await fxConvert(providerBase, providerCurrency, target);
+  const baseRounded = Number(baseInDisplay.toFixed(2));
+
+  // Affiliate verticals: zero markup on the public web flow. We earn the
+  // supplier's affiliate commission instead, after manual fulfillment.
+  if (AFFILIATE_VERTICALS.has(vertical)) {
+    return {
+      provider_base: baseRounded,
+      travsify_markup: 0,
+      total: baseRounded,
+      currency: target,
+      fx_from: providerCurrency.toUpperCase(),
+      fx_to: target,
+    };
+  }
+
   const { data, error } = await supabaseAdmin.rpc("compose_price", {
     p_partner_id: null as unknown as string,
     p_vertical: vertical,
-    p_provider_base: Number(baseInDisplay.toFixed(2)),
+    p_provider_base: baseRounded,
     p_currency: target,
   });
   if (error) throw new Error(`Price composition failed: ${error.message}`);
