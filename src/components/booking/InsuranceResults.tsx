@@ -4,7 +4,7 @@ export type InsuranceQuote = {
   id: string;
   plan_name: string;
   coverage_type: string;
-  provider: string;
+  provider?: string;
   duration_days: number;
   price: number;
   base_price?: number;
