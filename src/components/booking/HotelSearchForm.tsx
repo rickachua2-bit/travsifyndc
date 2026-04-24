@@ -2,9 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { Calendar, Loader2, Search, Users, Plus, Minus } from "lucide-react";
 import { CityInput } from "@/components/booking/CityInput";
 import { FieldLabel } from "@/components/booking/SearchForm";
+import { CITIES } from "@/data/cities";
 
 export type HotelSearchPayload = {
   city_code: string;
+  city_name: string;
+  country_code: string;
   checkin: string;
   checkout: string;
   rooms: number;
@@ -46,7 +49,14 @@ export function HotelSearchForm({
     e.preventDefault();
     if (!city) { alert("Please choose a destination."); return; }
     if (checkin >= checkout) { alert("Check-out must be after check-in."); return; }
-    onSubmit({ city_code: city, checkin, checkout, rooms, adults, children });
+    const meta = CITIES.find((c) => c.code === city);
+    if (!meta) { alert("Please select a destination from the list."); return; }
+    onSubmit({
+      city_code: city,
+      city_name: meta.city,
+      country_code: meta.country,
+      checkin, checkout, rooms, adults, children,
+    });
   }
 
   const guestSummary = `${rooms} room${rooms > 1 ? "s" : ""} · ${adults + children} guest${adults + children > 1 ? "s" : ""}`;
