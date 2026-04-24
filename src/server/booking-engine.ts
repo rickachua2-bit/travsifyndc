@@ -36,6 +36,14 @@ const FULFILLMENT: Record<Vertical, "auto" | "manual"> = {
   visas: "manual",
 };
 
+/**
+ * Affiliate verticals: we earn commission via the supplier's affiliate program
+ * after manual fulfillment, so the public /book flow must NOT add any Travsify
+ * markup. Customer pays the raw provider price (FX-converted to display ccy).
+ * Partner API still applies markups normally — that's a separate code path.
+ */
+const AFFILIATE_VERTICALS: Set<Vertical> = new Set(["tours", "transfers", "insurance", "visas"]);
+
 const PROVIDER: Record<Vertical, string> = {
   flights: "duffel",
   hotels: "liteapi",
