@@ -17,21 +17,30 @@ import { Automation } from "@/components/landing/Automation";
 import { Pricing } from "@/components/landing/Pricing";
 import { FinalCTA } from "@/components/landing/FinalCTA";
 import { Footer } from "@/components/landing/Footer";
+import { useReveal } from "@/hooks/useReveal";
 
 export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
       { title: "Travsify NDC — One Travel API for Africa & the World" },
-      { name: "description", content: "Build, launch and scale your travel business with one API. Global inventory of flights, hotels, transfers, e-Visas and insurance — built for Africa and the world." },
+      {
+        name: "description",
+        content:
+          "Build, launch and scale your travel business with one API. Flights, hotels, transfers, e-Visas and insurance — with local payments built for Africa.",
+      },
       { property: "og:title", content: "Travsify NDC — Complete Travel Infrastructure" },
-      { property: "og:description", content: "One API. Global inventory. Built for Africa & the World." },
+      {
+        property: "og:description",
+        content: "One API. Global inventory. Local payments. Built for Africa & the world.",
+      },
       { property: "og:type", content: "website" },
     ],
   }),
 });
 
 function Index() {
+  useReveal();
   return (
     <div className="min-h-screen bg-background">
       <Nav />
