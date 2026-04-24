@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as GetApiAccessRouteImport } from './routes/get-api-access'
@@ -21,6 +22,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as ApiPublicDemoSearchRouteImport } from './routes/api/public/demo-search'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SigninRoute = SigninRouteImport.update({
   id: '/signin',
   path: '/signin',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/get-api-access': typeof GetApiAccessRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
 }
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/get-api-access': typeof GetApiAccessRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
 }
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/get-api-access': typeof GetApiAccessRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
 }
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/get-api-access'
     | '/reset-password'
     | '/signin'
+    | '/signup'
     | '/dashboard'
     | '/api/public/demo-search'
   fileRoutesByTo: FileRoutesByTo
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/get-api-access'
     | '/reset-password'
     | '/signin'
+    | '/signup'
     | '/dashboard'
     | '/api/public/demo-search'
   id:
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/get-api-access'
     | '/reset-password'
     | '/signin'
+    | '/signup'
     | '/_authenticated/dashboard'
     | '/api/public/demo-search'
   fileRoutesById: FileRoutesById
@@ -164,11 +176,19 @@ export interface RootRouteChildren {
   GetApiAccessRoute: typeof GetApiAccessRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SigninRoute: typeof SigninRoute
+  SignupRoute: typeof SignupRoute
   ApiPublicDemoSearchRoute: typeof ApiPublicDemoSearchRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signin': {
       id: '/signin'
       path: '/signin'
@@ -271,8 +291,18 @@ const rootRouteChildren: RootRouteChildren = {
   GetApiAccessRoute: GetApiAccessRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SigninRoute: SigninRoute,
+  SignupRoute: SignupRoute,
   ApiPublicDemoSearchRoute: ApiPublicDemoSearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
