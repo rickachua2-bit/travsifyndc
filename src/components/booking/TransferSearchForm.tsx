@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Calendar, Clock, Loader2, MapPin, Search, Users } from "lucide-react";
+import { Calendar, Clock, Loader2, Search, Users } from "lucide-react";
 import { FieldLabel } from "@/components/booking/SearchForm";
+import { LocationInput } from "@/components/booking/LocationInput";
 
 export type TransferSearchPayload = {
   pickup_address: string;
