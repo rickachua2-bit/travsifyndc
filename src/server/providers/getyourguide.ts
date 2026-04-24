@@ -14,9 +14,18 @@ async function call<T>(path: string): Promise<T> {
   const url = new URL(`${BASE}${path}`);
   url.searchParams.set("partner_id", partnerId());
   if (!url.searchParams.has("cnt_lang")) url.searchParams.set("cnt_lang", "en");
-  const res = await fetch(url.toString(), {
-    headers: { "Accept": "application/json", "Accept-Language": "en-US" },
-  });
+  const headers: Record<string, string> = {
+    "Accept": "application/json",
+    "Accept-Language": "en-US",
+  };
+  // GYG affiliate API requires HTTP Basic Auth (partner_id : api_password) for
+  // most endpoints. The plain affiliate ID alone returns errorCode 15.
+  const apiPassword = process.env.GETYOURGUIDE_API_PASSWORD;
+  if (apiPassword) {
+    const token = Buffer.from(`${partnerId()}:${apiPassword}`).toString("base64");
+    headers["Authorization"] = `Basic ${token}`;
+  }
+  const res = await fetch(url.toString(), { headers });
   const text = await res.text();
   let json: unknown = null;
   try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
