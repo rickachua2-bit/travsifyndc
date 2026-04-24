@@ -111,6 +111,9 @@ function DashboardPage() {
                 Admin
               </Link>
             )}
+            <Link to="/wallet" className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-block">Wallet</Link>
+            <Link to="/bookings" className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-block">Bookings</Link>
+            <Link to="/book" className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-block">Book</Link>
             <Link to="/docs" className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-block">Docs</Link>
             <Link to="/demo" className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-block">Demo</Link>
             <button onClick={handleSignOut} className="inline-flex items-center gap-2 rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground hover:border-accent hover:text-accent">

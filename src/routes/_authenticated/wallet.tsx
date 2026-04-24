@@ -1,12 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Wallet as WalletIcon, Plus, Building2, ArrowUpRight, Copy } from "lucide-react";
+import { ArrowLeft, Wallet as WalletIcon, Plus, Building2, ArrowUpRight, Copy, CreditCard, Trash2 } from "lucide-react";
 import { Logo } from "@/components/landing/Logo";
 import { toast } from "sonner";
 import {
   myWallets, myWalletTransactions, myBankAccounts, addBankAccount, deleteBankAccount,
   requestWithdrawal, myWithdrawals, fundWallet, myVirtualAccount,
+  startCardLink, myCards, removeCard,
 } from "@/server/dashboard.functions";
+import { StripeProvider } from "@/components/wallet/StripeProvider";
+import { CardLinkForm } from "@/components/wallet/CardLinkForm";
+import { UsdTopUpForm } from "@/components/wallet/UsdTopUpForm";
 
 export const Route = createFileRoute("/_authenticated/wallet")({
   component: WalletPage,
@@ -18,27 +22,41 @@ type Txn = { id: string; currency: string; direction: string; amount: number; ba
 type Bank = { id: string; currency: string; account_name: string; account_number: string; bank_name: string | null };
 type Withdrawal = { id: string; currency: string; amount: number; status: string; created_at: string };
 type VAccount = { account_number?: string; account_name?: string; bank_name?: string };
+type Card = { id: string; brand: string | null; last4: string | null; exp_month: number | null; exp_year: number | null };
 
 function WalletPage() {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [txns, setTxns] = useState<Txn[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [cards, setCards] = useState<Card[]>([]);
   const [vacc, setVacc] = useState<VAccount | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cardLinkSecret, setCardLinkSecret] = useState<{ client_secret: string; setup_intent_id: string } | null>(null);
+  const [topUpSecret, setTopUpSecret] = useState<string | null>(null);
 
   async function refresh() {
-    const [w, t, b, wd] = await Promise.all([myWallets(), myWalletTransactions({ data: { limit: 50 } }), myBankAccounts(), myWithdrawals()]);
+    const [w, t, b, wd, c] = await Promise.all([
+      myWallets(), myWalletTransactions({ data: { limit: 50 } }), myBankAccounts(), myWithdrawals(), myCards(),
+    ]);
     setWallets(w as Wallet[]);
     setTxns(t as Txn[]);
     setBanks(b as Bank[]);
     setWithdrawals(wd as Withdrawal[]);
+    setCards(c as Card[]);
     setLoading(false);
   }
   useEffect(() => { refresh().catch(() => setLoading(false)); }, []);
 
   async function loadVA() {
     try { const v = await myVirtualAccount(); setVacc(v as VAccount); } catch (e) { toast.error((e as Error).message); }
+  }
+
+  async function linkCard() {
+    try {
+      const r = await startCardLink();
+      setCardLinkSecret({ client_secret: r.client_secret as string, setup_intent_id: r.setup_intent_id });
+    } catch (e) { toast.error((e as Error).message); }
   }
 
   async function fund(currency: "USD" | "NGN") {
@@ -49,8 +67,8 @@ function WalletPage() {
     try {
       if (currency === "USD") {
         const r = await fundWallet({ data: { currency: "USD", amount } }) as { client_secret?: string };
-        toast.success("Funding intent created. Connect Stripe Elements to confirm payment.");
-        if (r.client_secret) navigator.clipboard.writeText(r.client_secret);
+        if (r.client_secret) setTopUpSecret(r.client_secret);
+        else toast.error("No client secret returned");
       } else {
         const r = await fundWallet({ data: { currency: "NGN", amount, ngn_method: "card" } }) as { link?: string };
         if (r.link) window.location.href = r.link; else toast.error("No checkout link returned");
@@ -80,6 +98,12 @@ function WalletPage() {
     const amount = parseFloat(raw);
     if (!Number.isFinite(amount) || amount <= 0) return toast.error("Invalid amount");
     try { await requestWithdrawal({ data: { bank_account_id, amount } }); toast.success("Withdrawal submitted"); refresh(); }
+    catch (e) { toast.error((e as Error).message); }
+  }
+
+  async function deleteCard(id: string) {
+    if (!window.confirm("Remove this card?")) return;
+    try { await removeCard({ data: { card_id: id } }); toast.success("Card removed"); refresh(); }
     catch (e) { toast.error((e as Error).message); }
   }
 
@@ -130,6 +154,18 @@ function WalletPage() {
               })}
             </div>
 
+            {topUpSecret && (
+              <div className="mt-4 rounded-2xl border border-accent/30 bg-accent/5 p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="font-display text-sm font-bold text-primary">Confirm USD payment</h3>
+                  <button onClick={() => setTopUpSecret(null)} className="text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+                </div>
+                <StripeProvider clientSecret={topUpSecret}>
+                  <UsdTopUpForm onDone={() => { setTopUpSecret(null); setTimeout(refresh, 1500); }} />
+                </StripeProvider>
+              </div>
+            )}
+
             {vacc && (
               <div className="mt-4 rounded-2xl border border-accent/30 bg-accent/5 p-5">
                 <h3 className="font-display text-sm font-bold text-primary">Your NGN virtual account</h3>
@@ -146,6 +182,40 @@ function WalletPage() {
                 </div>
               </div>
             )}
+
+            {/* Saved cards */}
+            <section className="mt-8 rounded-2xl border border-border bg-white p-5" style={{ boxShadow: "var(--shadow-soft)" }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display text-base font-bold text-primary">Saved cards (USD)</h2>
+                  <p className="text-xs text-muted-foreground">Used for one-tap USD wallet top-up.</p>
+                </div>
+                <button onClick={linkCard} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-95">
+                  <CreditCard className="h-3 w-3" /> Link a card
+                </button>
+              </div>
+
+              {cardLinkSecret && (
+                <div className="mt-4 rounded-lg border border-accent/30 bg-accent/5 p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-accent">Enter card details</h3>
+                    <button onClick={() => setCardLinkSecret(null)} className="text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+                  </div>
+                  <StripeProvider clientSecret={cardLinkSecret.client_secret}>
+                    <CardLinkForm setupIntentId={cardLinkSecret.setup_intent_id} onDone={() => { setCardLinkSecret(null); refresh(); }} />
+                  </StripeProvider>
+                </div>
+              )}
+
+              <div className="mt-4 space-y-2">
+                {cards.length === 0 ? <p className="text-xs text-muted-foreground">No saved cards yet.</p> : cards.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-2.5 text-sm">
+                    <div className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-muted-foreground" /> <span className="font-semibold capitalize">{c.brand}</span> <span className="font-mono">•••• {c.last4}</span> <span className="text-xs text-muted-foreground">exp {c.exp_month}/{c.exp_year}</span></div>
+                    <button onClick={() => deleteCard(c.id)} className="rounded-md border border-border bg-white p-1.5 text-muted-foreground hover:border-destructive hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+                  </div>
+                ))}
+              </div>
+            </section>
 
             <section className="mt-8 rounded-2xl border border-border bg-white p-5" style={{ boxShadow: "var(--shadow-soft)" }}>
               <h2 className="font-display text-base font-bold text-primary">Bank accounts</h2>

@@ -343,3 +343,77 @@ export const myBookings = createServerFn({ method: "GET" })
     const { data } = await supabaseAdmin.from("bookings").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(100);
     return data ?? [];
   });
+
+// ---------- Stripe publishable key (safe to expose) ----------
+export const getStripePublishableKey = createServerFn({ method: "GET" })
+  .handler(async () => {
+    return { key: process.env.STRIPE_PUBLISHABLE_KEY || "" };
+  });
+
+// ---------- Admin: withdrawals queue ----------
+async function assertAdmin(userId: string) {
+  const { data } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+  if (!data) throw new Error("Admin only");
+}
+
+export const adminListWithdrawals = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    status: z.enum(["pending", "approved", "processing", "paid", "rejected", "failed"]).optional(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { userId } = context as unknown as { userId: string };
+    await assertAdmin(userId);
+    let q = supabaseAdmin.from("withdrawal_requests").select("*, bank_accounts(*), profiles!withdrawal_requests_user_id_fkey(full_name, legal_name, company)").order("created_at", { ascending: true }).limit(200);
+    if (data.status) q = q.eq("status", data.status);
+    // The FK join above may not exist — fall back to manual
+    const { data: rows } = await supabaseAdmin.from("withdrawal_requests").select("*").order("created_at", { ascending: true }).limit(200);
+    const filtered = (rows ?? []).filter((r) => !data.status || r.status === data.status);
+    // Enrich with bank + user
+    const userIds = [...new Set(filtered.map((r) => r.user_id))];
+    const bankIds = [...new Set(filtered.map((r) => r.bank_account_id))];
+    const [profilesRes, banksRes] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, full_name, legal_name, company").in("id", userIds.length ? userIds : ["00000000-0000-0000-0000-000000000000"]),
+      supabaseAdmin.from("bank_accounts").select("*").in("id", bankIds.length ? bankIds : ["00000000-0000-0000-0000-000000000000"]),
+    ]);
+    const profileById = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
+    const bankById = new Map((banksRes.data ?? []).map((b) => [b.id, b]));
+    void q;
+    return filtered.map((r) => ({
+      ...r,
+      profile: profileById.get(r.user_id) || null,
+      bank: bankById.get(r.bank_account_id) || null,
+    }));
+  });
+
+export const adminApproveWithdrawal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { userId } = context as unknown as { userId: string };
+    await assertAdmin(userId);
+    const { approveWithdrawal } = await import("@/server/wallet");
+    return approveWithdrawal(userId, data.id);
+  });
+
+export const adminRejectWithdrawal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), reason: z.string().min(2).max(500) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { userId } = context as unknown as { userId: string };
+    await assertAdmin(userId);
+    const { rejectWithdrawal } = await import("@/server/wallet");
+    await rejectWithdrawal(userId, data.id, data.reason);
+    return { ok: true };
+  });
+
+export const adminMarkWithdrawalPaid = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), provider_reference: z.string().max(120).optional() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { userId } = context as unknown as { userId: string };
+    await assertAdmin(userId);
+    const { markWithdrawalPaid } = await import("@/server/wallet");
+    await markWithdrawalPaid(userId, data.id, data.provider_reference);
+    return { ok: true };
+  });
