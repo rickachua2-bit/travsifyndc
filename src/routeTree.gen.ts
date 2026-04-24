@@ -35,6 +35,7 @@ import { Route as ApiV1PayoutsRouteImport } from './routes/api/v1/payouts'
 import { Route as ApiV1HealthRouteImport } from './routes/api/v1/health'
 import { Route as ApiPublicDemoSearchRouteImport } from './routes/api/public/demo-search'
 import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin/withdrawals'
+import { Route as AuthenticatedAdminVisaProductsRouteImport } from './routes/_authenticated/admin/visa-products'
 import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
 import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
 import { Route as ApiV1VisasSearchRouteImport } from './routes/api/v1/visas.search'
@@ -186,6 +187,12 @@ const AuthenticatedAdminWithdrawalsRoute =
     path: '/withdrawals',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminVisaProductsRoute =
+  AuthenticatedAdminVisaProductsRouteImport.update({
+    id: '/visa-products',
+    path: '/visa-products',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminProcessingRoute =
   AuthenticatedAdminProcessingRouteImport.update({
     id: '/processing',
@@ -303,6 +310,7 @@ export interface FileRoutesByFullPath {
   '/sdk/js': typeof SdkJsRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -347,6 +355,7 @@ export interface FileRoutesByTo {
   '/sdk/js': typeof SdkJsRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -394,6 +403,7 @@ export interface FileRoutesById {
   '/sdk/js': typeof SdkJsRoute
   '/_authenticated/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/_authenticated/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/_authenticated/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -441,6 +451,7 @@ export interface FileRouteTypes {
     | '/sdk/js'
     | '/admin/markups'
     | '/admin/processing'
+    | '/admin/visa-products'
     | '/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -485,6 +496,7 @@ export interface FileRouteTypes {
     | '/sdk/js'
     | '/admin/markups'
     | '/admin/processing'
+    | '/admin/visa-products'
     | '/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -531,6 +543,7 @@ export interface FileRouteTypes {
     | '/sdk/js'
     | '/_authenticated/admin/markups'
     | '/_authenticated/admin/processing'
+    | '/_authenticated/admin/visa-products'
     | '/_authenticated/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -771,6 +784,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWithdrawalsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/visa-products': {
+      id: '/_authenticated/admin/visa-products'
+      path: '/visa-products'
+      fullPath: '/admin/visa-products'
+      preLoaderRoute: typeof AuthenticatedAdminVisaProductsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/processing': {
       id: '/_authenticated/admin/processing'
       path: '/processing'
@@ -903,6 +923,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminMarkupsRoute: typeof AuthenticatedAdminMarkupsRoute
   AuthenticatedAdminProcessingRoute: typeof AuthenticatedAdminProcessingRoute
+  AuthenticatedAdminVisaProductsRoute: typeof AuthenticatedAdminVisaProductsRoute
   AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminApplicationsIdRoute: typeof AuthenticatedAdminApplicationsIdRoute
@@ -911,6 +932,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminMarkupsRoute: AuthenticatedAdminMarkupsRoute,
   AuthenticatedAdminProcessingRoute: AuthenticatedAdminProcessingRoute,
+  AuthenticatedAdminVisaProductsRoute: AuthenticatedAdminVisaProductsRoute,
   AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminApplicationsIdRoute: AuthenticatedAdminApplicationsIdRoute,
