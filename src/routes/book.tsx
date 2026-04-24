@@ -748,13 +748,30 @@ function InsuranceFlow() {
     if (!picked || !searchMeta) return;
     const fd = new FormData(form);
     const policyholder = {
-      firstName: String(fd.get("first_name")),
-      lastName: String(fd.get("last_name")),
-      email: String(fd.get("email")),
-      phone: String(fd.get("phone")),
-      dateOfBirth: String(fd.get("dob")),
+      firstName: String(fd.get("first_name") || "").trim(),
+      lastName: String(fd.get("last_name") || "").trim(),
+      email: String(fd.get("email") || "").trim(),
+      phone: String(fd.get("phone") || "").trim(),
+      dateOfBirth: String(fd.get("dob") || ""),
       nationality: searchMeta.nationality,
     };
+
+    // Collect every additional traveler. Index 0 is the policyholder above; we
+    // expect a name + DOB for everyone else so ops can issue individual policies.
+    const additionalTravelers = searchMeta.travelers.slice(1).map((t, i) => {
+      const idx = i + 1;
+      return {
+        firstName: String(fd.get(`tr_${idx}_first_name`) || "").trim(),
+        lastName: String(fd.get(`tr_${idx}_last_name`) || "").trim(),
+        dateOfBirth: String(fd.get(`tr_${idx}_dob`) || ""),
+        age: t.age,
+      };
+    });
+    if (additionalTravelers.some((t) => !t.firstName || !t.lastName || !t.dateOfBirth)) {
+      toast.error("Please complete name and date of birth for every traveler.");
+      return;
+    }
+
     setCheckoutInput({
       vertical: "insurance",
       base_amount: Number(picked.base_price ?? picked.price),
@@ -774,6 +791,7 @@ function InsuranceFlow() {
         end_date: searchMeta.end_date,
         travelers: searchMeta.travelers,
         policyholder,
+        additional_travelers: additionalTravelers,
         provider_amount: picked.base_price ?? picked.price,
       },
     });
