@@ -8,6 +8,10 @@ import {
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { searchFlights as duffelSearch, createOrder as duffelOrder } from "@/server/providers/duffel";
 import { searchHotelRates as liteapiSearch, prebookHotel as liteapiPrebook, bookHotel as liteapiBook } from "@/server/providers/liteapi";
+import { searchTours as gygSearch } from "@/server/providers/getyourguide";
+import { searchTransfers as mozioSearch } from "@/server/providers/mozio";
+import { searchInsurance as swSearch } from "@/server/providers/safetywing";
+import { searchVisas as sherpaSearch } from "@/server/providers/sherpa";
 import { genBookingRef } from "@/server/gateway";
 
 // ---------- Cards ----------
