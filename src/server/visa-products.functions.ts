@@ -76,12 +76,15 @@ export const publicSearchVisaProducts = createServerFn({ method: "POST" })
     const cutoff = Date.now() - VISA_CACHE_DAYS * 86400_000;
     const stale = rows.length === 0
       || rows.every((r) => !r.last_scraped_at || new Date(r.last_scraped_at).getTime() < cutoff);
+    let visaRequired: boolean | null = null;
+    let scrapeAttempted = false;
     if (dest && stale) {
       const natC = findCountryByCode(nat);
       const destC = findCountryByCode(dest);
       if (natC && destC) {
+        scrapeAttempted = true;
         try {
-          await scrapeAndCacheCorridor({
+          const result = await scrapeAndCacheCorridor({
             nationality_iso2: natC.code,
             nationality_name: natC.name,
             nationality_demonym: natC.demonym,
@@ -89,6 +92,7 @@ export const publicSearchVisaProducts = createServerFn({ method: "POST" })
             destination_name: destC.name,
             destination_slug: destC.slug,
           });
+          visaRequired = result.visaRequired;
           rows = await fetchRows();
         } catch (e) {
           console.warn(`on-demand scrape failed for ${nat}->${dest}:`, (e as Error).message);
@@ -127,7 +131,23 @@ export const publicSearchVisaProducts = createServerFn({ method: "POST" })
       }),
     );
 
-    return JSON.stringify({ products, display_currency: display });
+    // Build the Sherpa reference URL so the UI can link out when we have nothing.
+    let sherpaUrl: string | null = null;
+    if (dest) {
+      const natC = findCountryByCode(nat);
+      const destC = findCountryByCode(dest);
+      if (natC && destC) {
+        sherpaUrl = `https://apply.joinsherpa.com/visa/${destC.slug}/${natC.demonym}-citizens`;
+      }
+    }
+
+    return JSON.stringify({
+      products,
+      display_currency: display,
+      visa_required: visaRequired,
+      scrape_attempted: scrapeAttempted,
+      sherpa_url: sherpaUrl,
+    });
   });
 
 // List unique nationalities we support — used to populate the form dropdown.
