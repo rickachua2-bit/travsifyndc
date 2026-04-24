@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus, Pencil, Trash2, Globe2, ExternalLink } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Globe2, ExternalLink, Download, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminListVisaProducts,
   adminCreateVisaProduct,
   adminUpdateVisaProduct,
   adminDeleteVisaProduct,
+  adminStartSherpaScrape,
+  adminGetScrapeRun,
 } from "@/server/visa-products.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/visa-products")({
@@ -40,16 +42,29 @@ const blank: Omit<Product, "id"> = {
   is_active: true, display_order: 0,
 };
 
+type ScrapeRun = {
+  id: string; status: string;
+  total_corridors: number; scraped_count: number; upserted_count: number; failed_count: number;
+  errors: Array<{ corridor: string; error: string }>;
+  started_at: string; completed_at: string | null;
+};
+
 function VisaProductsAdmin() {
   const list = useServerFn(adminListVisaProducts);
   const create = useServerFn(adminCreateVisaProduct);
   const update = useServerFn(adminUpdateVisaProduct);
   const remove = useServerFn(adminDeleteVisaProduct);
+  const startScrape = useServerFn(adminStartSherpaScrape);
+  const getRun = useServerFn(adminGetScrapeRun);
+
   const [rows, setRows] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Product | null>(null);
   const [draft, setDraft] = useState<Omit<Product, "id"> | Product>(blank);
   const [saving, setSaving] = useState(false);
+  const [scrape, setScrape] = useState<ScrapeRun | null>(null);
+  const [scrapeLoading, setScrapeLoading] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   async function refresh() {
     setLoading(true);
@@ -58,6 +73,38 @@ function VisaProductsAdmin() {
     setLoading(false);
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  // Poll scrape status while a run is active.
+  useEffect(() => {
+    if (!scrape || scrape.status !== "running") {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      return;
+    }
+    pollRef.current = setInterval(async () => {
+      try {
+        const { run } = await getRun({ data: { id: scrape.id } });
+        setScrape(run as unknown as ScrapeRun);
+        if ((run as unknown as ScrapeRun).status !== "running") {
+          await refresh();
+          toast.success(`Scrape complete: ${(run as unknown as ScrapeRun).upserted_count} products upserted`);
+        }
+      } catch { /* keep polling */ }
+    }, 3000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrape?.id, scrape?.status]);
+
+  async function handleStartScrape() {
+    if (!confirm("Scrape ~120 corridors from Sherpa? Takes ~3 minutes.")) return;
+    setScrapeLoading(true);
+    try {
+      const r = await startScrape();
+      const { run } = await getRun({ data: { id: r.run_id } });
+      setScrape(run as unknown as ScrapeRun);
+      toast.message(r.already_running ? "A scrape is already running — attached to it." : `Started: ${r.total_corridors} corridors queued`);
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setScrapeLoading(false); }
+  }
 
   function startNew() { setEditing(null); setDraft({ ...blank }); }
   function startEdit(p: Product) { setEditing(p); setDraft({ ...p, requirements: [...p.requirements] }); }
@@ -91,6 +138,9 @@ function VisaProductsAdmin() {
     catch (e) { toast.error((e as Error).message); }
   }
 
+  const scrapePct = scrape && scrape.total_corridors > 0
+    ? Math.round((scrape.scraped_count + scrape.failed_count) * 100 / scrape.total_corridors) : 0;
+
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -99,8 +149,49 @@ function VisaProductsAdmin() {
           <h1 className="mt-1 font-display text-3xl font-extrabold text-primary">Visa products</h1>
           <p className="mt-1 text-sm text-muted-foreground">Curated corridors with retail prices, requirements, and Sherpa portal links for ops.</p>
         </div>
-        <button onClick={startNew} className="btn-glow inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-2 text-xs font-bold text-accent-foreground"><Plus className="h-4 w-4" /> New product</button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleStartScrape}
+            disabled={scrapeLoading || scrape?.status === "running"}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white px-3 py-2 text-xs font-bold text-foreground disabled:opacity-50"
+            title="Scrape ~120 high-demand corridors from Sherpa and upsert into the catalogue"
+          >
+            {scrape?.status === "running" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {scrape?.status === "running" ? "Scraping…" : "Scrape from Sherpa"}
+          </button>
+          <button onClick={startNew} className="btn-glow inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-2 text-xs font-bold text-accent-foreground"><Plus className="h-4 w-4" /> New product</button>
+        </div>
       </div>
+
+      {scrape && (
+        <div className="mt-4 rounded-xl border border-border bg-white p-4" style={{ boxShadow: "var(--shadow-soft)" }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              {scrape.status === "running" && <Loader2 className="h-4 w-4 animate-spin text-accent" />}
+              {scrape.status === "completed" && <CheckCircle2 className="h-4 w-4 text-success" />}
+              {scrape.status === "failed" && <AlertTriangle className="h-4 w-4 text-destructive" />}
+              Sherpa scrape — {scrape.status}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {scrape.scraped_count + scrape.failed_count} / {scrape.total_corridors} corridors · {scrape.upserted_count} products upserted · {scrape.failed_count} failed
+            </div>
+          </div>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface">
+            <div className="h-full bg-accent transition-all" style={{ width: `${scrapePct}%` }} />
+          </div>
+          {scrape.errors.length > 0 && (
+            <details className="mt-3">
+              <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">{scrape.errors.length} error(s) — show details</summary>
+              <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-xs">
+                {scrape.errors.slice(-30).map((e, i) => (
+                  <li key={i} className="font-mono text-destructive"><span className="text-muted-foreground">{e.corridor}:</span> {e.error}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      )}
+
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_400px]">
         <div className="overflow-hidden rounded-2xl border border-border bg-white" style={{ boxShadow: "var(--shadow-soft)" }}>

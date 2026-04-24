@@ -1004,6 +1004,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          last_scraped_at: string | null
           max_stay_days: number
           nationality: string
           nationality_name: string
@@ -1028,6 +1029,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          last_scraped_at?: string | null
           max_stay_days: number
           nationality: string
           nationality_name: string
@@ -1052,6 +1054,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          last_scraped_at?: string | null
           max_stay_days?: number
           nationality?: string
           nationality_name?: string
@@ -1063,6 +1066,48 @@ export type Database = {
           updated_at?: string
           validity_days?: number
           visa_type?: string
+        }
+        Relationships: []
+      }
+      visa_scrape_runs: {
+        Row: {
+          completed_at: string | null
+          errors: Json
+          failed_count: number
+          id: string
+          metadata: Json
+          scraped_count: number
+          started_at: string
+          started_by: string | null
+          status: string
+          total_corridors: number
+          upserted_count: number
+        }
+        Insert: {
+          completed_at?: string | null
+          errors?: Json
+          failed_count?: number
+          id?: string
+          metadata?: Json
+          scraped_count?: number
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          total_corridors?: number
+          upserted_count?: number
+        }
+        Update: {
+          completed_at?: string | null
+          errors?: Json
+          failed_count?: number
+          id?: string
+          metadata?: Json
+          scraped_count?: number
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          total_corridors?: number
+          upserted_count?: number
         }
         Relationships: []
       }
