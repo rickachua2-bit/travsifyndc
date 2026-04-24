@@ -16,10 +16,14 @@ import { TourSearchForm, type TourSearchPayload } from "@/components/booking/Tou
 import { TourResults, type Tour } from "@/components/booking/TourResults";
 import { VisaSearchForm, type VisaSearchPayload } from "@/components/booking/VisaSearchForm";
 import { VisaResults, type VisaProduct } from "@/components/booking/VisaResults";
+import { TransferSearchForm, type TransferSearchPayload } from "@/components/booking/TransferSearchForm";
+import { TransferResults, type TransferQuote } from "@/components/booking/TransferResults";
+import { InsuranceSearchForm, type InsuranceSearchPayload } from "@/components/booking/InsuranceSearchForm";
+import { InsuranceResults, type InsuranceQuote } from "@/components/booking/InsuranceResults";
 import { findCityByCode } from "@/data/cities";
 import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/components/booking/GuestCheckout";
 import { CurrencySwitcher } from "@/components/booking/CurrencySwitcher";
-import { publicSearchFlights, publicSearchHotels, publicSearchTours } from "@/server/booking-engine";
+import { publicSearchFlights, publicSearchHotels, publicSearchTours, publicSearchTransfers, publicSearchInsurance } from "@/server/booking-engine";
 import { publicSearchVisaProducts } from "@/server/visa-products.functions";
 
 export const Route = createFileRoute("/book")({
@@ -78,16 +82,8 @@ function BookPage() {
           {tab === "hotels" && <HotelsFlow />}
           {tab === "tours" && <ToursFlow />}
           {tab === "visas" && <VisasFlow />}
-          {tab !== "flights" && tab !== "hotels" && tab !== "tours" && tab !== "visas" && (
-            <div className="rounded-2xl border border-dashed border-border bg-white p-10 text-center">
-              <div className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent/15"><vertical.icon className="h-5 w-5 text-accent" /></div>
-              <h3 className="mt-3 font-display text-lg font-bold text-primary">{vertical.label} checkout — opening soon</h3>
-              <p className="mt-1 text-sm text-muted-foreground">This vertical is wired to the same engine. Search and card checkout for {vertical.label.toLowerCase()} go live in the next release.</p>
-              {isAuthenticated && (
-                <p className="mt-3 text-xs text-muted-foreground">Signed-in partners can already book {vertical.label.toLowerCase()} from the dashboard.</p>
-              )}
-            </div>
-          )}
+          {tab === "transfers" && <TransfersFlow />}
+          {tab === "insurance" && <InsuranceFlow />}
         </div>
       </section>
     </PageShell>
@@ -544,6 +540,251 @@ function VisasFlow() {
           </div>
           <div className="col-span-full flex gap-2">
             <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
+            <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
+          </div>
+        </form>
+      )}
+    </>
+  );
+}
+
+function TransfersFlow() {
+  const { currency: displayCurrency, format } = useCurrency();
+  const [busy, setBusy] = useState(false);
+  const [quotes, setQuotes] = useState<TransferQuote[]>([]);
+  const [searchMeta, setSearchMeta] = useState<TransferSearchPayload | null>(null);
+  const [picked, setPicked] = useState<TransferQuote | null>(null);
+  const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
+  const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
+
+  async function search(payload: TransferSearchPayload) {
+    setSearchMeta(payload);
+    setBusy(true); setQuotes([]); setPicked(null); setCheckoutInput(null); setDone(null);
+    try {
+      const json = await publicSearchTransfers({ data: {
+        pickup_address: payload.pickup_address,
+        dropoff_address: payload.dropoff_address,
+        pickup_datetime: payload.pickup_datetime,
+        num_passengers: payload.num_passengers,
+        currency: "USD",
+        display_currency: displayCurrency,
+      } });
+      const parsed = JSON.parse(json) as { quotes: TransferQuote[]; error?: string };
+      setQuotes(parsed.quotes || []);
+      if (parsed.error) toast.error(parsed.error);
+      else if (!parsed.quotes?.length) toast.message("No transfers available for that route");
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  function startCheckout(form: HTMLFormElement) {
+    if (!picked || !searchMeta) return;
+    const fd = new FormData(form);
+    const passenger = {
+      firstName: String(fd.get("first_name")),
+      lastName: String(fd.get("last_name")),
+      email: String(fd.get("email")),
+      phone: String(fd.get("phone")),
+    };
+    setCheckoutInput({
+      vertical: "transfers",
+      base_amount: Number(picked.base_price ?? picked.total_price),
+      currency: picked.base_currency || picked.currency || "USD",
+      display_currency: displayCurrency,
+      contact: { name: `${passenger.firstName} ${passenger.lastName}`, email: passenger.email, phone: passenger.phone },
+      payload: {
+        quote_id: picked.id,
+        vehicle_class: picked.vehicle_class,
+        vehicle_description: picked.vehicle_description,
+        provider_name: picked.provider_name,
+        pickup_address: searchMeta.pickup_address,
+        dropoff_address: searchMeta.dropoff_address,
+        pickup_datetime: searchMeta.pickup_datetime,
+        num_passengers: searchMeta.num_passengers,
+        passenger,
+        flight_number: String(fd.get("flight_number") || ""),
+        special_instructions: String(fd.get("special_instructions") || ""),
+        provider_amount: picked.base_price ?? picked.total_price,
+      },
+    });
+  }
+
+  if (done) {
+    return <ConfirmationScreen {...done} vertical="transfers" fulfillment="manual" onReset={() => { setDone(null); setQuotes([]); setPicked(null); setCheckoutInput(null); }} />;
+  }
+  if (checkout) {
+    return <GuestCheckout input={checkout} onCancel={() => setCheckoutInput(null)} onSuccess={(r) => { setDone(r); setCheckoutInput(null); }} />;
+  }
+
+  const routeLabel = searchMeta ? `${searchMeta.pickup_address.split(",")[0]} → ${searchMeta.dropoff_address.split(",")[0]}` : "";
+
+  return (
+    <>
+      <TransferSearchForm busy={busy} onSubmit={search} />
+
+      {busy && <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Searching live transfer rates…</div>}
+
+      {!picked && quotes.length > 0 && searchMeta && (
+        <TransferResults
+          quotes={quotes}
+          routeLabel={routeLabel}
+          passengers={searchMeta.num_passengers}
+          format={format}
+          onSelect={(q) => setPicked(q)}
+        />
+      )}
+
+      {picked && searchMeta && (
+        <form
+          onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
+          className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
+          style={{ boxShadow: "var(--shadow-soft)" }}
+        >
+          <div className="col-span-full flex items-start justify-between gap-3 border-b border-border pb-3">
+            <div>
+              <h3 className="font-display text-base font-bold text-primary">Lead passenger details</h3>
+              <p className="text-xs text-muted-foreground">{picked.vehicle_description} · {searchMeta.num_passengers} passenger{searchMeta.num_passengers > 1 ? "s" : ""}</p>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
+              <div className="font-display text-lg font-extrabold text-primary">{format(Number(picked.total_price), picked.currency)}</div>
+            </div>
+          </div>
+          <Field label="First name"><input name="first_name" required className={inputCls} /></Field>
+          <Field label="Last name"><input name="last_name" required className={inputCls} /></Field>
+          <Field label="Email (confirmation destination)"><input name="email" type="email" required className={inputCls} /></Field>
+          <Field label="Phone"><input name="phone" required placeholder="+234 800 000 0000" className={inputCls} /></Field>
+          <Field label="Flight number (optional)"><input name="flight_number" placeholder="e.g. BA178" className={inputCls} /></Field>
+          <Field label="Special instructions (optional)"><input name="special_instructions" placeholder="Child seat, extra luggage…" className={inputCls} /></Field>
+          <div className="col-span-full rounded-md bg-surface p-3 text-xs text-muted-foreground">
+            <strong className="text-foreground">Heads up:</strong> Transfer reservations are confirmed within a few hours by our ops team. You'll receive driver details and a contact number by email before pickup.
+          </div>
+          <div className="col-span-full flex gap-2">
+            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
+            <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
+          </div>
+        </form>
+      )}
+    </>
+  );
+}
+
+function InsuranceFlow() {
+  const { currency: displayCurrency, format } = useCurrency();
+  const [busy, setBusy] = useState(false);
+  const [quotes, setQuotes] = useState<InsuranceQuote[]>([]);
+  const [searchMeta, setSearchMeta] = useState<InsuranceSearchPayload | null>(null);
+  const [picked, setPicked] = useState<InsuranceQuote | null>(null);
+  const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
+  const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
+
+  async function search(payload: InsuranceSearchPayload) {
+    setSearchMeta(payload);
+    setBusy(true); setQuotes([]); setPicked(null); setCheckoutInput(null); setDone(null);
+    try {
+      const json = await publicSearchInsurance({ data: {
+        nationality: payload.nationality,
+        destination: payload.destination,
+        start_date: payload.start_date,
+        end_date: payload.end_date,
+        travelers: payload.travelers,
+        coverage_type: payload.coverage_type,
+        display_currency: displayCurrency,
+      } });
+      const parsed = JSON.parse(json) as { quotes: InsuranceQuote[]; error?: string };
+      setQuotes(parsed.quotes || []);
+      if (parsed.error) toast.error(parsed.error);
+      else if (!parsed.quotes?.length) toast.message("No plans available for that combination");
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  function startCheckout(form: HTMLFormElement) {
+    if (!picked || !searchMeta) return;
+    const fd = new FormData(form);
+    const policyholder = {
+      firstName: String(fd.get("first_name")),
+      lastName: String(fd.get("last_name")),
+      email: String(fd.get("email")),
+      phone: String(fd.get("phone")),
+      dateOfBirth: String(fd.get("dob")),
+      nationality: searchMeta.nationality,
+    };
+    setCheckoutInput({
+      vertical: "insurance",
+      base_amount: Number(picked.base_price ?? picked.price),
+      currency: picked.base_currency || picked.currency || "USD",
+      display_currency: displayCurrency,
+      contact: { name: `${policyholder.firstName} ${policyholder.lastName}`, email: policyholder.email, phone: policyholder.phone },
+      payload: {
+        quote_id: picked.id,
+        plan_name: picked.plan_name,
+        coverage_type: picked.coverage_type,
+        duration_days: picked.duration_days,
+        nationality: searchMeta.nationality,
+        nationality_name: searchMeta.nationality_name,
+        destination: searchMeta.destination,
+        destination_name: searchMeta.destination_name,
+        start_date: searchMeta.start_date,
+        end_date: searchMeta.end_date,
+        travelers: searchMeta.travelers,
+        policyholder,
+        provider_amount: picked.base_price ?? picked.price,
+      },
+    });
+  }
+
+  if (done) {
+    return <ConfirmationScreen {...done} vertical="insurance" fulfillment="manual" onReset={() => { setDone(null); setQuotes([]); setPicked(null); setCheckoutInput(null); }} />;
+  }
+  if (checkout) {
+    return <GuestCheckout input={checkout} onCancel={() => setCheckoutInput(null)} onSuccess={(r) => { setDone(r); setCheckoutInput(null); }} />;
+  }
+
+  const totalTravelers = searchMeta?.travelers.length ?? 0;
+
+  return (
+    <>
+      <InsuranceSearchForm busy={busy} onSubmit={search} />
+
+      {busy && <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Pricing your cover…</div>}
+
+      {!picked && quotes.length > 0 && searchMeta && (
+        <InsuranceResults
+          quotes={quotes}
+          travelersCount={totalTravelers}
+          destinationLabel={searchMeta.destination_name}
+          format={format}
+          onSelect={(q) => setPicked(q)}
+        />
+      )}
+
+      {picked && searchMeta && (
+        <form
+          onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
+          className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
+          style={{ boxShadow: "var(--shadow-soft)" }}
+        >
+          <div className="col-span-full flex items-start justify-between gap-3 border-b border-border pb-3">
+            <div>
+              <h3 className="font-display text-base font-bold text-primary">Policyholder details</h3>
+              <p className="text-xs text-muted-foreground">{picked.plan_name} · {totalTravelers} traveler{totalTravelers > 1 ? "s" : ""} · {picked.duration_days} day{picked.duration_days !== 1 ? "s" : ""}</p>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
+              <div className="font-display text-lg font-extrabold text-primary">{format(Number(picked.price), picked.currency)}</div>
+            </div>
+          </div>
+          <Field label="First name"><input name="first_name" required className={inputCls} /></Field>
+          <Field label="Last name"><input name="last_name" required className={inputCls} /></Field>
+          <Field label="Date of birth"><input name="dob" type="date" required className={inputCls} /></Field>
+          <Field label="Email (policy destination)"><input name="email" type="email" required className={inputCls} /></Field>
+          <Field label="Phone"><input name="phone" required placeholder="+234 800 000 0000" className={inputCls} /></Field>
+          <div className="col-span-full rounded-md bg-surface p-3 text-xs text-muted-foreground">
+            <strong className="text-foreground">Heads up:</strong> Your policy is bound by our ops team within a few hours of payment. The policy PDF and member ID will be emailed to you. Coverage starts on {picked.duration_days > 0 ? searchMeta.start_date : "your selected start date"}.
+          </div>
+          <div className="col-span-full flex gap-2">
+            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to plans</button>
             <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
           </div>
         </form>
