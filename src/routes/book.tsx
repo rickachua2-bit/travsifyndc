@@ -18,12 +18,14 @@ import { VisaSearchForm, type VisaSearchPayload } from "@/components/booking/Vis
 import { VisaResults, type VisaProduct } from "@/components/booking/VisaResults";
 import { TransferSearchForm, type TransferSearchPayload } from "@/components/booking/TransferSearchForm";
 import { TransferResults, type TransferQuote } from "@/components/booking/TransferResults";
+import { CarRentalSearchForm, type CarRentalSearchPayload } from "@/components/booking/CarRentalSearchForm";
+import { CarRentalResults, type CarRentalQuote } from "@/components/booking/CarRentalResults";
 import { InsuranceSearchForm, type InsuranceSearchPayload } from "@/components/booking/InsuranceSearchForm";
 import { InsuranceResults, type InsuranceQuote } from "@/components/booking/InsuranceResults";
 import { findCityByCode } from "@/data/cities";
 import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/components/booking/GuestCheckout";
 import { CurrencySwitcher } from "@/components/booking/CurrencySwitcher";
-import { publicSearchFlights, publicSearchHotels, publicSearchTours, publicSearchTransfers, publicSearchInsurance } from "@/server/booking-engine";
+import { publicSearchFlights, publicSearchHotels, publicSearchTours, publicSearchTransfers, publicSearchInsurance, publicSearchCarRentals } from "@/server/booking-engine";
 import { publicSearchVisaProducts } from "@/server/visa-products.functions";
 
 export const Route = createFileRoute("/book")({
@@ -83,6 +85,7 @@ function BookPage() {
           {tab === "tours" && <ToursFlow />}
           {tab === "visas" && <VisasFlow />}
           {tab === "transfers" && <TransfersFlow />}
+          {tab === "car_rentals" && <CarRentalsFlow />}
           {tab === "insurance" && <InsuranceFlow />}
         </div>
       </section>
