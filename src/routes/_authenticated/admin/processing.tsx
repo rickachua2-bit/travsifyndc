@@ -112,16 +112,20 @@ function ProcessingQueue() {
                         <div className="grid gap-4 md:grid-cols-2">
                           <div>
                             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Booking details</h3>
-                            {b.vertical === "visas" && (b.metadata as { payload?: { sherpa_url?: string } })?.payload?.sherpa_url && (
-                              <a
-                                href={(b.metadata as { payload: { sherpa_url: string } }).payload.sherpa_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-2 text-xs font-bold text-accent-foreground hover:opacity-90"
-                              >
-                                <ArrowRight className="h-3.5 w-3.5" /> Open Sherpa portal (affiliate-tagged)
-                              </a>
-                            )}
+                            {(() => {
+                              const portal = affiliatePortalUrl(b);
+                              if (!portal) return null;
+                              return (
+                                <a
+                                  href={portal.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-2 text-xs font-bold text-accent-foreground hover:opacity-90"
+                                >
+                                  <ArrowRight className="h-3.5 w-3.5" /> Open {portal.label} (affiliate-tagged)
+                                </a>
+                              );
+                            })()}
                             <pre className="mt-2 max-h-64 overflow-auto rounded-md bg-white p-3 font-mono text-[11px] leading-relaxed text-foreground border border-border">{JSON.stringify(b.metadata, null, 2)}</pre>
                           </div>
                           <div className="space-y-4">
