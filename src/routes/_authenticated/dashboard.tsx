@@ -1,14 +1,13 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Copy, ArrowRight, LogOut, Code2, Activity, BookOpen, CheckCircle2, ShieldCheck, Sparkles,
-  Eye, EyeOff, Webhook, Zap, AlertCircle, Settings, CreditCard, Users, Inbox
+  ArrowRight, Activity, BookOpen, CheckCircle2, ShieldCheck, Sparkles,
+  Webhook, Zap, AlertCircle, Settings, CreditCard, Users, Inbox, KeyRound, Wallet as WalletIcon,
 } from "lucide-react";
-import { Logo } from "@/components/landing/Logo";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile, useIsAdmin } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { PartnerShell } from "@/components/partner/PartnerShell";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -28,19 +27,16 @@ type BookingRow = {
 };
 
 function DashboardPage() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { profile } = useProfile();
-  const { isAdmin } = useIsAdmin();
-  const navigate = useNavigate();
-  const [showLive, setShowLive] = useState(false);
-  const [showSandbox, setShowSandbox] = useState(false);
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [bookings, setBookings] = useState<BookingRow[]>([]);
+  const [walletTotal, setWalletTotal] = useState<{ usd: number; ngn: number }>({ usd: 0, ngn: 0 });
   const [loading, setLoading] = useState(true);
 
   const firstName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "there";
-  const sandbox = profile?.sandbox_api_key ?? "";
-  const live = profile?.live_api_key ?? "";
+  const status = profile?.kyc_status ?? "draft";
+  const approved = status === "approved";
 
   useEffect(() => {
     if (!user) return;
@@ -48,9 +44,15 @@ function DashboardPage() {
     Promise.all([
       supabase.from("api_logs").select("created_at,status_code,vertical").eq("user_id", user.id).gte("created_at", since).order("created_at", { ascending: false }).limit(1000),
       supabase.from("bookings").select("id,reference,vertical,provider,customer_name,total_amount,currency,status,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
-    ]).then(([l, b]) => {
+      supabase.from("wallets").select("currency,balance").eq("user_id", user.id),
+    ]).then(([l, b, w]) => {
       setLogs((l.data ?? []) as LogRow[]);
       setBookings((b.data ?? []) as BookingRow[]);
+      const wallets = (w.data ?? []) as { currency: string; balance: number }[];
+      setWalletTotal({
+        usd: Number(wallets.find((x) => x.currency === "USD")?.balance ?? 0),
+        ngn: Number(wallets.find((x) => x.currency === "NGN")?.balance ?? 0),
+      });
       setLoading(false);
     });
   }, [user]);
@@ -69,7 +71,6 @@ function DashboardPage() {
       name, pct: Math.round((count / totalBk) * 100),
     })).sort((a, b) => b.pct - a.pct);
 
-    // 7-day series
     const days: { d: string; calls: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(Date.now() - i * 86400000);
@@ -81,100 +82,38 @@ function DashboardPage() {
     return { calls, errors, errorRate, gmv, splitArr, days, max };
   }, [logs, bookings]);
 
-  async function handleSignOut() {
-    await signOut();
-    toast.success("Signed out");
-    navigate({ to: "/" });
-  }
-
-  function copy(label: string, value: string) {
-    if (!value) return;
-    navigator.clipboard.writeText(value);
-    toast.success(`${label} copied`);
-  }
-
-  function masked(v: string) {
-    if (!v) return "—";
-    const parts = v.split("_");
-    const tail = v.slice(-6);
-    return `${parts.slice(0, 2).join("_")}_${"•".repeat(20)}${tail}`;
-  }
-
   return (
-    <div className="min-h-screen bg-surface">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <Link to="/"><Logo /></Link>
-          <div className="flex items-center gap-2">
-            {isAdmin && (
-              <Link to="/admin" className="hidden rounded-md border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent hover:bg-accent/20 sm:inline-block">
-                Admin
-              </Link>
-            )}
-            <Link to="/wallet" className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-block">Wallet</Link>
-            <Link to="/bookings" className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-block">Bookings</Link>
-            <Link to="/book" className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-block">Book</Link>
-            <Link to="/docs" className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-block">Docs</Link>
-            <Link to="/demo" className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-block">Demo</Link>
-            <button onClick={handleSignOut} className="inline-flex items-center gap-2 rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground hover:border-accent hover:text-accent">
-              <LogOut className="h-3.5 w-3.5" /> Sign out
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-6 py-10">
+    <PartnerShell>
+      <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="animate-fade-in-up flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-3 py-1 text-xs font-semibold text-success">
-              <CheckCircle2 className="h-3 w-3" /> KYC approved · Free for life
-            </div>
+            <StatusPill status={status} />
             <h1 className="mt-3 font-display text-3xl font-extrabold leading-tight text-primary md:text-4xl">
               Welcome, {firstName} <span className="text-gradient-accent">👋</span>
             </h1>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              {profile?.legal_name ?? profile?.company} is live on Travsify. No fees. No commission. You keep 100% of your margin.
+              {profile?.legal_name ?? profile?.company ?? "Your account"} · {approved
+                ? "Live + Sandbox active. You keep 100% of your margin."
+                : "Sandbox is unlocked while we review. Live keys activate on approval."}
             </p>
           </div>
-          <Link to="/docs" className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-95">
-            <BookOpen className="h-4 w-4" /> Read the docs
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link to="/api-keys" className="inline-flex items-center gap-2 rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground hover:border-accent hover:text-accent">
+              <KeyRound className="h-3.5 w-3.5" /> API keys
+            </Link>
+            <Link to="/docs" className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-95">
+              <BookOpen className="h-3.5 w-3.5" /> Read the docs
+            </Link>
+          </div>
         </div>
+
+        {!approved && <AwaitingApprovalBanner status={status} reason={profile?.rejection_reason ?? null} />}
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={<Zap className="h-4 w-4" />} label="API calls (7d)" value={stats.calls.toLocaleString()} />
           <Stat icon={<CheckCircle2 className="h-4 w-4" />} label="Bookings (all-time)" value={bookings.length.toLocaleString()} />
           <Stat icon={<CreditCard className="h-4 w-4" />} label="GMV (confirmed)" value={`$${stats.gmv.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
-          <Stat icon={<AlertCircle className="h-4 w-4" />} label="Error rate (7d)" value={`${stats.errorRate.toFixed(2)}%`} />
-        </div>
-
-        <div className="mt-8 grid gap-4 lg:grid-cols-2">
-          <KeyCard tone="live" icon={<Sparkles className="h-5 w-5" />} title="Live API key"
-            desc="Production traffic. Real bookings. Real money. Keep it secret."
-            value={live} shown={showLive} onToggle={() => setShowLive((s) => !s)}
-            onCopy={() => copy("Live key", live)} masked={masked(live)} />
-          <KeyCard tone="sandbox" icon={<ShieldCheck className="h-5 w-5" />} title="Sandbox API key"
-            desc="Safe for testing. Never charged. Never bills the traveler."
-            value={sandbox} shown={showSandbox} onToggle={() => setShowSandbox((s) => !s)}
-            onCopy={() => copy("Sandbox key", sandbox)} masked={masked(sandbox)} />
-        </div>
-
-        {/* Two-line snippet */}
-        <div className="mt-8">
-          <Card>
-            <h2 className="font-display text-base font-bold text-primary">Integrate in two lines</h2>
-            <p className="text-xs text-muted-foreground">Drop this into any HTML page. That's the full integration.</p>
-            <pre className="mt-4 overflow-x-auto rounded-lg bg-primary p-4 font-mono text-xs leading-relaxed text-white">
-{`<script src="${typeof window !== "undefined" ? window.location.origin : ""}/sdk.js"></script>
-<script>Travsify.init("${live || "tsk_live_…"}").flights.search({origin:"LOS",destination:"DXB",departure_date:"2026-06-01",adults:1}).then(console.log)</script>`}
-            </pre>
-            <button
-              onClick={() => copy("Snippet", `<script src="${window.location.origin}/sdk.js"></script>\n<script>Travsify.init("${live || "tsk_live_…"}").flights.search({origin:"LOS",destination:"DXB",departure_date:"2026-06-01",adults:1}).then(console.log)</script>`)}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border bg-white px-3 py-1.5 text-xs font-semibold text-foreground hover:border-accent hover:text-accent"
-            >
-              <Copy className="h-3 w-3" /> Copy snippet
-            </button>
-          </Card>
+          <Stat icon={<WalletIcon className="h-4 w-4" />} label="Wallet" value={`$${walletTotal.usd.toLocaleString(undefined, { maximumFractionDigits: 0 })} · ₦${walletTotal.ngn.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
         </div>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-[2fr_1fr]">
@@ -227,7 +166,7 @@ function DashboardPage() {
             {loading ? (
               <p className="mt-6 text-xs text-muted-foreground">Loading…</p>
             ) : bookings.length === 0 ? (
-              <EmptyState icon={<Inbox className="h-5 w-5" />} title="No bookings yet" desc="Once you create your first booking via the API, it will appear here." />
+              <EmptyState icon={<Inbox className="h-5 w-5" />} title="No bookings yet" desc="Once you create your first booking via the API or in-app, it will appear here." />
             ) : (
               <div className="mt-5 overflow-hidden rounded-lg border border-border">
                 <table className="w-full text-sm">
@@ -258,20 +197,11 @@ function DashboardPage() {
         <div className="mt-8 grid gap-4 lg:grid-cols-[2fr_1fr]">
           <Card>
             <h2 className="font-display text-base font-bold text-primary">Onboarding checklist</h2>
-            <p className="text-xs text-muted-foreground">Get your first live booking flowing</p>
+            <p className="text-xs text-muted-foreground">Get your first booking flowing</p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {[
-                { icon: Code2, title: "Make your first call", desc: "Search a flight in 2 lines.", to: "/developers" as const },
-                { icon: Webhook, title: "Wire up webhooks", desc: "Booking & refund events.", to: "/docs" as const },
-                { icon: Users, title: "Invite your team", desc: "Coming soon.", to: "/contact" as const },
-              ].map((s) => (
-                <Link key={s.title} to={s.to} className="hover-lift rounded-xl border border-border bg-surface p-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-deep text-white"><s.icon className="h-5 w-5" /></div>
-                  <h3 className="mt-3 font-display text-sm font-bold text-primary">{s.title}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{s.desc}</p>
-                  <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-accent">Go <ArrowRight className="h-3 w-3" /></div>
-                </Link>
-              ))}
+              <ChecklistTile to="/api-keys" icon={KeyRound} title="Grab your sandbox key" desc="Two lines of code, full feature parity." />
+              <ChecklistTile to="/wallet" icon={WalletIcon} title="Fund your wallet" desc="Top-up USD or NGN to enable bookings." />
+              <ChecklistTile to="/book" icon={Sparkles} title="Make your first booking" desc="Search inventory and book in-app." />
             </div>
           </Card>
 
@@ -280,22 +210,96 @@ function DashboardPage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10 text-success"><Activity className="h-5 w-5" /></div>
               <div>
                 <h2 className="font-display text-base font-bold text-primary">Account status</h2>
-                <p className="text-xs text-muted-foreground">Everything looks good</p>
+                <p className="text-xs text-muted-foreground">{approved ? "Everything looks good" : "Sandbox active while we review"}</p>
               </div>
             </div>
             <div className="mt-4 space-y-2 text-sm">
-              <StatusRow label="Live access" status={live ? "Active" : "Pending"} tone={live ? "success" : "muted"} />
-              <StatusRow label="Sandbox" status={sandbox ? "Active" : "Pending"} tone={sandbox ? "success" : "muted"} />
+              <StatusRow label="Sandbox" status={profile?.sandbox_api_key ? "Active" : "Pending"} tone={profile?.sandbox_api_key ? "success" : "muted"} />
+              <StatusRow label="Live access" status={approved && profile?.live_api_key ? "Active" : status === "rejected" ? "Rejected" : "Awaiting approval"} tone={approved && profile?.live_api_key ? "success" : status === "rejected" ? "destructive" : "muted"} />
               <StatusRow label="Webhooks" status="Not configured" tone="muted" />
               <StatusRow label="Rate limit" status="120 req/min" tone="success" />
+              <StatusRow label="Error rate (7d)" status={`${stats.errorRate.toFixed(2)}%`} tone={stats.errorRate < 1 ? "success" : "muted"} />
             </div>
             <Link to="/contact" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline">
               <Settings className="h-3 w-3" /> Request rate-limit increase
             </Link>
           </Card>
         </div>
-      </main>
+      </div>
+    </PartnerShell>
+  );
+}
+
+function StatusPill({ status }: { status: string }) {
+  if (status === "approved") {
+    return (
+      <div className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-3 py-1 text-xs font-semibold text-success">
+        <CheckCircle2 className="h-3 w-3" /> KYC approved · Live + Sandbox active
+      </div>
+    );
+  }
+  if (status === "rejected") {
+    return (
+      <div className="inline-flex items-center gap-2 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-xs font-semibold text-destructive">
+        <AlertCircle className="h-3 w-3" /> Application not approved
+      </div>
+    );
+  }
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+      <ShieldCheck className="h-3 w-3" /> Sandbox mode · awaiting approval
     </div>
+  );
+}
+
+function AwaitingApprovalBanner({ status, reason }: { status: string; reason: string | null }) {
+  if (status === "rejected") {
+    return (
+      <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/5 p-5">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 flex-none text-destructive" />
+          <div className="flex-1">
+            <p className="font-display text-sm font-bold text-primary">Application not approved</p>
+            {reason && <p className="mt-1 text-sm text-muted-foreground"><span className="font-semibold text-foreground">Reviewer note:</span> {reason}</p>}
+            <Link to="/kyc" className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground">
+              Update & resubmit <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-6 rounded-2xl border border-accent/30 bg-accent/5 p-5">
+      <div className="flex items-start gap-3">
+        <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-accent" />
+        <div className="flex-1">
+          <p className="font-display text-sm font-bold text-primary">You're in sandbox mode while we review your KYC</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Build, test, and integrate the full API with your sandbox key. Live keys activate automatically the moment you're approved (typical review: 24–72h).
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link to="/api-keys" className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground">
+              <KeyRound className="h-3 w-3" /> Get sandbox key
+            </Link>
+            <Link to="/pending-review" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground hover:border-accent hover:text-accent">
+              View application status
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChecklistTile({ to, icon: Icon, title, desc }: { to: "/api-keys" | "/wallet" | "/book" | "/docs" | "/contact"; icon: typeof KeyRound; title: string; desc: string }) {
+  return (
+    <Link to={to} className="hover-lift rounded-xl border border-border bg-surface p-4">
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-deep text-white"><Icon className="h-5 w-5" /></div>
+      <h3 className="mt-3 font-display text-sm font-bold text-primary">{title}</h3>
+      <p className="mt-1 text-xs text-muted-foreground">{desc}</p>
+      <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-accent">Go <ArrowRight className="h-3 w-3" /></div>
+    </Link>
   );
 }
 
@@ -309,35 +313,6 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">{icon}</div>
       <div className="mt-4 font-display text-2xl font-extrabold text-primary">{value}</div>
       <div className="mt-1 text-xs text-muted-foreground">{label}</div>
-    </div>
-  );
-}
-
-function KeyCard({ tone, icon, title, desc, value, masked, shown, onToggle, onCopy }: {
-  tone: "live" | "sandbox"; icon: React.ReactNode; title: string; desc: string;
-  value: string; masked: string; shown: boolean; onToggle: () => void; onCopy: () => void;
-}) {
-  const isLive = tone === "live";
-  return (
-    <div className="rounded-2xl border border-border bg-white p-5" style={{ boxShadow: "var(--shadow-soft)" }}>
-      <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isLive ? "bg-gradient-to-br from-accent to-orange-500 text-white" : "bg-accent/10 text-accent"}`}>{icon}</div>
-        <div className="flex-1">
-          <h2 className="font-display text-base font-bold text-primary">{title}</h2>
-          <p className="text-xs text-muted-foreground">{desc}</p>
-        </div>
-      </div>
-      <div className="mt-4 flex items-center justify-between gap-2 rounded-md border border-border bg-surface px-3 py-2.5 font-mono text-xs text-foreground">
-        <span className="truncate">{value ? (shown ? value : masked) : "—"}</span>
-        <div className="flex shrink-0 items-center gap-1">
-          <button onClick={onToggle} disabled={!value} aria-label={shown ? "Hide key" : "Show key"} className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2 py-1 text-[11px] font-semibold text-foreground hover:border-accent hover:text-accent disabled:opacity-50">
-            {shown ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-          </button>
-          <button onClick={onCopy} disabled={!value} className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2 py-1 text-[11px] font-semibold text-foreground hover:border-accent hover:text-accent disabled:opacity-50">
-            <Copy className="h-3 w-3" /> Copy
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -359,6 +334,7 @@ function BookingStatus({ status }: { status: string }) {
   const map: Record<string, string> = {
     confirmed: "bg-success/15 text-success",
     pending: "bg-accent/15 text-accent",
+    processing: "bg-accent/15 text-accent",
     cancelled: "bg-muted text-muted-foreground",
     failed: "bg-destructive/15 text-destructive",
     refunded: "bg-blue-500/15 text-blue-600",
@@ -366,11 +342,12 @@ function BookingStatus({ status }: { status: string }) {
   return <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${map[status] ?? "bg-muted text-muted-foreground"}`}>{status}</span>;
 }
 
-function StatusRow({ label, status, tone }: { label: string; status: string; tone: "success" | "muted" }) {
+function StatusRow({ label, status, tone }: { label: string; status: string; tone: "success" | "muted" | "destructive" }) {
+  const cls = tone === "success" ? "bg-success/15 text-success" : tone === "destructive" ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground";
   return (
     <div className="flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2">
       <span className="text-foreground">{label}</span>
-      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tone === "success" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{status}</span>
+      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${cls}`}>{status}</span>
     </div>
   );
 }

@@ -1,15 +1,14 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Logo } from "@/components/landing/Logo";
-import { useAuth } from "@/hooks/useAuth";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useProfile } from "@/hooks/useProfile";
-import { Clock, ShieldCheck, AlertCircle, Copy, ArrowRight, BookOpen, PlayCircle, RefreshCw, LogOut, Mail } from "lucide-react";
+import { Clock, ShieldCheck, AlertCircle, Copy, ArrowRight, BookOpen, PlayCircle, RefreshCw, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { PartnerShell } from "@/components/partner/PartnerShell";
 
 export const Route = createFileRoute("/_authenticated/pending-review")({
   component: PendingReviewPage,
   head: () => ({
     meta: [
-      { title: "Application under review — Travsify NDC" },
+      { title: "Application status — Travsify NDC" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -17,31 +16,15 @@ export const Route = createFileRoute("/_authenticated/pending-review")({
 
 function PendingReviewPage() {
   const { profile } = useProfile();
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
 
   if (!profile) return null;
 
   const status = profile.kyc_status;
   const sandboxKey = profile.sandbox_api_key ?? "tsk_sandbox_••••••••";
 
-  async function handleSignOut() {
-    await signOut();
-    navigate({ to: "/" });
-  }
-
   return (
-    <div className="min-h-screen bg-surface">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link to="/"><Logo /></Link>
-          <button onClick={handleSignOut} className="inline-flex items-center gap-2 rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground hover:border-accent hover:text-accent">
-            <LogOut className="h-3.5 w-3.5" /> Sign out
-          </button>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-6 py-12">
+    <PartnerShell>
+      <div className="mx-auto max-w-6xl px-6 py-8">
         <div className="animate-fade-in-up">
           <StatusBanner status={status} reason={profile.rejection_reason} />
         </div>
