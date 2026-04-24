@@ -166,7 +166,7 @@ export const searchFlightsInternal = createServerFn({ method: "POST" })
     adults: z.number().int().min(1).max(8).optional(),
     cabin: z.enum(["economy", "premium_economy", "business", "first"]).optional(),
   }).parse(d))
-  .handler(async ({ data }) => duffelSearch("live", data));
+  .handler(async ({ data }) => (await duffelSearch("live", data)) as unknown as Record<string, unknown>);
 
 export const searchHotelsInternal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -179,7 +179,7 @@ export const searchHotelsInternal = createServerFn({ method: "POST" })
     children: z.number().int().min(0).max(6).optional(),
     currency: z.string().length(3).optional(),
   }).parse(d))
-  .handler(async ({ data }) => liteapiSearch(data));
+  .handler(async ({ data }) => (await liteapiSearch(data)) as unknown as Record<string, unknown>);
 
 const PassengerSchema = z.object({
   given_name: z.string().min(1).max(60),
