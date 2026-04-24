@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowRight, Loader2, Plane, ExternalLink } from "lucide-react";
+import { ArrowRight, Loader2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { PageShell, PageHero } from "@/components/landing/PageShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { VerticalTabs, VERTICALS, type BookingVertical } from "@/components/booking/VerticalTabs";
 import { Field, inputCls } from "@/components/booking/SearchForm";
 import { FlightSearchForm, type FlightSearchPayload } from "@/components/booking/FlightSearchForm";
+import { FlightResults, type FlightOffer } from "@/components/booking/FlightResults";
 import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/components/booking/GuestCheckout";
 import { CurrencySwitcher } from "@/components/booking/CurrencySwitcher";
 import { publicSearchFlights } from "@/server/booking-engine";
@@ -23,11 +24,6 @@ export const Route = createFileRoute("/book")({
     ],
   }),
 });
-
-type FlightOffer = {
-  id: string; total_amount: string; total_currency: string; base_amount: number; base_currency: string; owner?: string;
-  slices?: Array<{ origin?: string; destination?: string; segments?: Array<{ departing_at?: string; arriving_at?: string; marketing_carrier?: string; flight_number?: string }> }>;
-};
 
 function BookPage() {
   const { isAuthenticated } = useAuth();
@@ -90,11 +86,13 @@ function FlightsFlow() {
   const { currency: displayCurrency, format } = useCurrency();
   const [busy, setBusy] = useState(false);
   const [offers, setOffers] = useState<FlightOffer[]>([]);
+  const [routeLabel, setRouteLabel] = useState("");
   const [picked, setPicked] = useState<FlightOffer | null>(null);
   const [checkout, setCheckout] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
 
   async function search(payload: FlightSearchPayload) {
+    setRouteLabel(`${payload.slices[0]?.destination || ""}`);
     setBusy(true); setOffers([]); setPicked(null); setCheckout(null); setDone(null);
     try {
       const json = await publicSearchFlights({ data: {
@@ -149,25 +147,7 @@ function FlightsFlow() {
       {busy && <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Searching live inventory…</div>}
 
       {!picked && offers.length > 0 && (
-        <div className="mt-6 space-y-3">
-          {offers.map((o) => (
-            <div key={o.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-white p-4" style={{ boxShadow: "var(--shadow-soft)" }}>
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary"><Plane className="h-4 w-4" /></div>
-                <div>
-                  <div className="font-display text-sm font-bold text-primary">{o.owner || "Operating carrier"}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {o.slices?.[0]?.segments?.map((s) => `${s.marketing_carrier ?? ""}${s.flight_number ?? ""} ${new Date(s.departing_at || "").toLocaleString()} → ${new Date(s.arriving_at || "").toLocaleString()}`).join("  •  ")}
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="font-display text-xl font-extrabold text-primary">{format(Number(o.total_amount), o.total_currency)}</div>
-                <button onClick={() => setPicked(o)} className="mt-1 rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">Select</button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <FlightResults offers={offers} routeLabel={routeLabel} format={format} onSelect={(o) => setPicked(o)} />
       )}
 
       {picked && (
