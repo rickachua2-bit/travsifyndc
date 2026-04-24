@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { PageShell, PageHero } from "@/components/landing/PageShell";
 import { useAuth } from "@/hooks/useAuth";
 import { VerticalTabs, VERTICALS, type BookingVertical } from "@/components/booking/VerticalTabs";
-import { SearchForm, Field, inputCls } from "@/components/booking/SearchForm";
+import { Field, inputCls } from "@/components/booking/SearchForm";
+import { FlightSearchForm, type FlightSearchPayload } from "@/components/booking/FlightSearchForm";
 import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/components/booking/GuestCheckout";
 import { publicSearchFlights } from "@/server/booking-engine";
 
