@@ -92,8 +92,14 @@ export function FlightSearchForm({
       destination: s.destination.trim().toUpperCase(),
       departure_date: s.departure_date,
     }));
-    if (cleanSlices.some((s) => s.origin.length !== 3 || s.destination.length !== 3 || !s.departure_date)) {
-      alert("Please fill 3-letter IATA codes and dates for every leg.");
+    const IATA = /^[A-Z]{3}$/;
+    const bad = cleanSlices.find((s) => !IATA.test(s.origin) || !IATA.test(s.destination) || !s.departure_date);
+    if (bad) {
+      alert(`Please enter valid 3-letter IATA airport codes for every leg (e.g. LOS, DXB, LHR). Got "${bad.origin}" → "${bad.destination}".`);
+      return;
+    }
+    if (cleanSlices.some((s) => s.origin === s.destination)) {
+      alert("Origin and destination must be different airports.");
       return;
     }
     void onSubmit({
