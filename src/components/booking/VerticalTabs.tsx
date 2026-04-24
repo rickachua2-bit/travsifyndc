@@ -12,21 +12,39 @@ export const VERTICALS: { id: BookingVertical; label: string; icon: typeof Plane
   { id: "insurance", label: "Travel insurance", icon: Shield, tagline: "Medical, trip & nomad cover" },
 ];
 
+/**
+ * OTA-style icon-over-label tab strip (Skyscanner / Trip.com / mytrip).
+ * Sits on top of the floating search card with an active underline accent.
+ */
 export function VerticalTabs({ value, onChange }: { value: BookingVertical; onChange: (v: BookingVertical) => void }) {
   return (
-    <div className="flex flex-wrap gap-1 rounded-2xl border border-border bg-white p-1.5">
+    <div
+      role="tablist"
+      aria-label="Booking products"
+      className="-mx-2 flex flex-nowrap gap-1 overflow-x-auto px-2 pb-1 sm:mx-0 sm:px-0 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
       {VERTICALS.map((v) => {
         const active = value === v.id;
         return (
           <button
             key={v.id}
+            role="tab"
+            aria-selected={active}
             onClick={() => onChange(v.id)}
-            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${
-              active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-surface hover:text-foreground"
+            className={`group relative flex flex-none flex-col items-center justify-center gap-1 rounded-t-xl px-4 py-3 text-[11px] font-semibold transition sm:flex-row sm:gap-2 sm:px-5 sm:text-xs ${
+              active
+                ? "bg-white text-primary"
+                : "text-white/85 hover:bg-white/10 hover:text-white"
             }`}
           >
-            <v.icon className="h-3.5 w-3.5" />
-            {v.label}
+            <v.icon className={`h-5 w-5 sm:h-4 sm:w-4 ${active ? "text-accent" : ""}`} />
+            <span className="whitespace-nowrap">{v.label}</span>
+            {active && (
+              <span
+                aria-hidden
+                className="absolute inset-x-3 -bottom-[2px] h-[3px] rounded-full bg-accent"
+              />
+            )}
           </button>
         );
       })}
