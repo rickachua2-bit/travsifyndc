@@ -263,7 +263,7 @@ function WalletPage() {
             </section>
           </>
         )}
-      </main>
-    </div>
+      </div>
+    </PartnerShell>
   );
 }
