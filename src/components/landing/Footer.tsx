@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Twitter, Linkedin, Github, Youtube } from "lucide-react";
 import { Logo } from "./Logo";
 
-type Path = "/developers" | "/docs" | "/demo" | "/contact" | "/" | "/signin" | "/get-api-access";
+type Path = "/developers" | "/docs" | "/demo" | "/contact" | "/" | "/signin" | "/signup";
 
 const cols: { title: string; links: { label: string; to: Path }[] }[] = [
   {
@@ -24,14 +24,14 @@ const cols: { title: string; links: { label: string; to: Path }[] }[] = [
     title: "Resources",
     links: [
       { label: "API Reference", to: "/docs" },
-      { label: "Sandbox", to: "/get-api-access" },
+      { label: "Sandbox", to: "/signup" },
       { label: "Status", to: "/docs" },
     ],
   },
   {
     title: "Get started",
     links: [
-      { label: "Get API Access", to: "/get-api-access" },
+      { label: "Apply for API access", to: "/signup" },
       { label: "Sign in", to: "/signin" },
       { label: "Book a demo", to: "/demo" },
     ],

@@ -14,7 +14,7 @@ import { Testimonials } from "@/components/landing/Testimonials";
 import { GlobalCoverage } from "@/components/landing/GlobalCoverage";
 import { UseCases } from "@/components/landing/UseCases";
 import { Automation } from "@/components/landing/Automation";
-import { Pricing } from "@/components/landing/Pricing";
+
 import { FinalCTA } from "@/components/landing/FinalCTA";
 import { Footer } from "@/components/landing/Footer";
 import { useReveal } from "@/hooks/useReveal";
@@ -59,7 +59,7 @@ function Index() {
         <GlobalCoverage />
         <UseCases />
         <Automation />
-        <Pricing />
+        
         <FinalCTA />
       </main>
       <Footer />

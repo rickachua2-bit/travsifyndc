@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Search, Loader2, Building2 } from "lucide-react";
+import { ArrowRight, Search, Loader2, Building2, Clock, CheckCircle2, XCircle, Inbox } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminQueue,
@@ -25,6 +25,7 @@ function AdminQueue() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("submitted");
   const [q, setQ] = useState("");
+  const [counts, setCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setLoading(true);
@@ -40,6 +41,15 @@ function AdminQueue() {
       });
   }, [filter]);
 
+  // Load counts per status for the stat cards
+  useEffect(() => {
+    Promise.all(
+      FILTERS.map((s) =>
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("kyc_status", s).then(({ count }) => [s, count ?? 0] as const),
+      ),
+    ).then((entries) => setCounts(Object.fromEntries(entries)));
+  }, [filter]);
+
   const filtered = rows.filter((r) => {
     if (!q) return true;
     const s = q.toLowerCase();
@@ -53,13 +63,13 @@ function AdminQueue() {
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Compliance</div>
           <h1 className="mt-1 font-display text-3xl font-extrabold text-primary">KYC review queue</h1>
           <p className="mt-1 text-sm text-muted-foreground">Approve or reject business applications. Oldest first.</p>
         </div>
-        <div className="relative w-72">
+        <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             value={q}
@@ -70,18 +80,12 @@ function AdminQueue() {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        {FILTERS.map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-semibold capitalize transition ${
-              filter === f ? "border-accent bg-accent/10 text-accent" : "border-border bg-white text-foreground hover:border-accent/60"
-            }`}
-          >
-            {f.replace("_", " ")}
-          </button>
-        ))}
+      {/* Stat cards */}
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard icon={<Inbox className="h-4 w-4" />} label="Awaiting review" value={counts.submitted ?? 0} tone="accent" active={filter === "submitted"} onClick={() => setFilter("submitted")} />
+        <StatCard icon={<Clock className="h-4 w-4" />} label="Under review" value={counts.under_review ?? 0} tone="blue" active={filter === "under_review"} onClick={() => setFilter("under_review")} />
+        <StatCard icon={<CheckCircle2 className="h-4 w-4" />} label="Approved" value={counts.approved ?? 0} tone="success" active={filter === "approved"} onClick={() => setFilter("approved")} />
+        <StatCard icon={<XCircle className="h-4 w-4" />} label="Rejected" value={counts.rejected ?? 0} tone="destructive" active={filter === "rejected"} onClick={() => setFilter("rejected")} />
       </div>
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-white" style={{ boxShadow: "var(--shadow-soft)" }}>
@@ -123,6 +127,37 @@ function AdminQueue() {
         )}
       </div>
     </main>
+  );
+}
+
+function StatCard({
+  icon, label, value, tone, active, onClick,
+}: {
+  icon: React.ReactNode; label: string; value: number;
+  tone: "accent" | "blue" | "success" | "destructive";
+  active: boolean; onClick: () => void;
+}) {
+  const tones: Record<string, string> = {
+    accent: "bg-accent/10 text-accent",
+    blue: "bg-blue-500/10 text-blue-600",
+    success: "bg-success/10 text-success",
+    destructive: "bg-destructive/10 text-destructive",
+  };
+  return (
+    <button
+      onClick={onClick}
+      className={`group rounded-2xl border bg-white p-4 text-left transition hover:-translate-y-0.5 ${
+        active ? "border-accent shadow-md" : "border-border"
+      }`}
+      style={{ boxShadow: active ? "var(--shadow-accent)" : "var(--shadow-soft)" }}
+    >
+      <div className="flex items-center justify-between">
+        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${tones[tone]}`}>{icon}</div>
+        {active && <span className="text-[10px] font-bold uppercase tracking-wider text-accent">Viewing</span>}
+      </div>
+      <div className="mt-3 font-display text-2xl font-extrabold text-primary">{value}</div>
+      <div className="text-xs text-muted-foreground">{label}</div>
+    </button>
   );
 }
 
