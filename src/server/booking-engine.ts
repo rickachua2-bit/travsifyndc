@@ -229,10 +229,51 @@ export const publicSearchTransfers = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
     const display = data.display_currency || "USD";
-    const res = await mozioSearch(data);
-    const quotes = await Promise.all(res.quotes.map(async (q) => {
+    const normalized = await getOrScrapeTransfers({
+      pickup_address: data.pickup_address,
+      dropoff_address: data.dropoff_address,
+      pickup_datetime: data.pickup_datetime,
+      num_passengers: data.num_passengers,
+    });
+    const quotes = await Promise.all(normalized.map(async (q) => {
       const price = await publicPrice("transfers", q.total_price, q.currency, display);
-      return { ...q, base_price: q.total_price, base_currency: q.currency, total_price: price.total, currency: price.currency, price_breakdown: price };
+      const { _internal_underwriter: _u, ...publicQuote } = q;
+      return {
+        ...publicQuote,
+        base_price: q.total_price,
+        base_currency: q.currency,
+        total_price: price.total,
+        currency: price.currency,
+        price_breakdown: price,
+      };
+    }));
+    return JSON.stringify({ quotes, display_currency: display });
+  });
+
+export const publicSearchCarRentals = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({
+    pickup_location: z.string().min(2).max(200),
+    dropoff_location: z.string().min(2).max(200),
+    pickup_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    dropoff_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    driver_age: z.number().int().min(18).max(99),
+    display_currency: DisplayCurrencyEnum.optional(),
+  }).parse(d))
+  .handler(async ({ data }): Promise<string> => {
+    const display = data.display_currency || "USD";
+    const normalized = await getOrScrapeCarRentals(data);
+    const quotes = await Promise.all(normalized.map(async (q) => {
+      const price = await publicPrice("car_rentals", q.total_price, q.currency, display);
+      const { _internal_underwriter: _u, ...publicQuote } = q;
+      return {
+        ...publicQuote,
+        base_price: q.total_price,
+        base_currency: q.currency,
+        total_price: price.total,
+        per_day_price: Number((price.total / Math.max(1, q.rental_days)).toFixed(2)),
+        currency: price.currency,
+        price_breakdown: price,
+      };
     }));
     return JSON.stringify({ quotes, display_currency: display });
   });
