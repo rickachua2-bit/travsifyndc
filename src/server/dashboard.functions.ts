@@ -340,7 +340,111 @@ export const bookHotelFromWallet = createServerFn({ method: "POST" })
     }
   });
 
-export const myBookings = createServerFn({ method: "GET" })
+// ---------- Affiliate verticals (manual fulfillment) ----------
+export const searchToursInternal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    query: z.string().min(2).max(100),
+    date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    currency: z.string().length(3).optional(),
+  }).parse(d))
+  .handler(async ({ data }): Promise<string> => JSON.stringify(await gygSearch(data)));
+
+export const searchTransfersInternal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    pickup_address: z.string().min(3).max(300),
+    dropoff_address: z.string().min(3).max(300),
+    pickup_datetime: z.string().min(10).max(40),
+    num_passengers: z.number().int().min(1).max(20),
+    currency: z.string().length(3).optional(),
+  }).parse(d))
+  .handler(async ({ data }): Promise<string> => JSON.stringify(await mozioSearch(data)));
+
+export const searchInsuranceInternal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    nationality: z.string().length(2),
+    destination: z.string().length(2),
+    start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    travelers: z.array(z.object({ age: z.number().int().min(0).max(120) })).min(1).max(10),
+    coverage_type: z.enum(["nomad", "trip", "remote_health"]).optional(),
+  }).parse(d))
+  .handler(async ({ data }): Promise<string> => JSON.stringify(await swSearch({
+    ...data,
+    nationality: data.nationality.toUpperCase(),
+    destination: data.destination.toUpperCase(),
+  })));
+
+export const searchVisasInternal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    nationality: z.string().length(2),
+    destination: z.string().length(2),
+    purpose: z.enum(["tourism", "business", "transit"]).optional(),
+  }).parse(d))
+  .handler(async ({ data }): Promise<string> => JSON.stringify(await sherpaSearch({
+    nationality: data.nationality.toUpperCase(),
+    destination: data.destination.toUpperCase(),
+    purpose: data.purpose,
+  })));
+
+/** Generic wallet-pay handler for manual-fulfillment verticals (tours, transfers, insurance, visas). */
+export const bookManualFromWallet = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    vertical: z.enum(["tours", "transfers", "insurance", "visas"]),
+    amount: z.number().positive().max(10_000_000),
+    currency: z.enum(["USD", "NGN"]),
+    customer: z.object({ name: z.string().min(2).max(120), email: z.string().email().max(255) }),
+    payload: z.record(z.string(), z.unknown()),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { userId } = context as unknown as { userId: string };
+    const ref = genBookingRef();
+    const provider = ({ tours: "getyourguide", transfers: "mozio", insurance: "safetywing", visas: "sherpa" } as const)[data.vertical];
+
+    // Create booking row first
+    const { data: booking, error } = await supabaseAdmin.from("bookings").insert({
+      user_id: userId,
+      environment: "live",
+      vertical: data.vertical,
+      provider,
+      reference: ref,
+      status: "processing",
+      fulfillment_mode: "manual",
+      total_amount: data.amount,
+      currency: data.currency,
+      customer_email: data.customer.email,
+      customer_name: data.customer.name,
+      metadata: { paid_via: "wallet", payload: data.payload } as never,
+    }).select("*").single();
+    if (error || !booking) throw new Error(error?.message || "Booking insert failed");
+
+    // Debit wallet (refund booking row on failure)
+    try {
+      await supabaseAdmin.rpc("wallet_debit", {
+        p_user_id: userId,
+        p_currency: data.currency,
+        p_amount: data.amount,
+        p_category: "booking_payment",
+        p_reference: `book_${ref}`,
+        p_description: `${data.vertical} booking ${ref}`,
+        p_provider: provider,
+        p_provider_reference: undefined,
+        p_booking_id: booking.id,
+        p_metadata: {},
+      });
+    } catch (e) {
+      await supabaseAdmin.from("bookings").update({ status: "cancelled", metadata: { paid_via: "wallet", cancel_reason: (e as Error).message } as never }).eq("id", booking.id);
+      throw e;
+    }
+    return booking;
+  });
+
+
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { userId } = context as unknown as { userId: string };
