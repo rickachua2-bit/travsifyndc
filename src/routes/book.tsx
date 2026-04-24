@@ -834,8 +834,11 @@ function InsuranceFlow() {
               <p className="text-xs text-muted-foreground">{picked.plan_name} · {totalTravelers} traveler{totalTravelers > 1 ? "s" : ""} · {picked.duration_days} day{picked.duration_days !== 1 ? "s" : ""}</p>
             </div>
             <div className="text-right">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total · {totalTravelers} traveler{totalTravelers > 1 ? "s" : ""}</div>
               <div className="font-display text-lg font-extrabold text-primary">{format(Number(picked.price), picked.currency)}</div>
+              {totalTravelers > 1 && (
+                <div className="text-[11px] text-muted-foreground">{format(Number(picked.per_traveler), picked.currency)} × {totalTravelers}</div>
+              )}
             </div>
           </div>
           <Field label="First name"><input name="first_name" required className={inputCls} /></Field>
@@ -843,6 +846,22 @@ function InsuranceFlow() {
           <Field label="Date of birth"><input name="dob" type="date" required className={inputCls} /></Field>
           <Field label="Email (policy destination)"><input name="email" type="email" required className={inputCls} /></Field>
           <Field label="Phone"><input name="phone" required placeholder="+234 800 000 0000" className={inputCls} /></Field>
+
+          {searchMeta.travelers.slice(1).map((t, i) => {
+            const idx = i + 1;
+            return (
+              <div key={idx} className="col-span-full grid gap-3 rounded-xl border border-dashed border-border bg-surface/40 p-3 sm:grid-cols-2">
+                <div className="col-span-full flex items-baseline justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Traveler {idx + 1}</h4>
+                  <span className="text-[11px] text-muted-foreground">Age {t.age}</span>
+                </div>
+                <Field label="First name"><input name={`tr_${idx}_first_name`} required className={inputCls} /></Field>
+                <Field label="Last name"><input name={`tr_${idx}_last_name`} required className={inputCls} /></Field>
+                <Field label="Date of birth"><input name={`tr_${idx}_dob`} type="date" required className={inputCls} /></Field>
+              </div>
+            );
+          })}
+
           <div className="col-span-full rounded-md bg-surface p-3 text-xs text-muted-foreground">
             <strong className="text-foreground">Heads up:</strong> Your policy is bound by our ops team within a few hours of payment. The policy PDF and member ID will be emailed to you. Coverage starts on {picked.duration_days > 0 ? searchMeta.start_date : "your selected start date"}.
           </div>
