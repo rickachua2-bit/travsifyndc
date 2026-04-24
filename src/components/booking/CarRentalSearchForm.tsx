@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Calendar, Loader2, MapPin, Search, User } from "lucide-react";
+import { Calendar, Loader2, Search, User } from "lucide-react";
 import { FieldLabel } from "@/components/booking/SearchForm";
+import { LocationInput } from "@/components/booking/LocationInput";
 
 export type CarRentalSearchPayload = {
   pickup_location: string;
@@ -50,31 +51,25 @@ export function CarRentalSearchForm({
       style={{ boxShadow: "var(--shadow-soft)" }}
     >
       <div className={sameLocation ? "sm:col-span-5" : "sm:col-span-3"}>
-        <FieldLabel>Pickup location</FieldLabel>
-        <div className="relative mt-1">
-          <MapPin className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={pickup}
-            onChange={(e) => setPickup(e.target.value)}
-            placeholder="e.g. JFK Airport, New York"
-            className="h-11 w-full rounded-md border border-border bg-white pl-8 pr-2 text-sm"
-            required
-          />
-        </div>
+        <LocationInput
+          label="Pickup location"
+          value={pickup}
+          onChange={setPickup}
+          placeholder="e.g. JFK Airport, New York"
+          iconHint="pickup"
+        />
       </div>
 
       {!sameLocation && (
         <div className="sm:col-span-3">
-          <FieldLabel>Drop-off location</FieldLabel>
-          <div className="relative mt-1">
-            <MapPin className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={dropoff}
-              onChange={(e) => setDropoff(e.target.value)}
-              placeholder="e.g. LAX Airport, Los Angeles"
-              className="h-11 w-full rounded-md border border-border bg-white pl-8 pr-2 text-sm"
-            />
-          </div>
+          <LocationInput
+            label="Drop-off location"
+            value={dropoff}
+            onChange={setDropoff}
+            placeholder="e.g. LAX Airport, Los Angeles"
+            iconHint="dropoff"
+            required={false}
+          />
         </div>
       )}
 

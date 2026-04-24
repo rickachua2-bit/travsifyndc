@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Calendar, Clock, Loader2, MapPin, Search, Users } from "lucide-react";
+import { Calendar, Clock, Loader2, Search, Users } from "lucide-react";
 import { FieldLabel } from "@/components/booking/SearchForm";
+import { LocationInput } from "@/components/booking/LocationInput";
 
 export type TransferSearchPayload = {
   pickup_address: string;
@@ -51,31 +52,23 @@ export function TransferSearchForm({
       style={{ boxShadow: "var(--shadow-soft)" }}
     >
       <div className="sm:col-span-4">
-        <FieldLabel>Pickup</FieldLabel>
-        <div className="relative mt-1">
-          <MapPin className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={pickup}
-            onChange={(e) => setPickup(e.target.value)}
-            placeholder="e.g. JFK Airport, Terminal 4"
-            className="h-11 w-full rounded-md border border-border bg-white pl-8 pr-2 text-sm"
-            required
-          />
-        </div>
+        <LocationInput
+          label="Pickup"
+          value={pickup}
+          onChange={setPickup}
+          placeholder="e.g. JFK Airport, Terminal 4"
+          iconHint="pickup"
+        />
       </div>
 
       <div className="sm:col-span-4">
-        <FieldLabel>Drop-off</FieldLabel>
-        <div className="relative mt-1">
-          <MapPin className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={dropoff}
-            onChange={(e) => setDropoff(e.target.value)}
-            placeholder="e.g. Times Square, Manhattan"
-            className="h-11 w-full rounded-md border border-border bg-white pl-8 pr-2 text-sm"
-            required
-          />
-        </div>
+        <LocationInput
+          label="Drop-off"
+          value={dropoff}
+          onChange={setDropoff}
+          placeholder="e.g. Times Square, Manhattan"
+          iconHint="dropoff"
+        />
       </div>
 
       <div className="sm:col-span-2">
