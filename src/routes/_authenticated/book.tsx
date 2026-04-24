@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Plane, Hotel, Loader2, Search } from "lucide-react";
-import { Logo } from "@/components/landing/Logo";
+import { Plane, Hotel, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { searchFlightsInternal, searchHotelsInternal, bookFlightFromWallet, bookHotelFromWallet } from "@/server/dashboard.functions";
+import { PartnerShell } from "@/components/partner/PartnerShell";
 
 export const Route = createFileRoute("/_authenticated/book")({
   component: BookPage,
