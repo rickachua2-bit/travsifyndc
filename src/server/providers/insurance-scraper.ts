@@ -354,7 +354,7 @@ export async function getOrScrapeInsurance(input: InsuranceScrapeInput): Promise
   try {
     await supabaseAdmin
       .from("insurance_quote_cache")
-      .upsert({
+      .upsert([{
         destination: input.destination_iso2,
         nationality: input.nationality_iso2,
         duration_bucket: dBucket,
@@ -362,7 +362,7 @@ export async function getOrScrapeInsurance(input: InsuranceScrapeInput): Promise
         travelers_count: tCount,
         quotes: fresh as unknown as object,
         last_scraped_at: new Date().toISOString(),
-      }, { onConflict: "destination,nationality,duration_bucket,max_age,travelers_count" });
+      }], { onConflict: "destination,nationality,duration_bucket,max_age,travelers_count" });
   } catch (e) {
     console.warn("insurance cache upsert failed:", (e as Error).message);
   }
