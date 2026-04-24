@@ -254,9 +254,9 @@ function KycWizard() {
     await supabase.from("kyc_drafts").delete().eq("user_id", user.id);
 
     setSubmitting(false);
-    toast.success("KYC submitted — we'll review within 24–72h");
+    toast.success("KYC submitted! Your sandbox is ready — start testing while we review (24–72h).");
     await refresh();
-    navigate({ to: "/pending-review" });
+    navigate({ to: "/dashboard" });
   }
 
   const progress = useMemo(() => Math.round(((step - 1) / 4) * 100), [step]);
