@@ -37,8 +37,10 @@ function AuthenticatedLayout() {
     }
 
     if (status === "submitted" || status === "under_review") {
-      if (path !== "/pending-review") {
-        navigate({ to: "/pending-review" });
+      // Submitted users can use the dashboard (sandbox) while we review.
+      // Only force them off /kyc; dashboard, wallet, bookings, pending-review are all allowed.
+      if (path === "/kyc") {
+        navigate({ to: "/dashboard" });
       }
       return;
     }
