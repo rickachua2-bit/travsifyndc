@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Calendar, Loader2, MapPin, Search, User } from "lucide-react";
+import { Calendar, Loader2, Search, User } from "lucide-react";
 import { FieldLabel } from "@/components/booking/SearchForm";
+import { LocationInput } from "@/components/booking/LocationInput";
 
 export type CarRentalSearchPayload = {
   pickup_location: string;
