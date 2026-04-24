@@ -22,6 +22,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SdkJsRouteImport } from './routes/sdk.js'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedPendingReviewRouteImport } from './routes/_authenticated/pending-review'
+import { Route as AuthenticatedMarkupsRouteImport } from './routes/_authenticated/markups'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
@@ -32,6 +33,8 @@ import { Route as ApiV1PayoutsRouteImport } from './routes/api/v1/payouts'
 import { Route as ApiV1HealthRouteImport } from './routes/api/v1/health'
 import { Route as ApiPublicDemoSearchRouteImport } from './routes/api/public/demo-search'
 import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin/withdrawals'
+import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
+import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
 import { Route as ApiV1VisasSearchRouteImport } from './routes/api/v1/visas.search'
 import { Route as ApiV1VisasBookingsRouteImport } from './routes/api/v1/visas.bookings'
 import { Route as ApiV1TransfersSearchRouteImport } from './routes/api/v1/transfers.search'
@@ -112,6 +115,11 @@ const AuthenticatedPendingReviewRoute =
     path: '/pending-review',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMarkupsRoute = AuthenticatedMarkupsRouteImport.update({
+  id: '/markups',
+  path: '/markups',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
   id: '/kyc',
   path: '/kyc',
@@ -161,6 +169,18 @@ const AuthenticatedAdminWithdrawalsRoute =
   AuthenticatedAdminWithdrawalsRouteImport.update({
     id: '/withdrawals',
     path: '/withdrawals',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminProcessingRoute =
+  AuthenticatedAdminProcessingRouteImport.update({
+    id: '/processing',
+    path: '/processing',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminMarkupsRoute =
+  AuthenticatedAdminMarkupsRouteImport.update({
+    id: '/markups',
+    path: '/markups',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const ApiV1VisasSearchRoute = ApiV1VisasSearchRouteImport.update({
@@ -250,9 +270,12 @@ export interface FileRoutesByFullPath {
   '/bookings': typeof AuthenticatedBookingsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
+  '/markups': typeof AuthenticatedMarkupsRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
+  '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
+  '/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -287,9 +310,12 @@ export interface FileRoutesByTo {
   '/bookings': typeof AuthenticatedBookingsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kyc': typeof AuthenticatedKycRoute
+  '/markups': typeof AuthenticatedMarkupsRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
+  '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
+  '/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -327,9 +353,12 @@ export interface FileRoutesById {
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
+  '/_authenticated/markups': typeof AuthenticatedMarkupsRoute
   '/_authenticated/pending-review': typeof AuthenticatedPendingReviewRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
+  '/_authenticated/admin/markups': typeof AuthenticatedAdminMarkupsRoute
+  '/_authenticated/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -367,9 +396,12 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/dashboard'
     | '/kyc'
+    | '/markups'
     | '/pending-review'
     | '/wallet'
     | '/sdk/js'
+    | '/admin/markups'
+    | '/admin/processing'
     | '/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -404,9 +436,12 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/dashboard'
     | '/kyc'
+    | '/markups'
     | '/pending-review'
     | '/wallet'
     | '/sdk/js'
+    | '/admin/markups'
+    | '/admin/processing'
     | '/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -443,9 +478,12 @@ export interface FileRouteTypes {
     | '/_authenticated/bookings'
     | '/_authenticated/dashboard'
     | '/_authenticated/kyc'
+    | '/_authenticated/markups'
     | '/_authenticated/pending-review'
     | '/_authenticated/wallet'
     | '/sdk/js'
+    | '/_authenticated/admin/markups'
+    | '/_authenticated/admin/processing'
     | '/_authenticated/admin/withdrawals'
     | '/api/public/demo-search'
     | '/api/v1/health'
@@ -590,6 +628,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPendingReviewRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/markups': {
+      id: '/_authenticated/markups'
+      path: '/markups'
+      fullPath: '/markups'
+      preLoaderRoute: typeof AuthenticatedMarkupsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/kyc': {
       id: '/_authenticated/kyc'
       path: '/kyc'
@@ -658,6 +703,20 @@ declare module '@tanstack/react-router' {
       path: '/withdrawals'
       fullPath: '/admin/withdrawals'
       preLoaderRoute: typeof AuthenticatedAdminWithdrawalsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/processing': {
+      id: '/_authenticated/admin/processing'
+      path: '/processing'
+      fullPath: '/admin/processing'
+      preLoaderRoute: typeof AuthenticatedAdminProcessingRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/markups': {
+      id: '/_authenticated/admin/markups'
+      path: '/markups'
+      fullPath: '/admin/markups'
+      preLoaderRoute: typeof AuthenticatedAdminMarkupsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/api/v1/visas/search': {
@@ -762,12 +821,16 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminMarkupsRoute: typeof AuthenticatedAdminMarkupsRoute
+  AuthenticatedAdminProcessingRoute: typeof AuthenticatedAdminProcessingRoute
   AuthenticatedAdminWithdrawalsRoute: typeof AuthenticatedAdminWithdrawalsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminApplicationsIdRoute: typeof AuthenticatedAdminApplicationsIdRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminMarkupsRoute: AuthenticatedAdminMarkupsRoute,
+  AuthenticatedAdminProcessingRoute: AuthenticatedAdminProcessingRoute,
   AuthenticatedAdminWithdrawalsRoute: AuthenticatedAdminWithdrawalsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminApplicationsIdRoute: AuthenticatedAdminApplicationsIdRoute,
@@ -782,6 +845,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
+  AuthenticatedMarkupsRoute: typeof AuthenticatedMarkupsRoute
   AuthenticatedPendingReviewRoute: typeof AuthenticatedPendingReviewRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
 }
@@ -792,6 +856,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
+  AuthenticatedMarkupsRoute: AuthenticatedMarkupsRoute,
   AuthenticatedPendingReviewRoute: AuthenticatedPendingReviewRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
 }

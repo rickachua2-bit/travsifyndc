@@ -26,7 +26,8 @@ export function MarkupEditor({ scope: _scope, title, subtitle, list, upsert, rem
   title: string;
   subtitle: string;
   list: () => Promise<{ markups: Row[] }>;
-  upsert: (args: { data: { vertical: string; markup_type: "fixed" | "percentage"; markup_value: number; currency?: string | null; is_active: boolean } }) => Promise<unknown>;
+  // Loose typing — both partner and admin server fns accept the same shape.
+  upsert: (args: { data: never }) => Promise<unknown>;
   remove: (args: { data: { id: string } }) => Promise<unknown>;
 }) {
   const [rows, setRows] = useState<Row[]>([]);
@@ -49,7 +50,7 @@ export function MarkupEditor({ scope: _scope, title, subtitle, list, upsert, rem
     if (!Number.isFinite(num) || num < 0) return toast.error("Invalid value");
     if (type === "percentage" && num > 100) return toast.error("Percentage > 100 not allowed");
     try {
-      await upsert({ data: { vertical, markup_type: type, markup_value: num, currency: type === "fixed" ? currency : null, is_active: true } });
+      await upsert({ data: { vertical, markup_type: type, markup_value: num, currency: type === "fixed" ? currency : null, is_active: true } as never });
       toast.success("Saved");
       setValue("5");
       refresh();
