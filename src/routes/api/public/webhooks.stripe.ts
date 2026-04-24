@@ -101,6 +101,15 @@ async function fulfillGuestBooking(bookingId: string, paymentIntentId: string) {
     await supabaseAdmin.from("bookings")
       .update({ ...baseUpdate, status: "processing" })
       .eq("id", bookingId);
+
+    // Visas: also auto-create a structured visa_application + traveler row so
+    // the customer can immediately upload supporting documents and track status
+    // via /visa/track/$reference. Other manual verticals stay in the bookings
+    // table only — they don't need a multi-step wizard.
+    if (vertical === "visas") {
+      try { await maybeCreateVisaApplication(bookingId); }
+      catch (e) { console.error("auto-create visa application failed:", e); }
+    }
     return;
   }
 
