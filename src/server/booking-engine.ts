@@ -173,14 +173,20 @@ export const publicSearchTours = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data }): Promise<string> => {
     const display = data.display_currency || "USD";
-    const res = await gygSearch(data);
-    const tours = await Promise.all(res.tours.map(async (t) => {
-      const price = await publicPrice("tours", t.price, t.currency, display);
-      // Strip booking_url — guests don't redirect.
-      const { booking_url: _omit, ...rest } = t;
-      return { ...rest, base_price: t.price, base_currency: t.currency, price: price.total, currency: price.currency, price_breakdown: price };
-    }));
-    return JSON.stringify({ tours, display_currency: display });
+    try {
+      const res = await gygSearch(data);
+      const tours = await Promise.all(res.tours.map(async (t) => {
+        const price = await publicPrice("tours", t.price, t.currency, display);
+        // Strip booking_url — guests don't redirect.
+        const { booking_url: _omit, ...rest } = t;
+        return { ...rest, base_price: t.price, base_currency: t.currency, price: price.total, currency: price.currency, price_breakdown: price };
+      }));
+      return JSON.stringify({ tours, display_currency: display });
+    } catch (err) {
+      console.error("Tour search failed:", err);
+      const message = err instanceof Error ? err.message : "Tour search unavailable";
+      return JSON.stringify({ tours: [], display_currency: display, error: message });
+    }
   });
 
 export const publicSearchTransfers = createServerFn({ method: "POST" })
