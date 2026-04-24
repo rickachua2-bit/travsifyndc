@@ -536,7 +536,7 @@ export const adminUpdateApplicationStatus = createServerFn({ method: "POST" })
     }
     if (data.status === "delivered") update.delivered_at = now;
 
-    await supabaseAdmin.from("visa_applications").update(update).eq("id", data.application_id);
+    await supabaseAdmin.from("visa_applications").update(update as never).eq("id", data.application_id);
 
     await logEvent({
       application_id: data.application_id,
