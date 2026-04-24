@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Calendar, Loader2, Search, Users, Plus, Minus } from "lucide-react";
-import { CityInput } from "@/components/booking/CityInput";
+import { LocationInput } from "@/components/booking/LocationInput";
 import { FieldLabel } from "@/components/booking/SearchForm";
-import { CITIES } from "@/data/cities";
 
 export type TourSearchPayload = {
   city_code: string;
