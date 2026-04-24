@@ -517,7 +517,7 @@ function VisasFlow() {
           <div className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" /> Checking visa requirements & live pricing…
           </div>
-          <p className="mt-1 text-xs">First lookup for a new corridor takes ~10–20 seconds while we fetch fresh data from Sherpa.</p>
+          <p className="mt-1 text-xs">First lookup for a new corridor takes ~10–20 seconds while we fetch fresh pricing & requirements.</p>
         </div>
       )}
 
@@ -531,16 +531,6 @@ function VisasFlow() {
               <p className="mt-1 text-muted-foreground">
                 {searchMeta.nationality_name} passport holders can usually enter {searchMeta.destination_name} visa-free or get a visa on arrival. No application is required through us.
               </p>
-              {emptyState.sherpaUrl && (
-                <a
-                  href={emptyState.sherpaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline"
-                >
-                  Verify on Sherpa →
-                </a>
-              )}
             </>
           ) : (
             <>
@@ -548,18 +538,8 @@ function VisasFlow() {
                 No visa products available for this corridor yet
               </h3>
               <p className="mt-1 text-muted-foreground">
-                We couldn't find any purchasable visa for {searchMeta.nationality_name} → {searchMeta.destination_name} via our partner. This usually means it isn't an e-visa corridor (you'd need to apply directly at the embassy) or our data source doesn't list it.
+                We couldn't find any purchasable visa for {searchMeta.nationality_name} → {searchMeta.destination_name}. This usually means it isn't an e-visa corridor (you'd need to apply directly at the embassy) or it isn't listed in our catalog yet.
               </p>
-              {emptyState.sherpaUrl && (
-                <a
-                  href={emptyState.sherpaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline"
-                >
-                  Check requirements on Sherpa →
-                </a>
-              )}
             </>
           )}
         </div>
