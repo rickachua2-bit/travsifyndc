@@ -25,7 +25,7 @@ export const Route = createFileRoute("/book")({
 });
 
 type FlightOffer = {
-  id: string; total_amount: string; total_currency: string; base_amount: number; owner?: string;
+  id: string; total_amount: string; total_currency: string; base_amount: number; base_currency: string; owner?: string;
   slices?: Array<{ origin?: string; destination?: string; segments?: Array<{ departing_at?: string; arriving_at?: string; marketing_carrier?: string; flight_number?: string }> }>;
 };
 
