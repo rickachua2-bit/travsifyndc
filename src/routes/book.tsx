@@ -429,20 +429,34 @@ function VisasFlow() {
   const [picked, setPicked] = useState<VisaProduct | null>(null);
   const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
+  const [emptyState, setEmptyState] = useState<{
+    visaRequired: boolean | null;
+    sherpaUrl: string | null;
+  } | null>(null);
 
   async function search(payload: VisaSearchPayload) {
     setSearchMeta(payload);
-    setBusy(true); setProducts([]); setPicked(null); setCheckoutInput(null); setDone(null);
+    setBusy(true); setProducts([]); setPicked(null); setCheckoutInput(null); setDone(null); setEmptyState(null);
     try {
       const json = await publicSearchVisaProducts({ data: {
         nationality: payload.nationality,
         destination: payload.destination || undefined,
         display_currency: displayCurrency,
       } });
-      const parsed = JSON.parse(json) as { products: VisaProduct[]; error?: string };
+      const parsed = JSON.parse(json) as {
+        products: VisaProduct[];
+        error?: string;
+        visa_required?: boolean | null;
+        sherpa_url?: string | null;
+      };
       setProducts(parsed.products || []);
       if (parsed.error) toast.error(parsed.error);
-      else if (!parsed.products?.length) toast.message("No visa corridors available for this combination yet");
+      else if (!parsed.products?.length) {
+        setEmptyState({
+          visaRequired: parsed.visa_required ?? null,
+          sherpaUrl: parsed.sherpa_url ?? null,
+        });
+      }
     } catch (e) { toast.error((e as Error).message); }
     finally { setBusy(false); }
   }
