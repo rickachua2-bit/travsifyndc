@@ -89,39 +89,147 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["kyc_status"] | null
+          id: string
+          reason: string | null
+          to_status: Database["public"]["Enums"]["kyc_status"] | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["kyc_status"] | null
+          id?: string
+          reason?: string | null
+          to_status?: Database["public"]["Enums"]["kyc_status"] | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["kyc_status"] | null
+          id?: string
+          reason?: string | null
+          to_status?: Database["public"]["Enums"]["kyc_status"] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      kyc_drafts: {
+        Row: {
+          current_step: number
+          form_data: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_step?: number
+          form_data?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_step?: number
+          form_data?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          business_address: Json | null
+          business_type: string | null
           company: string | null
+          contact_phone: string | null
+          contact_role: string | null
           country: string | null
           created_at: string
           full_name: string | null
           id: string
+          incorporation_country: string | null
+          kyc_reviewed_at: string | null
+          kyc_reviewed_by: string | null
+          kyc_status: Database["public"]["Enums"]["kyc_status"]
+          kyc_submitted_at: string | null
+          legal_name: string | null
+          live_api_key: string | null
           monthly_volume: string | null
+          registration_number: string | null
+          rejection_reason: string | null
           role_title: string | null
+          sandbox_api_key: string | null
+          target_verticals: string[] | null
+          trading_name: string | null
           updated_at: string
+          use_case: string | null
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
+          business_address?: Json | null
+          business_type?: string | null
           company?: string | null
+          contact_phone?: string | null
+          contact_role?: string | null
           country?: string | null
           created_at?: string
           full_name?: string | null
           id: string
+          incorporation_country?: string | null
+          kyc_reviewed_at?: string | null
+          kyc_reviewed_by?: string | null
+          kyc_status?: Database["public"]["Enums"]["kyc_status"]
+          kyc_submitted_at?: string | null
+          legal_name?: string | null
+          live_api_key?: string | null
           monthly_volume?: string | null
+          registration_number?: string | null
+          rejection_reason?: string | null
           role_title?: string | null
+          sandbox_api_key?: string | null
+          target_verticals?: string[] | null
+          trading_name?: string | null
           updated_at?: string
+          use_case?: string | null
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
+          business_address?: Json | null
+          business_type?: string | null
           company?: string | null
+          contact_phone?: string | null
+          contact_role?: string | null
           country?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          incorporation_country?: string | null
+          kyc_reviewed_at?: string | null
+          kyc_reviewed_by?: string | null
+          kyc_status?: Database["public"]["Enums"]["kyc_status"]
+          kyc_submitted_at?: string | null
+          legal_name?: string | null
+          live_api_key?: string | null
           monthly_volume?: string | null
+          registration_number?: string | null
+          rejection_reason?: string | null
           role_title?: string | null
+          sandbox_api_key?: string | null
+          target_verticals?: string[] | null
+          trading_name?: string | null
           updated_at?: string
+          use_case?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -161,6 +269,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      kyc_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -289,6 +403,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      kyc_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+      ],
     },
   },
 } as const
