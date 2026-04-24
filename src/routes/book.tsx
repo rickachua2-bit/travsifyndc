@@ -4,10 +4,12 @@ import { ArrowRight, Loader2, Plane, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { PageShell, PageHero } from "@/components/landing/PageShell";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import { VerticalTabs, VERTICALS, type BookingVertical } from "@/components/booking/VerticalTabs";
 import { Field, inputCls } from "@/components/booking/SearchForm";
 import { FlightSearchForm, type FlightSearchPayload } from "@/components/booking/FlightSearchForm";
 import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/components/booking/GuestCheckout";
+import { CurrencySwitcher } from "@/components/booking/CurrencySwitcher";
 import { publicSearchFlights } from "@/server/booking-engine";
 
 export const Route = createFileRoute("/book")({
