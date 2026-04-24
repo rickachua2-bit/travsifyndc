@@ -13,6 +13,7 @@ function partnerId(): string {
 async function call<T>(path: string): Promise<T> {
   const url = new URL(`${BASE}${path}`);
   url.searchParams.set("partner_id", partnerId());
+  if (!url.searchParams.has("cnt_lang")) url.searchParams.set("cnt_lang", "en");
   const res = await fetch(url.toString(), {
     headers: { "Accept": "application/json", "Accept-Language": "en-US" },
   });
