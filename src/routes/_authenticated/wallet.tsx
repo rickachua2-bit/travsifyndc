@@ -1,7 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Wallet as WalletIcon, Plus, Building2, ArrowUpRight, Copy, CreditCard, Trash2 } from "lucide-react";
-import { Logo } from "@/components/landing/Logo";
+import { Wallet as WalletIcon, Plus, Building2, ArrowUpRight, Copy, CreditCard, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   myWallets, myWalletTransactions, myBankAccounts, addBankAccount, deleteBankAccount,
@@ -11,6 +10,7 @@ import {
 import { StripeProvider } from "@/components/wallet/StripeProvider";
 import { CardLinkForm } from "@/components/wallet/CardLinkForm";
 import { UsdTopUpForm } from "@/components/wallet/UsdTopUpForm";
+import { PartnerShell } from "@/components/partner/PartnerShell";
 
 export const Route = createFileRoute("/_authenticated/wallet")({
   component: WalletPage,
