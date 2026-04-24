@@ -55,10 +55,10 @@ export function Nav() {
             Sign in
           </Link>
           <Link
-            to="/get-api-access"
+            to="/signup"
             className="btn-glow group relative hidden items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground shadow-sm transition hover:opacity-95 sm:inline-flex"
           >
-            Get API Access
+            Apply for API Access
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </Link>
           <button
@@ -93,11 +93,11 @@ export function Nav() {
               Sign in
             </Link>
             <Link
-              to="/get-api-access"
+              to="/signup"
               onClick={() => setOpen(false)}
               className="mt-2 inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground"
             >
-              Get API Access <ArrowRight className="h-3.5 w-3.5" />
+              Apply for API Access <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>
