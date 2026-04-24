@@ -15,6 +15,8 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { convert as fxConvert, SUPPORTED_CURRENCIES } from "@/server/fx";
+import { runSherpaScrape } from "@/server/providers/sherpa-scraper";
+import { VISA_CORRIDORS } from "@/server/data/visa-corridors";
 
 const DisplayCurrencyEnum = z.enum(SUPPORTED_CURRENCIES as [string, ...string[]]);
 
