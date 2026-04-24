@@ -26,7 +26,7 @@ export function TourSearchForm({
   busy: boolean;
   onSubmit: (payload: TourSearchPayload) => void | Promise<void>;
 }) {
-  const [city, setCity] = useState("");
+  const [destination, setDestination] = useState("");
   const [dateFrom, setDateFrom] = useState(todayPlus(7));
   const [dateTo, setDateTo] = useState(todayPlus(14));
   const [adults, setAdults] = useState(2);
@@ -44,14 +44,18 @@ export function TourSearchForm({
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!city) { alert("Please choose a destination."); return; }
+    const trimmed = destination.trim();
+    if (!trimmed) { alert("Please enter a destination."); return; }
     if (dateFrom > dateTo) { alert("End date must be after start date."); return; }
-    const meta = CITIES.find((c) => c.code === city);
-    if (!meta) { alert("Please select a destination from the list."); return; }
+    // Parse "City Name, Country" or "Airport (CODE), City, Country" into a clean city query.
+    const parts = trimmed.split(",").map((p) => p.trim()).filter(Boolean);
+    // If first segment looks like an airport "Name (CODE)", use the second segment (city).
+    const isAirport = /\([A-Z]{3}\)/.test(parts[0] || "");
+    const cityName = (isAirport ? parts[1] : parts[0]) || trimmed;
     onSubmit({
-      city_code: city,
-      query: meta.city,
-      destination_label: `${meta.city}, ${meta.country_name}`,
+      city_code: cityName.toLowerCase().replace(/\s+/g, "-").slice(0, 30),
+      query: cityName,
+      destination_label: trimmed,
       date_from: dateFrom,
       date_to: dateTo,
       adults,
@@ -68,7 +72,7 @@ export function TourSearchForm({
       style={{ boxShadow: "var(--shadow-soft)" }}
     >
       <div className="sm:col-span-5">
-        <CityInput label="Destination" value={city} onChange={setCity} placeholder="Where are you going?" />
+        <LocationInput label="Destination" value={destination} onChange={setDestination} placeholder="Where are you going? (city or airport)" />
       </div>
 
       <div className="sm:col-span-2">
