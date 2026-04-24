@@ -35,7 +35,7 @@ export const Route = createFileRoute("/api/public/webhooks/fincra")({
                   p_provider: "fincra",
                   p_provider_reference: reference,
                   p_booking_id: undefined,
-                  p_metadata: data,
+                  p_metadata: data as never,
                 });
               }
             }
