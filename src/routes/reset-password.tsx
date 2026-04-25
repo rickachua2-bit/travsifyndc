@@ -10,6 +10,9 @@ const emailSchema = z.string().trim().email("Enter a valid email").max(255);
 const pwdSchema = z.string().min(8, "At least 8 characters").max(72);
 
 export const Route = createFileRoute("/reset-password")({
+  validateSearch: (s: Record<string, unknown>): { next?: string } => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
   component: ResetPasswordPage,
   head: () => ({
     meta: [
@@ -18,6 +21,11 @@ export const Route = createFileRoute("/reset-password")({
     ],
   }),
 });
+
+function getSafeNext(next?: string) {
+  if (next === "/admin-login" || next === "/signin" || next === "/dashboard") return next;
+  return "/dashboard";
+}
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
