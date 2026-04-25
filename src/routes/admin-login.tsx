@@ -35,6 +35,13 @@ async function userIsAdmin(userId: string): Promise<boolean> {
   return !!data;
 }
 
+function getSafeAdminRedirect(redirect?: string) {
+  if (redirect?.startsWith("/admin") && !redirect.startsWith("/admin-login")) {
+    return redirect;
+  }
+  return "/admin";
+}
+
 function AdminLoginPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
@@ -43,10 +50,11 @@ function AdminLoginPage() {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [existingAdminSession, setExistingAdminSession] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  // If already signed in AND admin, send straight to /admin.
-  // If signed in but NOT admin, sign them out so they can re-auth with admin creds.
+  // Keep /admin-login reachable. Only mark an existing admin session;
+  // never auto-redirect from this page because that can create a bounce loop.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -56,17 +64,21 @@ function AdminLoginPage() {
         const ok = await userIsAdmin(data.session.user.id);
         if (cancelled) return;
         if (ok) {
-          navigate({ to: search.redirect || "/admin" });
-          return;
+          setExistingAdminSession(true);
+        } else {
+          await supabase.auth.signOut();
+          if (cancelled) return;
+          setExistingAdminSession(false);
         }
-        await supabase.auth.signOut();
+      } else {
+        setExistingAdminSession(false);
       }
       setChecking(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [navigate, search.redirect]);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -97,7 +109,7 @@ function AdminLoginPage() {
     }
     setLoading(false);
     toast.success("Welcome, admin");
-    navigate({ to: search.redirect || "/admin" });
+    navigate({ to: getSafeAdminRedirect(search.redirect), replace: true });
   }
 
   if (checking) {
@@ -148,6 +160,17 @@ function AdminLoginPage() {
         <p className="mt-2 text-center text-sm text-white/60">
           Sign in with your Travsify staff credentials. All access is logged.
         </p>
+
+        {existingAdminSession && (
+          <button
+            type="button"
+            onClick={() => navigate({ to: getSafeAdminRedirect(search.redirect), replace: true })}
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/15"
+          >
+            Continue to admin
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        )}
 
         <form
           onSubmit={handleSubmit}
