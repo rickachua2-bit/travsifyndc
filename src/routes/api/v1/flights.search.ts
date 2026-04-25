@@ -4,6 +4,7 @@ import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/se
 import { searchFlights } from "@/server/providers/duffel";
 import { ndcSearch, isNdcEnabled } from "@/server/providers/ndc";
 import { composePrice } from "@/server/bookings";
+import { ProviderTimeoutError } from "@/server/providers/fetch-with-timeout";
 
 const Schema = z.object({
   origin: z.string().trim().length(3).regex(/^[A-Z]{3}$/i),
@@ -42,8 +43,17 @@ export const Route = createFileRoute("/api/v1/flights/search")({
           const duffelOffers = duffelRes.status === "fulfilled" ? duffelRes.value.offers : [];
           const ndcOffers = ndcRes.status === "fulfilled" ? (ndcRes.value as { offers: Array<Record<string, unknown>> }).offers : [];
 
+          // Surface upstream failures with the right status code so partners can retry intelligently.
           if (duffelRes.status === "rejected" && ndcOffers.length === 0) {
-            return errorResponse("supplier_error", (duffelRes.reason as Error).message, 502);
+            const reason = duffelRes.reason as Error;
+            if (reason instanceof ProviderTimeoutError) {
+              return errorResponse(
+                "upstream_timeout",
+                "Duffel did not respond in time. This is usually transient — please retry the request.",
+                504,
+              );
+            }
+            return errorResponse("supplier_error", reason.message, 502);
           }
 
           // Apply two-tier markup so partners see customer-facing totals.
