@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Search, Loader2, Building2, Clock, CheckCircle2, XCircle, Inbox } from "lucide-react";
+import { ArrowRight, Search, Loader2, Building2, Clock, CheckCircle2, XCircle, Inbox, Users, Receipt, PackageCheck, Banknote, Stamp } from "lucide-react";
+import { adminPlatformStats } from "@/server/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminQueue,
