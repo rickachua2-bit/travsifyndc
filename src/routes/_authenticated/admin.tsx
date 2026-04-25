@@ -1,19 +1,77 @@
-import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useIsAdmin } from "@/hooks/useProfile";
-import { Loader2, Shield } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  Loader2,
+  Shield,
+  LayoutDashboard,
+  Users,
+  ClipboardList,
+  PackageCheck,
+  FileBadge,
+  Stamp,
+  Banknote,
+  Percent,
+  Receipt,
+  LogOut,
+  ExternalLink,
+} from "lucide-react";
 import { Logo } from "@/components/landing/Logo";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
 });
+
+type NavItem = {
+  to: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  exact?: boolean;
+};
+
+const PLATFORM: NavItem[] = [
+  { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
+  { to: "/admin/users", label: "Users & partners", icon: Users },
+  { to: "/admin/bookings", label: "Bookings", icon: Receipt },
+];
+
+const KYC: NavItem[] = [
+  { to: "/admin", label: "KYC queue", icon: ClipboardList, exact: true },
+];
+
+const OPERATIONS: NavItem[] = [
+  { to: "/admin/processing", label: "Manual fulfillment", icon: PackageCheck },
+  { to: "/admin/visa-queue", label: "Visa applications", icon: Stamp },
+  { to: "/admin/visa-products", label: "Visa products", icon: FileBadge },
+  { to: "/admin/withdrawals", label: "Withdrawals", icon: Banknote },
+];
+
+const FINANCE: NavItem[] = [
+  { to: "/admin/markups", label: "Markups", icon: Percent },
+];
 
 function AdminLayout() {
   const { isAdmin, loading } = useIsAdmin();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: "/dashboard" });
+    if (!loading && !isAdmin) navigate({ to: "/admin-login" });
   }, [loading, isAdmin, navigate]);
 
   if (loading) {
@@ -27,26 +85,114 @@ function AdminLayout() {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-surface">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <Link to="/"><Logo /></Link>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-surface">
+        <AdminSidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl">
+            <SidebarTrigger />
             <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
-              <Shield className="h-3 w-3" /> Admin
+              <Shield className="h-3 w-3" /> Super admin
             </span>
-          </div>
-          <nav className="flex items-center gap-4 text-sm font-medium text-muted-foreground">
-            <Link to="/admin" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }} className="hover:text-foreground">KYC queue</Link>
-            <Link to="/admin/processing" activeProps={{ className: "text-foreground" }} className="hover:text-foreground">Fulfillment</Link>
-            <Link to="/admin/visa-queue" activeProps={{ className: "text-foreground" }} className="hover:text-foreground">Visa applications</Link>
-            <Link to="/admin/visa-products" activeProps={{ className: "text-foreground" }} className="hover:text-foreground">Visa products</Link>
-            <Link to="/admin/withdrawals" activeProps={{ className: "text-foreground" }} className="hover:text-foreground">Withdrawals</Link>
-            <Link to="/dashboard" className="hover:text-foreground">My dashboard</Link>
-          </nav>
+            <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="hidden sm:inline">Restricted console — all actions logged</span>
+            </div>
+          </header>
+          <main className="min-w-0 flex-1">
+            <Outlet />
+          </main>
         </div>
-      </header>
-      <Outlet />
-    </div>
+      </div>
+    </SidebarProvider>
+  );
+}
+
+function AdminSidebar() {
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const location = useLocation();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const isActive = (to: string, exact?: boolean) =>
+    exact ? location.pathname === to : location.pathname === to || location.pathname.startsWith(to + "/");
+
+  async function handleSignOut() {
+    await signOut();
+    navigate({ to: "/admin-login" });
+  }
+
+  const renderItems = (items: NavItem[]) => (
+    <SidebarMenu>
+      {items.map((item) => {
+        const active = isActive(item.to, item.exact);
+        return (
+          <SidebarMenuItem key={item.to}>
+            <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+              <Link to={item.to}>
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
+    </SidebarMenu>
+  );
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <Link to="/admin" className="flex items-center gap-2 px-2 py-2">
+          <Logo />
+          {!collapsed && (
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">
+              Console
+            </span>
+          )}
+        </Link>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Platform</SidebarGroupLabel>
+          <SidebarGroupContent>{renderItems(PLATFORM)}</SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>KYC</SidebarGroupLabel>
+          <SidebarGroupContent>{renderItems(KYC)}</SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Operations</SidebarGroupLabel>
+          <SidebarGroupContent>{renderItems(OPERATIONS)}</SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Finance</SidebarGroupLabel>
+          <SidebarGroupContent>{renderItems(FINANCE)}</SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Open partner dashboard">
+              <Link to="/dashboard">
+                <ExternalLink className="h-4 w-4" />
+                <span>Partner dashboard</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleSignOut} tooltip="Sign out">
+              <LogOut className="h-4 w-4" />
+              <span>Sign out</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }
