@@ -131,16 +131,23 @@ export async function ensureVirtualAccount(userId: string, email: string, fullNa
     .maybeSingle();
   if (existing) return { kind: "virtual_account" as const, ...existing };
 
-  const [first, ...rest] = fullName.split(" ");
-  const va = await createVirtualAccount({
-    user_id: userId,
-    email,
-    first_name: first || fullName,
-    last_name: rest.join(" ") || first || "User",
-  });
+  const [first, ...rest] = fullName.trim().split(/\s+/);
+  let va: Awaited<ReturnType<typeof createVirtualAccount>>;
+  try {
+    va = await createVirtualAccount({
+      user_id: userId,
+      email,
+      first_name: first || fullName,
+      last_name: rest.join(" ") || first || "User",
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not create NGN virtual account";
+    throw new Error(`NGN virtual account unavailable: ${message}`);
+  }
+
   const info = va.data?.accountInformation;
   if (!info?.accountNumber) throw new Error("Fincra did not return account information");
-  await supabaseAdmin.from("fincra_virtual_accounts").insert({
+  const row = {
     user_id: userId,
     account_number: info.accountNumber,
     account_name: info.accountName || fullName,
@@ -148,12 +155,14 @@ export async function ensureVirtualAccount(userId: string, email: string, fullNa
     bank_code: info.bankCode || null,
     provider_reference: va.data?.reference || va.data?._id || `vacc_${userId}`,
     currency: "NGN",
-  });
+  };
+  const { error } = await supabaseAdmin.from("fincra_virtual_accounts").insert(row);
+  if (error) throw new Error(error.message);
   return {
     kind: "virtual_account" as const,
-    account_number: info.accountNumber,
-    account_name: info.accountName || fullName,
-    bank_name: info.bankName || "Fincra Partner Bank",
+    account_number: row.account_number,
+    account_name: row.account_name,
+    bank_name: row.bank_name,
   };
 }
 

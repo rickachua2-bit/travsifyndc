@@ -3,9 +3,37 @@
 const BASE = "https://api.fincra.com";
 
 function key(): string {
-  const k = process.env.FINCRA_API_KEY;
+  const k = process.env.FINCRA_API_KEY?.trim();
   if (!k) throw new Error("FINCRA_API_KEY not configured");
   return k;
+}
+
+function optionalFincraHeaders(): Record<string, string> {
+  const businessId = process.env.FINCRA_BUSINESS_ID?.trim();
+  const publicKey = process.env.FINCRA_PUBLIC_KEY?.trim();
+  return {
+    ...(businessId ? { "x-business-id": businessId } : {}),
+    ...(publicKey ? { "x-pub-key": publicKey } : {}),
+  };
+}
+
+async function readJsonResponse(res: Response): Promise<unknown> {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { message: text };
+  }
+}
+
+function fincraErrorMessage(status: number, payload: unknown): string {
+  const err = payload as { message?: string; error?: string; errors?: unknown } | null;
+  const detail = err?.message || err?.error || (err?.errors ? JSON.stringify(err.errors) : "");
+  const authHint = status === 401 || status === 403
+    ? " Check FINCRA_API_KEY and FINCRA_BUSINESS_ID; they must be from the same Fincra mode/account."
+    : "";
+  return `Fincra error ${status}${detail ? `: ${detail}` : ""}.${authHint}`;
 }
 
 async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -15,13 +43,13 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
       "api-key": key(),
       "Accept": "application/json",
       "Content-Type": "application/json",
+      ...optionalFincraHeaders(),
       ...(init.headers || {}),
     },
   });
-  const json = await res.json();
+  const json = await readJsonResponse(res);
   if (!res.ok) {
-    const err = json as { message?: string };
-    throw new Error(err.message || `Fincra error ${res.status}`);
+    throw new Error(fincraErrorMessage(res.status, json));
   }
   return json as T;
 }
