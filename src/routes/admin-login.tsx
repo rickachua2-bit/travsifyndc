@@ -216,6 +216,16 @@ function AdminLoginPage() {
             />
           </Field>
 
+          <div className="flex justify-end">
+            <Link
+              to="/reset-password"
+              search={{ next: "/admin-login" }}
+              className="text-xs font-medium text-white/60 hover:text-white"
+            >
+              Set or reset admin password
+            </Link>
+          </div>
+
           <button
             type="submit"
             disabled={loading}

@@ -10,6 +10,9 @@ const emailSchema = z.string().trim().email("Enter a valid email").max(255);
 const pwdSchema = z.string().min(8, "At least 8 characters").max(72);
 
 export const Route = createFileRoute("/reset-password")({
+  validateSearch: (s: Record<string, unknown>): { next?: string } => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
   component: ResetPasswordPage,
   head: () => ({
     meta: [
@@ -19,9 +22,15 @@ export const Route = createFileRoute("/reset-password")({
   }),
 });
 
+function getSafeNext(next?: string) {
+  if (next === "/admin-login" || next === "/signin" || next === "/dashboard") return next;
+  return "/dashboard";
+}
+
 function ResetPasswordPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"request" | "set">("request");
+  const search = Route.useSearch();
+  const [mode, setMode] = useState<"checking" | "request" | "set">("checking");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,8 +38,15 @@ function ResetPasswordPage() {
   const [err, setErr] = useState<string | undefined>();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.location.hash.includes("type=recovery")) setMode("set");
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      const hasRecoveryHash = typeof window !== "undefined" && window.location.hash.includes("type=recovery");
+      setMode(hasRecoveryHash || !!data.session ? "set" : "request");
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function requestReset(e: React.FormEvent) {
@@ -39,8 +55,9 @@ function ResetPasswordPage() {
     const parsed = emailSchema.safeParse(email);
     if (!parsed.success) { setErr(parsed.error.issues[0].message); return; }
     setLoading(true);
+    const next = getSafeNext(search.next);
     const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/reset-password${next === "/dashboard" ? "" : `?next=${encodeURIComponent(next)}`}`,
     });
     setLoading(false);
     if (error) { toast.error(error.message); return; }
@@ -54,10 +71,26 @@ function ResetPasswordPage() {
     if (!parsed.success) { setErr(parsed.error.issues[0].message); return; }
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password: parsed.data });
+    if (error) {
+      setLoading(false);
+      toast.error(error.message);
+      return;
+    }
+    const next = getSafeNext(search.next);
+    if (next === "/admin-login") {
+      await supabase.auth.signOut();
+    }
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
     toast.success("Password updated");
-    navigate({ to: "/dashboard" });
+    navigate({ to: next, replace: true });
+  }
+
+  if (mode === "checking") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-accent" />
+      </div>
+    );
   }
 
   if (sent) {
@@ -71,7 +104,7 @@ function ResetPasswordPage() {
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-success">
             <CheckCircle2 className="h-8 w-8" />
           </div>
-          <Link to="/signin" className="text-sm font-semibold text-accent story-link">Back to sign in</Link>
+          <Link to={getSafeNext(search.next)} className="text-sm font-semibold text-accent story-link">Back to sign in</Link>
         </div>
       </AuthShell>
     );
@@ -82,7 +115,7 @@ function ResetPasswordPage() {
       eyebrow={mode === "set" ? "Set new password" : "Reset password"}
       title={mode === "set" ? <>Choose a <span className="text-gradient-accent">strong password</span></> : <>Forgot your <span className="text-gradient-accent">password?</span></>}
       subtitle={mode === "set" ? "Use at least 8 characters." : "We'll email you a secure link to reset it."}
-      footer={<>Remembered it? <Link to="/signin" className="font-semibold text-accent story-link">Sign in</Link></>}
+      footer={<>Remembered it? <Link to={getSafeNext(search.next) === "/admin-login" ? "/admin-login" : "/signin"} className="font-semibold text-accent story-link">Sign in</Link></>}
     >
       <form onSubmit={mode === "set" ? setNewPassword : requestReset} className="space-y-4">
         {mode === "request" ? (
