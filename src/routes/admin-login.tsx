@@ -35,6 +35,13 @@ async function userIsAdmin(userId: string): Promise<boolean> {
   return !!data;
 }
 
+function getSafeAdminRedirect(redirect?: string) {
+  if (redirect?.startsWith("/admin") && !redirect.startsWith("/admin-login")) {
+    return redirect;
+  }
+  return "/admin";
+}
+
 function AdminLoginPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
@@ -43,10 +50,11 @@ function AdminLoginPage() {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [existingAdminSession, setExistingAdminSession] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  // If already signed in AND admin, send straight to /admin.
-  // If signed in but NOT admin, sign them out so they can re-auth with admin creds.
+  // Keep /admin-login reachable. Only mark an existing admin session;
+  // never auto-redirect from this page because that can create a bounce loop.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -56,17 +64,21 @@ function AdminLoginPage() {
         const ok = await userIsAdmin(data.session.user.id);
         if (cancelled) return;
         if (ok) {
-          navigate({ to: search.redirect || "/admin" });
-          return;
+          setExistingAdminSession(true);
+        } else {
+          await supabase.auth.signOut();
+          if (cancelled) return;
+          setExistingAdminSession(false);
         }
-        await supabase.auth.signOut();
+      } else {
+        setExistingAdminSession(false);
       }
       setChecking(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [navigate, search.redirect]);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
