@@ -49,36 +49,7 @@ function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true);
-  const [existingAdminSession, setExistingAdminSession] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-
-  // Keep /admin-login reachable. Only mark an existing admin session;
-  // never auto-redirect from this page because that can create a bounce loop.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (data.session?.user) {
-        const ok = await userIsAdmin(data.session.user.id);
-        if (cancelled) return;
-        if (ok) {
-          setExistingAdminSession(true);
-        } else {
-          await supabase.auth.signOut();
-          if (cancelled) return;
-          setExistingAdminSession(false);
-        }
-      } else {
-        setExistingAdminSession(false);
-      }
-      setChecking(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
