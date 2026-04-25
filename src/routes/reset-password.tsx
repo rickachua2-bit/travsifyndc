@@ -55,8 +55,9 @@ function ResetPasswordPage() {
     const parsed = emailSchema.safeParse(email);
     if (!parsed.success) { setErr(parsed.error.issues[0].message); return; }
     setLoading(true);
+    const next = getSafeNext(search.next);
     const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/reset-password${next === "/dashboard" ? "" : `?next=${encodeURIComponent(next)}`}`,
     });
     setLoading(false);
     if (error) { toast.error(error.message); return; }
@@ -70,10 +71,26 @@ function ResetPasswordPage() {
     if (!parsed.success) { setErr(parsed.error.issues[0].message); return; }
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password: parsed.data });
+    if (error) {
+      setLoading(false);
+      toast.error(error.message);
+      return;
+    }
+    const next = getSafeNext(search.next);
+    if (next === "/admin-login") {
+      await supabase.auth.signOut();
+    }
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
     toast.success("Password updated");
-    navigate({ to: "/dashboard" });
+    navigate({ to: next, replace: true });
+  }
+
+  if (mode === "checking") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-accent" />
+      </div>
+    );
   }
 
   if (sent) {
@@ -87,7 +104,7 @@ function ResetPasswordPage() {
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-success">
             <CheckCircle2 className="h-8 w-8" />
           </div>
-          <Link to="/signin" className="text-sm font-semibold text-accent story-link">Back to sign in</Link>
+          <Link to={getSafeNext(search.next)} className="text-sm font-semibold text-accent story-link">Back to sign in</Link>
         </div>
       </AuthShell>
     );
@@ -98,7 +115,7 @@ function ResetPasswordPage() {
       eyebrow={mode === "set" ? "Set new password" : "Reset password"}
       title={mode === "set" ? <>Choose a <span className="text-gradient-accent">strong password</span></> : <>Forgot your <span className="text-gradient-accent">password?</span></>}
       subtitle={mode === "set" ? "Use at least 8 characters." : "We'll email you a secure link to reset it."}
-      footer={<>Remembered it? <Link to="/signin" className="font-semibold text-accent story-link">Sign in</Link></>}
+      footer={<>Remembered it? <Link to={getSafeNext(search.next) === "/admin-login" ? "/admin-login" : "/signin"} className="font-semibold text-accent story-link">Sign in</Link></>}
     >
       <form onSubmit={mode === "set" ? setNewPassword : requestReset} className="space-y-4">
         {mode === "request" ? (
