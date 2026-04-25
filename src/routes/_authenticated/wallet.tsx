@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Wallet as WalletIcon, Plus, Building2, ArrowUpRight, Copy, CreditCard,
-  Trash2, ArrowDownLeft, Loader2, ExternalLink, AlertCircle, Sparkles,
+  Trash2, ArrowDownLeft, Loader2, AlertCircle, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
