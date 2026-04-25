@@ -23,6 +23,7 @@ import {
   Activity,
   Inbox,
   Mailbox,
+  TrendingUp,
 } from "lucide-react";
 import { Logo } from "@/components/landing/Logo";
 import {

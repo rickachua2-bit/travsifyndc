@@ -43,6 +43,7 @@ import { Route as AuthenticatedAdminVisaQueueRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminVisaProductsRouteImport } from './routes/_authenticated/admin/visa-products'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
 import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin/support'
+import { Route as AuthenticatedAdminRevenueRouteImport } from './routes/_authenticated/admin/revenue'
 import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
 import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
 import { Route as AuthenticatedAdminLedgerRouteImport } from './routes/_authenticated/admin/ledger'
@@ -246,6 +247,12 @@ const AuthenticatedAdminSupportRoute =
     path: '/support',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminRevenueRoute =
+  AuthenticatedAdminRevenueRouteImport.update({
+    id: '/revenue',
+    path: '/revenue',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminProcessingRoute =
   AuthenticatedAdminProcessingRouteImport.update({
     id: '/processing',
@@ -419,6 +426,7 @@ export interface FileRoutesByFullPath {
   '/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/admin/revenue': typeof AuthenticatedAdminRevenueRoute
   '/admin/support': typeof AuthenticatedAdminSupportRouteWithChildren
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
@@ -479,6 +487,7 @@ export interface FileRoutesByTo {
   '/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/admin/revenue': typeof AuthenticatedAdminRevenueRoute
   '/admin/support': typeof AuthenticatedAdminSupportRouteWithChildren
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
@@ -542,6 +551,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/_authenticated/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/_authenticated/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/_authenticated/admin/revenue': typeof AuthenticatedAdminRevenueRoute
   '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRouteWithChildren
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
@@ -605,6 +615,7 @@ export interface FileRouteTypes {
     | '/admin/ledger'
     | '/admin/markups'
     | '/admin/processing'
+    | '/admin/revenue'
     | '/admin/support'
     | '/admin/users'
     | '/admin/visa-products'
@@ -665,6 +676,7 @@ export interface FileRouteTypes {
     | '/admin/ledger'
     | '/admin/markups'
     | '/admin/processing'
+    | '/admin/revenue'
     | '/admin/support'
     | '/admin/users'
     | '/admin/visa-products'
@@ -727,6 +739,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/ledger'
     | '/_authenticated/admin/markups'
     | '/_authenticated/admin/processing'
+    | '/_authenticated/admin/revenue'
     | '/_authenticated/admin/support'
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/visa-products'
@@ -1033,6 +1046,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSupportRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/revenue': {
+      id: '/_authenticated/admin/revenue'
+      path: '/revenue'
+      fullPath: '/admin/revenue'
+      preLoaderRoute: typeof AuthenticatedAdminRevenueRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/processing': {
       id: '/_authenticated/admin/processing'
       path: '/processing'
@@ -1255,6 +1275,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminLedgerRoute: typeof AuthenticatedAdminLedgerRoute
   AuthenticatedAdminMarkupsRoute: typeof AuthenticatedAdminMarkupsRoute
   AuthenticatedAdminProcessingRoute: typeof AuthenticatedAdminProcessingRoute
+  AuthenticatedAdminRevenueRoute: typeof AuthenticatedAdminRevenueRoute
   AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRouteWithChildren
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminVisaProductsRoute: typeof AuthenticatedAdminVisaProductsRoute
@@ -1275,6 +1296,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminLedgerRoute: AuthenticatedAdminLedgerRoute,
   AuthenticatedAdminMarkupsRoute: AuthenticatedAdminMarkupsRoute,
   AuthenticatedAdminProcessingRoute: AuthenticatedAdminProcessingRoute,
+  AuthenticatedAdminRevenueRoute: AuthenticatedAdminRevenueRoute,
   AuthenticatedAdminSupportRoute: AuthenticatedAdminSupportRouteWithChildren,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminVisaProductsRoute: AuthenticatedAdminVisaProductsRoute,
