@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { z } from "zod";
 import { Loader2, Mail, Lock, Eye, EyeOff, Shield, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,36 +49,7 @@ function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true);
-  const [existingAdminSession, setExistingAdminSession] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-
-  // Keep /admin-login reachable. Only mark an existing admin session;
-  // never auto-redirect from this page because that can create a bounce loop.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (data.session?.user) {
-        const ok = await userIsAdmin(data.session.user.id);
-        if (cancelled) return;
-        if (ok) {
-          setExistingAdminSession(true);
-        } else {
-          await supabase.auth.signOut();
-          if (cancelled) return;
-          setExistingAdminSession(false);
-        }
-      } else {
-        setExistingAdminSession(false);
-      }
-      setChecking(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -110,14 +81,6 @@ function AdminLoginPage() {
     setLoading(false);
     toast.success("Welcome, admin");
     navigate({ to: getSafeAdminRedirect(search.redirect), replace: true });
-  }
-
-  if (checking) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-accent" />
-      </div>
-    );
   }
 
   return (
@@ -160,17 +123,6 @@ function AdminLoginPage() {
         <p className="mt-2 text-center text-sm text-white/60">
           Sign in with your Travsify staff credentials. All access is logged.
         </p>
-
-        {existingAdminSession && (
-          <button
-            type="button"
-            onClick={() => navigate({ to: getSafeAdminRedirect(search.redirect), replace: true })}
-            className="mt-6 inline-flex items-center justify-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/15"
-          >
-            Continue to admin
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        )}
 
         <form
           onSubmit={handleSubmit}
