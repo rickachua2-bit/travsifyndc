@@ -484,10 +484,7 @@ async function ensureGuestUser(email: string, name: string): Promise<string> {
 // for ops to fulfill via the affiliate portal.
 // =============================================================
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { searchFlights as duffelSearchFlights, createOrder as duffelCreateOrder } from "@/server/providers/duffel";
-import { prebookHotel as liteapiPrebookHotel, bookHotel as liteapiBookHotel } from "@/server/providers/liteapi";
-void duffelSearchFlights;
+
 
 const WalletCheckoutSchema = GuestCheckoutSchema;
 
