@@ -1,5 +1,6 @@
 import { ArrowRight, Plane, Hotel, Car, MapPin, FileCheck2, ShieldPlus, Wallet, Code2, Sparkles, Globe2, Zap } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import logoMark from "@/assets/travsify-logo-mark.png";
 
 const verticals = [
   { icon: Plane,       label: "Flights",    sub: "Duffel · NDC",   tone: "from-sky-500 to-blue-600",       delay: "0s" },
