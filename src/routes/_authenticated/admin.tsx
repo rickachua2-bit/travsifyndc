@@ -50,6 +50,7 @@ const PLATFORM: NavItem[] = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/admin/users", label: "Users & partners", icon: Users },
   { to: "/admin/bookings", label: "Bookings", icon: Receipt },
+  { to: "/admin/support", label: "Support tickets", icon: LifeBuoy },
 ];
 
 const KYC: NavItem[] = [
