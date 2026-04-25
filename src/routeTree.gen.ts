@@ -18,6 +18,7 @@ import { Route as DevelopersRouteImport } from './routes/developers'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as BookRouteImport } from './routes/book'
+import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SdkJsRouteImport } from './routes/sdk.js'
@@ -101,6 +102,11 @@ const ContactRoute = ContactRouteImport.update({
 const BookRoute = BookRouteImport.update({
   id: '/book',
   path: '/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin-login',
+  path: '/admin-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -309,6 +315,7 @@ const AuthenticatedAdminApplicationsIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin-login': typeof AdminLoginRoute
   '/book': typeof BookRoute
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
@@ -358,6 +365,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin-login': typeof AdminLoginRoute
   '/book': typeof BookRoute
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
@@ -408,6 +416,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/admin-login': typeof AdminLoginRoute
   '/book': typeof BookRoute
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
@@ -459,6 +468,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin-login'
     | '/book'
     | '/contact'
     | '/demo'
@@ -508,6 +518,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin-login'
     | '/book'
     | '/contact'
     | '/demo'
@@ -557,6 +568,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/admin-login'
     | '/book'
     | '/contact'
     | '/demo'
@@ -608,6 +620,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AdminLoginRoute: typeof AdminLoginRoute
   BookRoute: typeof BookRoute
   ContactRoute: typeof ContactRoute
   DemoRoute: typeof DemoRoute
@@ -702,6 +715,13 @@ declare module '@tanstack/react-router' {
       path: '/book'
       fullPath: '/book'
       preLoaderRoute: typeof BookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-login': {
+      id: '/admin-login'
+      path: '/admin-login'
+      fullPath: '/admin-login'
+      preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1049,6 +1069,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AdminLoginRoute: AdminLoginRoute,
   BookRoute: BookRoute,
   ContactRoute: ContactRoute,
   DemoRoute: DemoRoute,
