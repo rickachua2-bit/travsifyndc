@@ -311,6 +311,155 @@ export const adminUpdateApiRequest = createServerFn({ method: "POST" })
   });
 
 // ============================================================================
+// Financial reporting (Phase 2)
+// ============================================================================
+
+import { convert as fxConvert } from "@/server/fx";
+
+export const adminRevenueReport = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator(
+    (d: { days?: number; vertical?: string; partner_id?: string; report_currency?: "USD" | "NGN" }) => d,
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const days = Math.min(Math.max(data.days ?? 30, 1), 365);
+    const reportCcy = data.report_currency ?? "USD";
+    const sinceIso = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
+
+    let q = supabaseAdmin
+      .from("bookings")
+      .select("id, vertical, provider, total_amount, margin_amount, currency, status, created_at, user_id")
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: true })
+      .limit(5000);
+    if (data.vertical && data.vertical !== "all") q = q.eq("vertical", data.vertical);
+    if (data.partner_id) q = q.eq("user_id", data.partner_id);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+
+    // Convert each booking into the report currency.
+    type Norm = {
+      day: string;
+      vertical: string;
+      provider: string;
+      user_id: string;
+      gross: number;
+      margin: number;
+      status: string;
+      bookings: number;
+    };
+    const normalized: Norm[] = await Promise.all(
+      (rows ?? []).map(async (r) => ({
+        day: r.created_at.slice(0, 10),
+        vertical: r.vertical,
+        provider: r.provider,
+        user_id: r.user_id,
+        gross: await fxConvert(Number(r.total_amount || 0), r.currency, reportCcy),
+        margin: await fxConvert(Number(r.margin_amount || 0), r.currency, reportCcy),
+        status: r.status,
+        bookings: 1,
+      })),
+    );
+
+    const counted = normalized.filter((r) => r.status !== "cancelled" && r.status !== "failed");
+
+    // Time-series by day
+    const byDay = new Map<string, { day: string; gross: number; margin: number; bookings: number }>();
+    counted.forEach((r) => {
+      const cur = byDay.get(r.day) ?? { day: r.day, gross: 0, margin: 0, bookings: 0 };
+      cur.gross += r.gross;
+      cur.margin += r.margin;
+      cur.bookings += 1;
+      byDay.set(r.day, cur);
+    });
+    // Fill missing days
+    const series: { day: string; gross: number; margin: number; bookings: number }[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 3600 * 1000).toISOString().slice(0, 10);
+      series.push(byDay.get(d) ?? { day: d, gross: 0, margin: 0, bookings: 0 });
+    }
+
+    // By vertical
+    const byVertical = new Map<string, { vertical: string; gross: number; margin: number; bookings: number }>();
+    counted.forEach((r) => {
+      const cur = byVertical.get(r.vertical) ?? { vertical: r.vertical, gross: 0, margin: 0, bookings: 0 };
+      cur.gross += r.gross;
+      cur.margin += r.margin;
+      cur.bookings += 1;
+      byVertical.set(r.vertical, cur);
+    });
+
+    // By provider
+    const byProvider = new Map<string, { provider: string; gross: number; margin: number; bookings: number }>();
+    counted.forEach((r) => {
+      const cur = byProvider.get(r.provider) ?? { provider: r.provider, gross: 0, margin: 0, bookings: 0 };
+      cur.gross += r.gross;
+      cur.margin += r.margin;
+      cur.bookings += 1;
+      byProvider.set(r.provider, cur);
+    });
+
+    // Top partners
+    const byPartner = new Map<string, { user_id: string; gross: number; margin: number; bookings: number }>();
+    counted.forEach((r) => {
+      const cur = byPartner.get(r.user_id) ?? { user_id: r.user_id, gross: 0, margin: 0, bookings: 0 };
+      cur.gross += r.gross;
+      cur.margin += r.margin;
+      cur.bookings += 1;
+      byPartner.set(r.user_id, cur);
+    });
+    const topPartners = Array.from(byPartner.values()).sort((a, b) => b.gross - a.gross).slice(0, 10);
+    const partnerIds = topPartners.map((p) => p.user_id);
+    const { data: partnerProfiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id, legal_name, company, full_name")
+      .in("id", partnerIds.length ? partnerIds : ["00000000-0000-0000-0000-000000000000"]);
+    const profileMap = new Map((partnerProfiles ?? []).map((p) => [p.id, p]));
+    const topPartnersNamed = topPartners.map((p) => ({
+      ...p,
+      label:
+        profileMap.get(p.user_id)?.legal_name ??
+        profileMap.get(p.user_id)?.company ??
+        profileMap.get(p.user_id)?.full_name ??
+        p.user_id.slice(0, 8),
+    }));
+
+    const totals = {
+      gross: counted.reduce((s, r) => s + r.gross, 0),
+      margin: counted.reduce((s, r) => s + r.margin, 0),
+      bookings: counted.length,
+      cancelled: normalized.filter((r) => r.status === "cancelled" || r.status === "failed").length,
+    };
+
+    return {
+      report_currency: reportCcy,
+      days,
+      totals,
+      series,
+      by_vertical: Array.from(byVertical.values()).sort((a, b) => b.gross - a.gross),
+      by_provider: Array.from(byProvider.values()).sort((a, b) => b.gross - a.gross),
+      top_partners: topPartnersNamed,
+    };
+  });
+
+export const adminFxRates = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    // Sample the live rates by converting 1 unit.
+    const usdToNgn = await fxConvert(1, "USD", "NGN");
+    const ngnToUsd = await fxConvert(1, "NGN", "USD");
+    return {
+      base: "USD",
+      rates: { USD: 1, NGN: usdToNgn },
+      inverse: { NGN_USD: ngnToUsd },
+      fetched_at: new Date().toISOString(),
+      source: "exchangerate.host (1h cache, fallback if down)",
+    };
+  });
+
+// ============================================================================
 // Contact submissions
 // ============================================================================
 
