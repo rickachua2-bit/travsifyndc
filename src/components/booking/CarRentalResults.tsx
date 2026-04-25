@@ -284,7 +284,7 @@ export function CarRentalResults({
             >
               <div className="relative h-40 bg-surface sm:h-full">
                 <img
-                  src={carPhoto(q.car_class)}
+                  src={carPhoto(q.example_model, q.car_class)}
                   alt={q.car_description}
                   loading="lazy"
                   className="h-full w-full object-cover"
