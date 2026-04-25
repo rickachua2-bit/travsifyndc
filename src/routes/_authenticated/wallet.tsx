@@ -151,8 +151,9 @@ function WalletPage() {
             toast.success("Virtual account ready below");
           }
         } else {
-          const r = await fundWallet({ data: { currency: "NGN", amount, ngn_method: "card" }, headers }) as { link?: string };
-          if (r.link) window.location.href = r.link;
+          const r = await fundWallet({ data: { currency: "NGN", amount, ngn_method: "card" }, headers }) as { link?: string; ok?: false; error?: string };
+          if (r && r.ok === false) toast.error(r.error || "NGN funding unavailable");
+          else if (r.link) window.location.href = r.link;
           else toast.error("Could not get checkout link");
         }
       }
