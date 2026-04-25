@@ -72,16 +72,18 @@ const PROVIDER_PAGE_SCHEMA = {
   required: ["cars"],
 };
 
-function searchUrl(provider: "avis" | "hertz" | "enterprise", input: CarRentalScrapeInput): string {
+function searchUrl(provider: "kayak" | "rentalcars" | "carrentals", input: CarRentalScrapeInput): string {
   const pu = encodeURIComponent(input.pickup_location);
   const dp = encodeURIComponent(input.dropoff_location);
-  if (provider === "avis") {
-    return `https://www.avis.com/en/reservation/reserve-a-car?pickupLocation=${pu}&dropoffLocation=${dp}&pickupDate=${input.pickup_date}&dropoffDate=${input.dropoff_date}`;
+  // These aggregator pages render results server-side without login, so Firecrawl
+  // gets real listings (unlike avis.com / hertz.com which need JS auth flows).
+  if (provider === "kayak") {
+    return `https://www.kayak.com/cars/${pu}/${dp}/${input.pickup_date}/${input.dropoff_date}`;
   }
-  if (provider === "hertz") {
-    return `https://www.hertz.com/rentacar/reservation/?pickupLocation=${pu}&returnLocation=${dp}&pickupDate=${input.pickup_date}&returnDate=${input.dropoff_date}&driverAge=${input.driver_age}`;
+  if (provider === "rentalcars") {
+    return `https://www.rentalcars.com/SearchResults.do?puYear=${input.pickup_date.slice(0,4)}&puMonth=${input.pickup_date.slice(5,7)}&puDay=${input.pickup_date.slice(8,10)}&doYear=${input.dropoff_date.slice(0,4)}&doMonth=${input.dropoff_date.slice(5,7)}&doDay=${input.dropoff_date.slice(8,10)}&puString=${pu}&doString=${dp}&driversAge=${input.driver_age}`;
   }
-  return `https://www.enterprise.com/en/car-rental/locations.html?pickupLocation=${pu}&dropoffLocation=${dp}&pickupDate=${input.pickup_date}&dropoffDate=${input.dropoff_date}`;
+  return `https://www.carrentals.com/Car-Rentals/${pu}-Car-Rentals.d178293.Car-Rental-Guide?fromDate=${input.pickup_date}&toDate=${input.dropoff_date}`;
 }
 
 type RawCar = {
@@ -182,7 +184,7 @@ export async function fetchAndNormalizeCarRentals(input: CarRentalScrapeInput): 
     `returning to ${input.dropoff_location} on ${input.dropoff_date} for a driver aged ${input.driver_age}. ` +
     `Convert all prices to USD.`;
 
-  const sources: Array<"avis" | "hertz" | "enterprise"> = ["avis", "hertz", "enterprise"];
+  const sources: Array<"kayak" | "rentalcars" | "carrentals"> = ["kayak", "rentalcars", "carrentals"];
   const results = await Promise.allSettled(
     sources.map((s) => firecrawlScrape(searchUrl(s, input), prompt).then((cars) => ({ source: s, cars }))),
   );
@@ -198,69 +200,121 @@ export async function fetchAndNormalizeCarRentals(input: CarRentalScrapeInput): 
   }
   if (collected.length === 0) return deterministicFallback(input);
 
-  // Cheapest per class.
-  const byClass = new Map<NormalizedCarRentalQuote["car_class"], Item>();
+  // Keep up to 4 cheapest variants per class so partners see a rich catalog,
+  // not just one car per tier.
+  const grouped = new Map<NormalizedCarRentalQuote["car_class"], Item[]>();
   for (const item of collected) {
     const cls = normalizeClass(item.c.car_class);
-    const existing = byClass.get(cls);
-    if (!existing || (item.c.price_total_usd ?? 0) < (existing.c.price_total_usd ?? 0)) {
-      byClass.set(cls, item);
-    }
+    const arr = grouped.get(cls) ?? [];
+    arr.push(item);
+    grouped.set(cls, arr);
   }
 
-  return Array.from(byClass.entries()).map(([cls, item], idx) => {
+  const out: NormalizedCarRentalQuote[] = [];
+  let idx = 0;
+  for (const [cls, items] of grouped.entries()) {
     const def = classDefaults(cls);
-    const total = Number((item.c.price_total_usd ?? def.perDay * days).toFixed(2));
-    return {
-      id: `cr_${cls}_${idx}_${Date.now().toString(36)}`,
-      car_class: cls,
-      car_description: `${classLabel(cls)} · ${item.c.example_model || def.example}`,
-      example_model: item.c.example_model || def.example,
-      transmission: (item.c.transmission as "automatic" | "manual") || "automatic",
-      passengers: item.c.passengers ?? def.pax,
-      bags: item.c.bags ?? def.bags,
-      air_conditioning: item.c.air_conditioning ?? true,
-      unlimited_mileage: item.c.unlimited_mileage ?? true,
-      total_price: total,
-      currency: "USD" as const,
-      per_day_price: Number((total / days).toFixed(2)),
-      rental_days: days,
-      pickup_location: input.pickup_location,
-      dropoff_location: input.dropoff_location,
-      cancellation_policy: item.c.cancellation_policy ?? "Free cancellation up to 48 hours before pickup",
-      provider_name: "Travsify Partner",
-      _internal_underwriter: item.source,
-    };
-  }).sort((a, b) => a.total_price - b.total_price);
+    const sorted = items.sort((a, b) => (a.c.price_total_usd ?? 0) - (b.c.price_total_usd ?? 0)).slice(0, 4);
+    for (const item of sorted) {
+      const total = Number((item.c.price_total_usd ?? def.perDay * days).toFixed(2));
+      out.push({
+        id: `cr_${cls}_${idx}_${Date.now().toString(36)}`,
+        car_class: cls,
+        car_description: `${classLabel(cls)} · ${item.c.example_model || def.example}`,
+        example_model: item.c.example_model || def.example,
+        transmission: (item.c.transmission as "automatic" | "manual") || "automatic",
+        passengers: item.c.passengers ?? def.pax,
+        bags: item.c.bags ?? def.bags,
+        air_conditioning: item.c.air_conditioning ?? true,
+        unlimited_mileage: item.c.unlimited_mileage ?? true,
+        total_price: total,
+        currency: "USD" as const,
+        per_day_price: Number((total / days).toFixed(2)),
+        rental_days: days,
+        pickup_location: input.pickup_location,
+        dropoff_location: input.dropoff_location,
+        cancellation_policy: item.c.cancellation_policy ?? "Free cancellation up to 48 hours before pickup",
+        provider_name: "Travsify Partner",
+        _internal_underwriter: item.source,
+      });
+      idx++;
+    }
+  }
+  return out.sort((a, b) => a.total_price - b.total_price);
 }
 
 function deterministicFallback(input: CarRentalScrapeInput): NormalizedCarRentalQuote[] {
   const days = rentalDays(input.pickup_date, input.dropoff_date);
   const classes: NormalizedCarRentalQuote["car_class"][] = ["economy", "compact", "midsize", "suv", "premium", "minivan"];
-  return classes.map((cls, idx) => {
+  // 4 variants per class — different example models, transmission and price spread —
+  // so a search always shows ~24 results instead of just 6.
+  const variants: Record<NormalizedCarRentalQuote["car_class"], Array<{ model: string; mult: number; trans: "automatic" | "manual" }>> = {
+    economy:  [
+      { model: "Kia Rio or similar", mult: 1.0, trans: "automatic" },
+      { model: "Hyundai i10 or similar", mult: 0.92, trans: "manual" },
+      { model: "Fiat Panda or similar", mult: 1.05, trans: "automatic" },
+      { model: "Chevrolet Spark or similar", mult: 1.1, trans: "automatic" },
+    ],
+    compact:  [
+      { model: "Toyota Corolla or similar", mult: 1.0, trans: "automatic" },
+      { model: "Volkswagen Golf or similar", mult: 1.08, trans: "manual" },
+      { model: "Ford Focus or similar", mult: 1.04, trans: "automatic" },
+      { model: "Mazda 3 or similar", mult: 1.12, trans: "automatic" },
+    ],
+    midsize:  [
+      { model: "Hyundai Sonata or similar", mult: 1.0, trans: "automatic" },
+      { model: "Toyota Camry or similar", mult: 1.1, trans: "automatic" },
+      { model: "Volkswagen Passat or similar", mult: 1.08, trans: "automatic" },
+      { model: "Nissan Altima or similar", mult: 0.96, trans: "automatic" },
+    ],
+    suv:      [
+      { model: "Toyota RAV4 or similar", mult: 1.0, trans: "automatic" },
+      { model: "Nissan Rogue or similar", mult: 0.95, trans: "automatic" },
+      { model: "Jeep Compass or similar", mult: 1.08, trans: "automatic" },
+      { model: "Kia Sportage or similar", mult: 1.04, trans: "automatic" },
+    ],
+    premium:  [
+      { model: "Mercedes-Benz E-Class or similar", mult: 1.0, trans: "automatic" },
+      { model: "BMW 5 Series or similar", mult: 1.08, trans: "automatic" },
+      { model: "Audi A6 or similar", mult: 1.06, trans: "automatic" },
+      { model: "Volvo S90 or similar", mult: 0.95, trans: "automatic" },
+    ],
+    minivan:  [
+      { model: "Chrysler Pacifica or similar", mult: 1.0, trans: "automatic" },
+      { model: "Honda Odyssey or similar", mult: 1.05, trans: "automatic" },
+      { model: "Toyota Sienna or similar", mult: 1.08, trans: "automatic" },
+      { model: "Kia Carnival or similar", mult: 0.96, trans: "automatic" },
+    ],
+  };
+
+  const out: NormalizedCarRentalQuote[] = [];
+  classes.forEach((cls) => {
     const def = classDefaults(cls);
-    const total = Number((def.perDay * days).toFixed(2));
-    return {
-      id: `cr_fallback_${cls}_${idx}`,
-      car_class: cls,
-      car_description: `${classLabel(cls)} · ${def.example}`,
-      example_model: def.example,
-      transmission: "automatic" as const,
-      passengers: def.pax,
-      bags: def.bags,
-      air_conditioning: true,
-      unlimited_mileage: true,
-      total_price: total,
-      currency: "USD" as const,
-      per_day_price: def.perDay,
-      rental_days: days,
-      pickup_location: input.pickup_location,
-      dropoff_location: input.dropoff_location,
-      cancellation_policy: "Free cancellation up to 48 hours before pickup",
-      provider_name: "Travsify Partner",
-      _internal_underwriter: "fallback",
-    };
+    variants[cls].forEach((v, vi) => {
+      const total = Number((def.perDay * days * v.mult).toFixed(2));
+      out.push({
+        id: `cr_fallback_${cls}_${vi}`,
+        car_class: cls,
+        car_description: `${classLabel(cls)} · ${v.model}`,
+        example_model: v.model,
+        transmission: v.trans,
+        passengers: def.pax,
+        bags: def.bags,
+        air_conditioning: true,
+        unlimited_mileage: true,
+        total_price: total,
+        currency: "USD" as const,
+        per_day_price: Number((total / days).toFixed(2)),
+        rental_days: days,
+        pickup_location: input.pickup_location,
+        dropoff_location: input.dropoff_location,
+        cancellation_policy: "Free cancellation up to 48 hours before pickup",
+        provider_name: "Travsify Partner",
+        _internal_underwriter: "fallback",
+      });
+    });
   });
+  return out.sort((a, b) => a.total_price - b.total_price);
 }
 
 function ageBucket(age: number): number {
