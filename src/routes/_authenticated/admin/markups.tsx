@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listAdminMarkups, upsertAdminMarkup, deleteAdminMarkup } from "@/server/markups.functions";
 import { Loader2, Plus, Trash2, Percent, DollarSign, Plane, Hotel, Bus, MapPin, Globe2, Shield, Car } from "lucide-react";
 import { toast } from "sonner";
+import { getServerFnAuthHeaders } from "@/lib/server-fn-auth";
 
 export const Route = createFileRoute("/_authenticated/admin/markups")({
   component: AdminMarkupsPage,
@@ -29,9 +30,9 @@ export function MarkupEditor({ scope, title, subtitle, list, upsert, remove }: {
   scope: "travsify" | "partner";
   title: string;
   subtitle: string;
-  list: () => Promise<{ markups: Row[] }>;
-  upsert: (args: { data: never }) => Promise<unknown>;
-  remove: (args: { data: { id: string } }) => Promise<unknown>;
+  list: (args?: { headers?: HeadersInit }) => Promise<{ markups: Row[] }>;
+  upsert: (args: { data: never; headers?: HeadersInit }) => Promise<unknown>;
+  remove: (args: { data: { id: string }; headers?: HeadersInit }) => Promise<unknown>;
 }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +45,8 @@ export function MarkupEditor({ scope, title, subtitle, list, upsert, remove }: {
   async function refresh() {
     setLoading(true);
     try {
-      const { markups } = await list();
+      const headers = await getServerFnAuthHeaders();
+      const { markups } = await list({ headers });
       setRows(markups);
     } catch (e) {
       toast.error("Failed to load markups: " + (e as Error).message);
@@ -61,7 +63,8 @@ export function MarkupEditor({ scope, title, subtitle, list, upsert, remove }: {
     if (type === "fixed" && num === 0) return toast.error("Fixed markup must be > 0");
     setSaving(true);
     try {
-      await upsert({ data: { vertical, markup_type: type, markup_value: num, currency: type === "fixed" ? currency : null, is_active: true } as never });
+      const headers = await getServerFnAuthHeaders();
+      await upsert({ data: { vertical, markup_type: type, markup_value: num, currency: type === "fixed" ? currency : null, is_active: true } as never, headers });
       toast.success("Markup saved");
       setValue(type === "percentage" ? "5" : "10");
       refresh();
@@ -71,7 +74,7 @@ export function MarkupEditor({ scope, title, subtitle, list, upsert, remove }: {
 
   async function handleDelete(id: string, label: string) {
     if (!confirm(`Delete ${label}? Future bookings won't include this markup.`)) return;
-    try { await remove({ data: { id } }); toast.success("Markup deleted"); refresh(); }
+    try { const headers = await getServerFnAuthHeaders(); await remove({ data: { id }, headers }); toast.success("Markup deleted"); refresh(); }
     catch (e) { toast.error((e as Error).message); }
   }
 
