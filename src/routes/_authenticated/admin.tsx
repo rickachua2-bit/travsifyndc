@@ -74,6 +74,7 @@ const OPERATIONS: NavItem[] = [
 const TREASURY: NavItem[] = [
   { to: "/admin/wallets", label: "Wallets", icon: Wallet },
   { to: "/admin/ledger", label: "Ledger", icon: BookOpen },
+  { to: "/admin/revenue", label: "Revenue & GMV", icon: TrendingUp },
 ];
 
 const DEVELOPERS: NavItem[] = [
