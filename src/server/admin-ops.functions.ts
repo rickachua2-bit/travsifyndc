@@ -489,3 +489,200 @@ export const adminListContactSubmissions = createServerFn({ method: "POST" })
     }
     return { submissions };
   });
+
+// ============================================================================
+// Phase 3: Provider & cache health
+// ============================================================================
+
+const CACHE_TABLES = [
+  { key: "tour_quote_cache", label: "Tours (GetYourGuide)", vertical: "tours" },
+  { key: "transfer_quote_cache", label: "Transfers (Mozio)", vertical: "transfers" },
+  { key: "insurance_quote_cache", label: "Insurance (SafetyWing)", vertical: "insurance" },
+  { key: "car_rental_quote_cache", label: "Car rentals", vertical: "car_rentals" },
+] as const;
+
+type CacheKey = (typeof CACHE_TABLES)[number]["key"];
+
+export const adminCacheStats = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+
+    const stats = await Promise.all(
+      CACHE_TABLES.map(async (t) => {
+        const [total, fresh24h, stale7d, latest] = await Promise.all([
+          supabaseAdmin.from(t.key).select("id", { count: "exact", head: true }),
+          supabaseAdmin
+            .from(t.key)
+            .select("id", { count: "exact", head: true })
+            .gte("last_scraped_at", dayAgo),
+          supabaseAdmin
+            .from(t.key)
+            .select("id", { count: "exact", head: true })
+            .lt("last_scraped_at", weekAgo),
+          supabaseAdmin
+            .from(t.key)
+            .select("last_scraped_at")
+            .order("last_scraped_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        ]);
+        return {
+          key: t.key,
+          label: t.label,
+          vertical: t.vertical,
+          total: total.count ?? 0,
+          fresh_24h: fresh24h.count ?? 0,
+          stale_7d: stale7d.count ?? 0,
+          last_scraped_at: latest.data?.last_scraped_at ?? null,
+        };
+      }),
+    );
+    return { caches: stats };
+  });
+
+export const adminPurgeCache = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator(
+    z.object({
+      cache_key: z.enum([
+        "tour_quote_cache",
+        "transfer_quote_cache",
+        "insurance_quote_cache",
+        "car_rental_quote_cache",
+      ]),
+      mode: z.enum(["all", "stale_7d", "stale_24h"]),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const table = data.cache_key as CacheKey;
+    let q = supabaseAdmin.from(table).delete();
+    if (data.mode === "stale_24h") {
+      q = q.lt("last_scraped_at", new Date(Date.now() - 24 * 3600 * 1000).toISOString());
+    } else if (data.mode === "stale_7d") {
+      q = q.lt("last_scraped_at", new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString());
+    } else {
+      // delete all rows: need a where clause; use uuid sentinel that always matches
+      q = q.gte("created_at", "1970-01-01");
+    }
+    const { error, count } = await q;
+    if (error) throw new Error(error.message);
+    return { ok: true, deleted: count ?? 0 };
+  });
+
+export const adminListScrapeRuns = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("visa_scrape_runs")
+      .select("*")
+      .order("started_at", { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    return { runs: data ?? [] };
+  });
+
+export const adminProviderHealth = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const sinceIso = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const { data: rows } = await supabaseAdmin
+      .from("api_logs")
+      .select("provider, status_code, latency_ms, created_at, error_code")
+      .gte("created_at", sinceIso)
+      .not("provider", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(5000);
+
+    type Agg = {
+      provider: string;
+      total: number;
+      ok: number;
+      errors: number;
+      latencies: number[];
+      last_call_at: string | null;
+      last_error: string | null;
+      last_status: number | null;
+    };
+    const map = new Map<string, Agg>();
+    (rows ?? []).forEach((r) => {
+      if (!r.provider) return;
+      const cur =
+        map.get(r.provider) ??
+        ({
+          provider: r.provider,
+          total: 0,
+          ok: 0,
+          errors: 0,
+          latencies: [],
+          last_call_at: null,
+          last_error: null,
+          last_status: null,
+        } as Agg);
+      cur.total += 1;
+      if (r.status_code >= 200 && r.status_code < 400) cur.ok += 1;
+      else cur.errors += 1;
+      if (r.latency_ms) cur.latencies.push(r.latency_ms);
+      if (!cur.last_call_at) {
+        cur.last_call_at = r.created_at;
+        cur.last_status = r.status_code;
+        cur.last_error = r.error_code ?? null;
+      }
+      map.set(r.provider, cur);
+    });
+
+    const KNOWN_PROVIDERS = [
+      "duffel",
+      "ndc",
+      "liteapi",
+      "mozio",
+      "getyourguide",
+      "safetywing",
+      "sherpa",
+      "stripe",
+      "fincra",
+    ];
+    KNOWN_PROVIDERS.forEach((p) => {
+      if (!map.has(p)) {
+        map.set(p, {
+          provider: p,
+          total: 0,
+          ok: 0,
+          errors: 0,
+          latencies: [],
+          last_call_at: null,
+          last_error: null,
+          last_status: null,
+        });
+      }
+    });
+
+    const providers = Array.from(map.values()).map((a) => {
+      a.latencies.sort((x, y) => x - y);
+      const p50 = a.latencies.length ? a.latencies[Math.floor(a.latencies.length * 0.5)] : 0;
+      const p95 = a.latencies.length ? a.latencies[Math.floor(a.latencies.length * 0.95)] : 0;
+      const errorRate = a.total ? a.errors / a.total : 0;
+      const status: "healthy" | "degraded" | "down" | "idle" =
+        a.total === 0 ? "idle" : errorRate >= 0.5 ? "down" : errorRate >= 0.1 ? "degraded" : "healthy";
+      return {
+        provider: a.provider,
+        total: a.total,
+        ok: a.ok,
+        errors: a.errors,
+        error_rate: errorRate,
+        p50_latency: p50,
+        p95_latency: p95,
+        last_call_at: a.last_call_at,
+        last_status: a.last_status,
+        last_error: a.last_error,
+        status,
+      };
+    });
+    providers.sort((a, b) => b.total - a.total);
+    return { providers, window_hours: 24 };
+  });
