@@ -200,3 +200,29 @@ function Th({ children, className = "" }: { children: React.ReactNode; className
 function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <td className={`px-4 py-3 text-foreground ${className}`}>{children}</td>;
 }
+
+function PlatformStat({
+  to, icon, label, value, accent,
+}: {
+  to: string; icon: React.ReactNode; label: string; value: number; accent?: boolean;
+}) {
+  return (
+    <Link
+      to={to}
+      className={`group flex items-center gap-3 rounded-xl border bg-white p-3 transition hover:-translate-y-0.5 ${
+        accent && value > 0 ? "border-accent/50" : "border-border"
+      }`}
+      style={{ boxShadow: "var(--shadow-soft)" }}
+    >
+      <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+        accent && value > 0 ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground"
+      }`}>
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-display text-xl font-extrabold text-primary leading-none">{value}</div>
+        <div className="mt-1 truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      </div>
+    </Link>
+  );
+}
