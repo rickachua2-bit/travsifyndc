@@ -17,7 +17,7 @@ import type { ReactNode } from "react";
 
 type NavItem = {
   title: string;
-  to: "/dashboard" | "/dashboard-book" | "/bookings" | "/wallet" | "/markups" | "/api-keys" | "/docs" | "/pending-review";
+  to: "/dashboard" | "/dashboard-book" | "/bookings" | "/wallet" | "/markups" | "/api-keys" | "/docs" | "/pending-review" | "/support";
   icon: typeof LayoutDashboard;
   external?: boolean;
 };
@@ -32,6 +32,7 @@ const PRIMARY: NavItem[] = [
 ];
 
 const SECONDARY: NavItem[] = [
+  { title: "Support", to: "/support", icon: LifeBuoy },
   { title: "Docs", to: "/docs", icon: BookOpen },
 ];
 
