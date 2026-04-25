@@ -2,6 +2,8 @@
 // Affiliate model: we forward the search/quote and create the reservation server-side
 // using our affiliate ID. The end customer NEVER sees Mozio — they stay in our flow.
 // Docs: https://docs.mozio.com/  (REST-ish JSON API, key in `Authorization` header)
+import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
+
 const BASE = "https://api.mozio.com/v2";
 
 function key(): string {
@@ -14,8 +16,8 @@ function affiliateId(): string {
   return process.env.MOZIO_AFFILIATE_ID || "";
 }
 
-async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+async function call<T>(path: string, init: RequestInit = {}, timeoutMs = TIMEOUTS.search): Promise<T> {
+  const res = await fetchWithTimeout(`${BASE}${path}`, {
     ...init,
     headers: {
       "API-KEY": key(),
@@ -23,7 +25,7 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
       "Content-Type": "application/json",
       ...(init.headers || {}),
     },
-  });
+  }, { providerName: "Mozio", timeoutMs });
   const text = await res.text();
   let json: unknown = null;
   try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }

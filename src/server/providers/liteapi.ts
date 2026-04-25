@@ -1,5 +1,7 @@
 // LiteAPI client — hotels supplier.
 // Docs: https://docs.liteapi.travel/
+import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
+
 const BASE = "https://api.liteapi.travel/v3.0";
 
 function key(): string {
@@ -8,8 +10,8 @@ function key(): string {
   return k;
 }
 
-async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+async function call<T>(path: string, init: RequestInit = {}, timeoutMs = TIMEOUTS.search): Promise<T> {
+  const res = await fetchWithTimeout(`${BASE}${path}`, {
     ...init,
     headers: {
       "X-API-Key": key(),
@@ -17,7 +19,7 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
       "Content-Type": "application/json",
       ...(init.headers || {}),
     },
-  });
+  }, { providerName: "LiteAPI", timeoutMs });
   const text = await res.text();
   let json: unknown = null;
   try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }

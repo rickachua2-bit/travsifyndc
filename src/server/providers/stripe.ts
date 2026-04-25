@@ -1,5 +1,7 @@
 // Stripe client — payment intents for booking checkout.
 // We hit the REST API directly to keep the Worker bundle tiny.
+import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
+
 const BASE = "https://api.stripe.com/v1";
 
 function key(): string {
@@ -14,15 +16,15 @@ function form(data: Record<string, string | number | undefined>): string {
   return usp.toString();
 }
 
-async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+async function call<T>(path: string, init: RequestInit = {}, timeoutMs = TIMEOUTS.booking): Promise<T> {
+  const res = await fetchWithTimeout(`${BASE}${path}`, {
     ...init,
     headers: {
       "Authorization": `Bearer ${key()}`,
       "Content-Type": "application/x-www-form-urlencoded",
       ...(init.headers || {}),
     },
-  });
+  }, { providerName: "Stripe", timeoutMs });
   const json = await res.json();
   if (!res.ok) {
     const err = json as { error?: { message?: string } };

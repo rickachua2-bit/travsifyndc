@@ -2,6 +2,14 @@
 // SECURITY: only import from server routes/functions. Uses service-role client.
 import { createHash } from "crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { ProviderTimeoutError } from "@/server/providers/fetch-with-timeout";
+
+/**
+ * Hard ceiling per request inside the gateway. Cloudflare in front of the
+ * Worker returns 522 if the origin doesn't respond. We must always respond
+ * before that — even if upstream providers hang.
+ */
+const REQUEST_DEADLINE_MS = 22_000;
 
 export const API_CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -170,10 +178,21 @@ export async function withGateway(
 
   let res: Response;
   try {
-    res = await handler(auth, requestId);
+    // Race the handler against a request deadline so a hung upstream never
+    // produces a Cloudflare 522 — we always emit a proper JSON 504/timeout.
+    res = await Promise.race([
+      handler(auth, requestId),
+      new Promise<Response>((_, reject) =>
+        setTimeout(() => reject(new ProviderTimeoutError("gateway", REQUEST_DEADLINE_MS)), REQUEST_DEADLINE_MS),
+      ),
+    ]);
   } catch (e) {
     console.error(`[${meta.endpoint}]`, e);
-    res = errorResponse("internal_error", (e as Error).message || "Unexpected error", 500);
+    if (e instanceof ProviderTimeoutError) {
+      res = errorResponse("upstream_timeout", e.message + " — please retry. If this persists, the supplier API is slow.", 504);
+    } else {
+      res = errorResponse("internal_error", (e as Error).message || "Unexpected error", 500);
+    }
   }
 
   await logRequest({
@@ -185,7 +204,7 @@ export async function withGateway(
     requestId,
     vertical: meta.vertical,
     provider: meta.provider,
-    errorCode: res.status >= 400 ? "handler_error" : undefined,
+    errorCode: res.status >= 400 ? (res.status === 504 ? "upstream_timeout" : "handler_error") : undefined,
   });
 
   return withRequestId(res, requestId);

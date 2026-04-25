@@ -2,6 +2,8 @@
 // Affiliate model: we use our affiliate token; customers fill the application in our flow,
 // ops submits to Sherpa portal manually after wallet payment.
 // Docs: https://developers.joinsherpa.com/
+import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
+
 const BASE = "https://requirements-api.joinsherpa.com/v2";
 
 function affiliateId(): string {
@@ -14,7 +16,7 @@ function affiliateId(): string {
 
 async function call<T>(path: string): Promise<T> {
   const url = `${BASE}${path}${path.includes("?") ? "&" : "?"}affiliate=${affiliateId()}`;
-  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  const res = await fetchWithTimeout(url, { headers: { "Accept": "application/json" } }, { providerName: "Sherpa", timeoutMs: TIMEOUTS.search });
   const text = await res.text();
   let json: unknown = null;
   try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }

@@ -1,5 +1,7 @@
 // Duffel client — flights NDC supplier.
 // Docs: https://duffel.com/docs/api
+import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
+
 const BASE = "https://api.duffel.com";
 const VERSION = "v2";
 
@@ -14,8 +16,8 @@ function key(env: "sandbox" | "live"): string {
   return k;
 }
 
-async function call<T>(env: "sandbox" | "live", path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+async function call<T>(env: "sandbox" | "live", path: string, init: RequestInit = {}, timeoutMs = TIMEOUTS.search): Promise<T> {
+  const res = await fetchWithTimeout(`${BASE}${path}`, {
     ...init,
     headers: {
       "Authorization": `Bearer ${key(env)}`,
@@ -24,7 +26,7 @@ async function call<T>(env: "sandbox" | "live", path: string, init: RequestInit 
       "Content-Type": "application/json",
       ...(init.headers || {}),
     },
-  });
+  }, { providerName: "Duffel", timeoutMs });
   const text = await res.text();
   let json: unknown = null;
   try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
