@@ -18,7 +18,7 @@ import { genBookingRef } from "@/server/gateway";
 import { createPaymentIntent } from "@/server/providers/stripe";
 import { searchFlights as duffelSearch, createOrder as duffelCreateOrder } from "@/server/providers/duffel";
 import { searchHotelRates as liteapiSearch, prebookHotel as liteapiPrebookHotel, bookHotel as liteapiBookHotel } from "@/server/providers/liteapi";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth as authMiddleware } from "@/integrations/supabase/auth-middleware";
 import { getOrScrapeTours } from "@/server/providers/getyourguide-scraper";
 import { getOrScrapeTransfers } from "@/server/providers/transfers-scraper";
 import { getOrScrapeCarRentals } from "@/server/providers/car-rental-scraper";
@@ -489,7 +489,7 @@ async function ensureGuestUser(email: string, name: string): Promise<string> {
 const WalletCheckoutSchema = GuestCheckoutSchema;
 
 export const walletCheckout = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => WalletCheckoutSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { userId, claims } = context as unknown as { userId: string; claims: { email?: string } };
