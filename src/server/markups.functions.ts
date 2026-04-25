@@ -1,7 +1,7 @@
 // Markup CRUD server functions — partner-scoped (RLS enforced) and admin-scoped (Travsify global).
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth as authMiddleware } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const VERTICALS = ["flights", "hotels", "transfers", "tours", "visas", "insurance", "car_rentals"] as const;
@@ -20,14 +20,14 @@ async function isAdmin(userId: string): Promise<boolean> {
 }
 
 export const listPartnerMarkups = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { data } = await context.supabase.from("markups").select("*").eq("owner_type", "partner").eq("owner_id", context.userId).order("vertical");
     return { markups: data ?? [] };
   });
 
 export const upsertPartnerMarkup = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator(MarkupInput)
   .handler(async ({ data, context }) => {
     if (data.markup_type === "fixed" && !data.currency) throw new Error("Currency required for fixed markup");
@@ -52,7 +52,7 @@ export const upsertPartnerMarkup = createServerFn({ method: "POST" })
   });
 
 export const deletePartnerMarkup = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator(z.object({ id: z.string().uuid() }))
   .handler(async ({ data, context }) => {
     await context.supabase.from("markups").delete().eq("id", data.id).eq("owner_id", context.userId);
@@ -62,7 +62,7 @@ export const deletePartnerMarkup = createServerFn({ method: "POST" })
 // ---------- Admin (Travsify global) ----------
 
 export const listAdminMarkups = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     if (!(await isAdmin(context.userId))) throw new Error("Admins only");
     const { data } = await supabaseAdmin.from("markups").select("*").eq("owner_type", "travsify").order("vertical");
@@ -70,7 +70,7 @@ export const listAdminMarkups = createServerFn({ method: "POST" })
   });
 
 export const upsertAdminMarkup = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator(MarkupInput)
   .handler(async ({ data, context }) => {
     if (!(await isAdmin(context.userId))) throw new Error("Admins only");
@@ -94,7 +94,7 @@ export const upsertAdminMarkup = createServerFn({ method: "POST" })
   });
 
 export const deleteAdminMarkup = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator(z.object({ id: z.string().uuid() }))
   .handler(async ({ data, context }) => {
     if (!(await isAdmin(context.userId))) throw new Error("Admins only");

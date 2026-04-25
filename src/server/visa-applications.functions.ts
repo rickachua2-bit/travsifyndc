@@ -14,7 +14,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth as authMiddleware } from "@/integrations/supabase/auth-middleware";
 
 // ---------- shared helpers ----------
 
@@ -361,7 +361,7 @@ export const trackVisaApplication = createServerFn({ method: "POST" })
 // ---------- ADMIN: list / inspect / process ----------
 
 export const adminListVisaApplications = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) =>
     z.object({
       status: z
@@ -412,7 +412,7 @@ export const adminListVisaApplications = createServerFn({ method: "POST" })
   });
 
 export const adminGetVisaApplication = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({ application_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -458,7 +458,7 @@ export const adminGetVisaApplication = createServerFn({ method: "POST" })
   });
 
 export const adminReviewDocument = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) =>
     z.object({
       document_id: z.string().uuid(),
@@ -503,7 +503,7 @@ export const adminReviewDocument = createServerFn({ method: "POST" })
   });
 
 export const adminUpdateApplicationStatus = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) =>
     z.object({
       application_id: z.string().uuid(),
@@ -564,7 +564,7 @@ function defaultStatusMessage(status: string): string {
 // ---------- ADMIN: upload issued visa PDF ----------
 
 export const adminGetVisaPdfUploadUrl = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) =>
     z.object({
       application_id: z.string().uuid(),
@@ -583,7 +583,7 @@ export const adminGetVisaPdfUploadUrl = createServerFn({ method: "POST" })
   });
 
 export const adminFinalizeVisaPdf = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) =>
     z.object({
       application_id: z.string().uuid(),
@@ -614,7 +614,7 @@ export const adminFinalizeVisaPdf = createServerFn({ method: "POST" })
 // ---------- ADMIN: refund (visa fee only — service fee retained) ----------
 
 export const adminRefundVisaApplication = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) =>
     z.object({
       application_id: z.string().uuid(),

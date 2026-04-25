@@ -13,7 +13,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth as authMiddleware } from "@/integrations/supabase/auth-middleware";
 import { convert as fxConvert, SUPPORTED_CURRENCIES } from "@/server/fx";
 import { runSherpaScrape, scrapeAndCacheCorridor } from "@/server/providers/sherpa-scraper";
 import { VISA_CORRIDORS } from "@/server/data/visa-corridors";
@@ -195,7 +195,7 @@ const ProductSchema = z.object({
 });
 
 export const adminListVisaProducts = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { data, error } = await supabaseAdmin
@@ -208,7 +208,7 @@ export const adminListVisaProducts = createServerFn({ method: "POST" })
   });
 
 export const adminCreateVisaProduct = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => ProductSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -228,7 +228,7 @@ export const adminCreateVisaProduct = createServerFn({ method: "POST" })
   });
 
 export const adminUpdateVisaProduct = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) =>
     z.object({ id: z.string().uuid(), patch: ProductSchema.partial() }).parse(d),
   )
@@ -249,7 +249,7 @@ export const adminUpdateVisaProduct = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteVisaProduct = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -267,7 +267,7 @@ export const adminDeleteVisaProduct = createServerFn({ method: "POST" })
  * back to visa_scrape_runs as it goes.
  */
 export const adminStartSherpaScrape = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
 
@@ -309,7 +309,7 @@ export const adminStartSherpaScrape = createServerFn({ method: "POST" })
   });
 
 export const adminGetScrapeRun = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -323,7 +323,7 @@ export const adminGetScrapeRun = createServerFn({ method: "POST" })
   });
 
 export const adminListScrapeRuns = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { data, error } = await supabaseAdmin

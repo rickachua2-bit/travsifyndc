@@ -1,7 +1,7 @@
 // Admin server functions for manual booking fulfillment.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth as authMiddleware } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { refundWallet } from "@/server/bookings";
 
@@ -11,7 +11,7 @@ async function assertAdmin(userId: string) {
 }
 
 export const listManualBookings = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: { status?: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -27,7 +27,7 @@ export const listManualBookings = createServerFn({ method: "POST" })
   });
 
 export const confirmManualBooking = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator(z.object({ booking_id: z.string().uuid(), provider_reference: z.string().min(1).max(200) }))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -38,7 +38,7 @@ export const confirmManualBooking = createServerFn({ method: "POST" })
   });
 
 export const cancelManualBooking = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator(z.object({ booking_id: z.string().uuid(), reason: z.string().min(2).max(300) }))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
