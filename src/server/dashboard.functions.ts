@@ -82,8 +82,8 @@ export const fundWallet = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId, claims } = context as unknown as { userId: string; claims: { email?: string } };
     const email = claims.email || `${userId}@user.travsify.app`;
-    const { data: profile } = await supabaseAdmin.from("profiles").select("full_name, legal_name").eq("id", userId).maybeSingle();
-    const fullName = profile?.legal_name || profile?.full_name || email.split("@")[0];
+    const { data: profile } = await supabaseAdmin.from("profiles").select("full_name, legal_name, trading_name, company").eq("id", userId).maybeSingle();
+    const fullName = normalizeFullName(profile?.full_name, profile?.legal_name, profile?.trading_name, profile?.company, email);
 
     if (data.currency === "USD") {
       const amountCents = Math.round(data.amount * 100);
@@ -112,8 +112,8 @@ export const myVirtualAccount = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { userId, claims } = context as unknown as { userId: string; claims: { email?: string } };
     const email = claims.email || `${userId}@user.travsify.app`;
-    const { data: profile } = await supabaseAdmin.from("profiles").select("full_name, legal_name").eq("id", userId).maybeSingle();
-    const fullName = profile?.legal_name || profile?.full_name || email.split("@")[0];
+    const { data: profile } = await supabaseAdmin.from("profiles").select("full_name, legal_name, trading_name, company").eq("id", userId).maybeSingle();
+    const fullName = normalizeFullName(profile?.full_name, profile?.legal_name, profile?.trading_name, profile?.company, email);
     try {
       return await ensureVirtualAccount(userId, email, fullName);
     } catch (error) {
