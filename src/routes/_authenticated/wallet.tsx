@@ -170,6 +170,15 @@ function WalletPage() {
     finally { setBusy(false); }
   }
 
+  async function handleCancelWithdrawal(id: string) {
+    if (!confirm("Cancel this withdrawal? Your wallet will be refunded immediately.")) return;
+    try {
+      await cancelWithdrawal({ data: { id } });
+      toast.success("Withdrawal cancelled, wallet refunded");
+      refresh();
+    } catch (e) { toast.error((e as Error).message); }
+  }
+
   return (
     <PartnerShell>
       <div className="mx-auto max-w-7xl px-6 py-8">
