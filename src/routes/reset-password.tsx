@@ -82,14 +82,6 @@ function ResetPasswordPage() {
     navigate({ to: next, replace: true });
   }
 
-  if (mode === "checking") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-accent" />
-      </div>
-    );
-  }
-
   if (sent) {
     return (
       <AuthShell
