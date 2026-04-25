@@ -370,8 +370,7 @@ function WalletPage() {
               )}
             </section>
 
-            <section className="mt-8 rounded-2xl border border-border bg-white p-5" style={{ boxShadow: "var(--shadow-soft)" }}>
-              <h2 className="font-display text-base font-bold text-primary">Recent transactions</h2>
+            <section id="wallet-activity" className="mt-8 rounded-2xl border border-border bg-white p-5" style={{ boxShadow: "var(--shadow-soft)" }}>
               <p className="text-xs text-muted-foreground">Last 50 wallet movements.</p>
               {txns.length === 0 ? (
                 <p className="mt-3 rounded-lg border border-dashed border-border bg-surface px-4 py-3 text-xs text-muted-foreground">No transactions yet.</p>
