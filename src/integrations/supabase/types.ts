@@ -384,6 +384,60 @@ export type Database = {
         }
         Relationships: []
       }
+      flight_search_jobs: {
+        Row: {
+          api_key_id: string
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          environment: string
+          error_code: string | null
+          error_message: string | null
+          expires_at: string
+          id: string
+          input: Json
+          result: Json | null
+          started_at: string | null
+          status: string
+          suppliers_called: string[]
+          user_id: string
+        }
+        Insert: {
+          api_key_id: string
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          environment: string
+          error_code?: string | null
+          error_message?: string | null
+          expires_at?: string
+          id?: string
+          input: Json
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          suppliers_called?: string[]
+          user_id: string
+        }
+        Update: {
+          api_key_id?: string
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          environment?: string
+          error_code?: string | null
+          error_message?: string | null
+          expires_at?: string
+          id?: string
+          input?: Json
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          suppliers_called?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
       insurance_quote_cache: {
         Row: {
           created_at: string
