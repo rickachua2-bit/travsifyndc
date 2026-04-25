@@ -193,6 +193,21 @@ function AdminSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
+          <SidebarGroupLabel>Treasury</SidebarGroupLabel>
+          <SidebarGroupContent>{renderItems(TREASURY)}</SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Developers</SidebarGroupLabel>
+          <SidebarGroupContent>{renderItems(DEVELOPERS)}</SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Inbox</SidebarGroupLabel>
+          <SidebarGroupContent>{renderItems(INBOX)}</SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
           <SidebarGroupLabel>Finance</SidebarGroupLabel>
           <SidebarGroupContent>{renderItems(FINANCE)}</SidebarGroupContent>
         </SidebarGroup>
