@@ -24,6 +24,9 @@ import {
   Inbox,
   Mailbox,
   TrendingUp,
+  HeartPulse,
+  Database,
+  History,
 } from "lucide-react";
 import { Logo } from "@/components/landing/Logo";
 import {
@@ -85,6 +88,12 @@ const DEVELOPERS: NavItem[] = [
 
 const INBOX: NavItem[] = [
   { to: "/admin/contact-submissions", label: "Contact inbox", icon: Mailbox },
+];
+
+const HEALTH: NavItem[] = [
+  { to: "/admin/provider-health", label: "Provider health", icon: HeartPulse },
+  { to: "/admin/caches", label: "Cache management", icon: Database },
+  { to: "/admin/scrape-runs", label: "Scrape runs", icon: History },
 ];
 
 const FINANCE: NavItem[] = [
@@ -207,6 +216,11 @@ function AdminSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Inbox</SidebarGroupLabel>
           <SidebarGroupContent>{renderItems(INBOX)}</SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Health</SidebarGroupLabel>
+          <SidebarGroupContent>{renderItems(HEALTH)}</SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
