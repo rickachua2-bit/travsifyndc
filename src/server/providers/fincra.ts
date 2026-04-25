@@ -17,6 +17,13 @@ function optionalFincraHeaders(): Record<string, string> {
   };
 }
 
+function normalizeCustomerName(name: string): { fullName: string; firstName: string; lastName: string } {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const firstName = parts[0] || "Travsify";
+  const lastName = parts.slice(1).join(" ") || "Customer";
+  return { fullName: `${firstName} ${lastName}`, firstName, lastName };
+}
+
 async function readJsonResponse(res: Response): Promise<unknown> {
   const text = await res.text();
   if (!text) return null;
@@ -122,9 +129,7 @@ export async function createNgnCharge(input: {
   customer_name: string;
   redirect_url: string;
 }) {
-  const parts = input.customer_name.trim().split(/\s+/).filter(Boolean);
-  const firstName = parts[0] || "Customer";
-  const lastName = parts.slice(1).join(" ") || firstName;
+  const { fullName, firstName, lastName } = normalizeCustomerName(input.customer_name);
   return call<{ data?: { link?: string; reference?: string } }>("/checkout/payments", {
     method: "POST",
     body: JSON.stringify({
@@ -132,7 +137,7 @@ export async function createNgnCharge(input: {
       currency: "NGN",
       reference: input.reference,
       customer: {
-        name: input.customer_name,
+        name: fullName,
         firstName,
         lastName,
         email: input.email,
