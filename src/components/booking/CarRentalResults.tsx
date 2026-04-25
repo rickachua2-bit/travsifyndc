@@ -35,17 +35,59 @@ const CLASSES: Array<{ id: CarRentalQuote["car_class"]; label: string }> = [
   { id: "minivan", label: "Minivan" },
 ];
 
-/** Deterministic, royalty-free Unsplash photo per car class — Kayak-style hero shots. */
-function carPhoto(cls: CarRentalQuote["car_class"]): string {
-  const map: Record<CarRentalQuote["car_class"], string> = {
-    economy:  "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=400&h=260&fit=crop",
-    compact:  "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=400&h=260&fit=crop",
-    midsize:  "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=260&fit=crop",
-    suv:      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=260&fit=crop",
-    premium:  "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=260&fit=crop",
-    minivan:  "https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=400&h=260&fit=crop",
-  };
-  return map[cls];
+/** Match the car's example_model to a representative Unsplash photo of that
+ *  exact make/model so the image and the listing title agree. Falls back to a
+ *  class-level photo when we don't have a model-specific shot. */
+const MODEL_PHOTOS: Array<{ match: RegExp; url: string }> = [
+  // Economy
+  { match: /kia rio/i,         url: "https://images.unsplash.com/photo-1623869675781-80aa31012a5a?w=400&h=260&fit=crop" },
+  { match: /hyundai i10/i,     url: "https://images.unsplash.com/photo-1617469767053-d3b523a0b982?w=400&h=260&fit=crop" },
+  { match: /fiat panda/i,      url: "https://images.unsplash.com/photo-1612825173281-9a193378527e?w=400&h=260&fit=crop" },
+  { match: /chevrolet spark/i, url: "https://images.unsplash.com/photo-1570733577524-3a047079e80d?w=400&h=260&fit=crop" },
+
+  // Compact
+  { match: /toyota corolla/i,    url: "https://images.unsplash.com/photo-1623869675781-80aa31012a5a?w=400&h=260&fit=crop" },
+  { match: /volkswagen golf|vw golf/i, url: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400&h=260&fit=crop" },
+  { match: /ford focus/i,        url: "https://images.unsplash.com/photo-1612544448445-b8232cff3b6c?w=400&h=260&fit=crop" },
+  { match: /mazda 3/i,           url: "https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=400&h=260&fit=crop" },
+
+  // Midsize
+  { match: /hyundai sonata/i,       url: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=260&fit=crop" },
+  { match: /toyota camry/i,         url: "https://images.unsplash.com/photo-1621135802920-133df287f89c?w=400&h=260&fit=crop" },
+  { match: /volkswagen passat|vw passat/i, url: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400&h=260&fit=crop" },
+  { match: /nissan altima/i,        url: "https://images.unsplash.com/photo-1590362891991-f776e747a588?w=400&h=260&fit=crop" },
+
+  // SUV
+  { match: /toyota rav4/i,    url: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=260&fit=crop" },
+  { match: /nissan rogue/i,   url: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=400&h=260&fit=crop" },
+  { match: /jeep compass/i,   url: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=260&fit=crop" },
+  { match: /kia sportage/i,   url: "https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?w=400&h=260&fit=crop" },
+
+  // Premium
+  { match: /mercedes.+e.?class/i, url: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=260&fit=crop" },
+  { match: /bmw 5 series/i,       url: "https://images.unsplash.com/photo-1556189250-72ba954cfc2b?w=400&h=260&fit=crop" },
+  { match: /audi a6/i,            url: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400&h=260&fit=crop" },
+  { match: /volvo s90/i,          url: "https://images.unsplash.com/photo-1617469767053-d3b523a0b982?w=400&h=260&fit=crop" },
+
+  // Minivan
+  { match: /chrysler pacifica/i, url: "https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=400&h=260&fit=crop" },
+  { match: /honda odyssey/i,     url: "https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=400&h=260&fit=crop" },
+  { match: /toyota sienna/i,     url: "https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=400&h=260&fit=crop" },
+  { match: /kia carnival/i,      url: "https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=400&h=260&fit=crop" },
+];
+
+const CLASS_FALLBACK_PHOTO: Record<CarRentalQuote["car_class"], string> = {
+  economy:  "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=400&h=260&fit=crop",
+  compact:  "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=400&h=260&fit=crop",
+  midsize:  "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=260&fit=crop",
+  suv:      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=260&fit=crop",
+  premium:  "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=260&fit=crop",
+  minivan:  "https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=400&h=260&fit=crop",
+};
+
+function carPhoto(model: string, cls: CarRentalQuote["car_class"]): string {
+  for (const m of MODEL_PHOTOS) if (m.match.test(model)) return m.url;
+  return CLASS_FALLBACK_PHOTO[cls];
 }
 
 export function CarRentalResults({
@@ -242,7 +284,7 @@ export function CarRentalResults({
             >
               <div className="relative h-40 bg-surface sm:h-full">
                 <img
-                  src={carPhoto(q.car_class)}
+                  src={carPhoto(q.example_model, q.car_class)}
                   alt={q.car_description}
                   loading="lazy"
                   className="h-full w-full object-cover"
