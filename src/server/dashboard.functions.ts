@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth as authMiddleware } from "@/integrations/supabase/auth-middleware";
 import {
   createCardSetupIntent, persistSetupIntentResult, listUserCards, deleteUserCard,
   fundUsdWalletIntent, fundNgnWallet, ensureVirtualAccount, submitWithdrawal,
@@ -16,7 +16,7 @@ import { genBookingRef } from "@/server/gateway";
 
 // ---------- Cards ----------
 export const startCardLink = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { userId, claims } = context as unknown as { userId: string; claims: { email?: string } };
     const email = claims.email || `${userId}@user.travsify.app`;
@@ -24,7 +24,7 @@ export const startCardLink = createServerFn({ method: "POST" })
   });
 
 export const confirmCardLink = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: { setup_intent_id: string }) => z.object({ setup_intent_id: z.string().min(5).max(120) }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context as unknown as { userId: string };
@@ -33,14 +33,14 @@ export const confirmCardLink = createServerFn({ method: "POST" })
   });
 
 export const myCards = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { userId } = context as unknown as { userId: string };
     return listUserCards(userId);
   });
 
 export const removeCard = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: { card_id: string }) => z.object({ card_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context as unknown as { userId: string };
@@ -50,7 +50,7 @@ export const removeCard = createServerFn({ method: "POST" })
 
 // ---------- Wallets ----------
 export const myWallets = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { userId } = context as unknown as { userId: string };
     const { data: wallets } = await supabaseAdmin.from("wallets").select("*").eq("user_id", userId);
@@ -58,7 +58,7 @@ export const myWallets = createServerFn({ method: "GET" })
   });
 
 export const myWalletTransactions = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: { currency?: "USD" | "NGN"; limit?: number }) => z.object({
     currency: z.enum(["USD", "NGN"]).optional(),
     limit: z.number().int().min(1).max(200).optional(),
@@ -72,7 +72,7 @@ export const myWalletTransactions = createServerFn({ method: "POST" })
   });
 
 export const fundWallet = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     currency: z.enum(["USD", "NGN"]),
     amount: z.number().positive().max(10_000_000),
@@ -93,7 +93,7 @@ export const fundWallet = createServerFn({ method: "POST" })
   });
 
 export const myVirtualAccount = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { userId, claims } = context as unknown as { userId: string; claims: { email?: string } };
     const email = claims.email || `${userId}@user.travsify.app`;
@@ -104,7 +104,7 @@ export const myVirtualAccount = createServerFn({ method: "POST" })
 
 // ---------- Bank accounts & withdrawals ----------
 export const myBankAccounts = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { userId } = context as unknown as { userId: string };
     const { data } = await supabaseAdmin.from("bank_accounts").select("*").eq("user_id", userId).order("created_at", { ascending: false });
@@ -112,7 +112,7 @@ export const myBankAccounts = createServerFn({ method: "GET" })
   });
 
 export const addBankAccount = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     currency: z.enum(["USD", "NGN"]),
     account_name: z.string().min(2).max(120),
@@ -132,7 +132,7 @@ export const addBankAccount = createServerFn({ method: "POST" })
   });
 
 export const deleteBankAccount = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context as unknown as { userId: string };
@@ -141,7 +141,7 @@ export const deleteBankAccount = createServerFn({ method: "POST" })
   });
 
 export const requestWithdrawal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     bank_account_id: z.string().uuid(),
     amount: z.number().positive().max(10_000_000),
@@ -152,7 +152,7 @@ export const requestWithdrawal = createServerFn({ method: "POST" })
   });
 
 export const myWithdrawals = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { userId } = context as unknown as { userId: string };
     const { data } = await supabaseAdmin.from("withdrawal_requests").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(50);
@@ -162,7 +162,7 @@ export const myWithdrawals = createServerFn({ method: "GET" })
 // We return a JSON string from these search endpoints because the supplier shapes are deeply typed
 // with `unknown` fields that TanStack Start's serializability check rejects. The client parses it.
 export const searchFlightsInternal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     origin: z.string().length(3),
     destination: z.string().length(3),
@@ -174,7 +174,7 @@ export const searchFlightsInternal = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<string> => JSON.stringify(await duffelSearch("live", data)));
 
 export const searchHotelsInternal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     city_code: z.string().min(2).max(8).optional(),
     country_code: z.string().length(2).optional(),
@@ -197,7 +197,7 @@ const PassengerSchema = z.object({
 });
 
 export const bookFlightFromWallet = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     offer_id: z.string().min(5).max(120),
     amount: z.number().positive().max(10_000_000),
@@ -264,7 +264,7 @@ export const bookFlightFromWallet = createServerFn({ method: "POST" })
   });
 
 export const bookHotelFromWallet = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     offer_id: z.string().min(5).max(200),
     amount: z.number().positive().max(10_000_000),
@@ -342,7 +342,7 @@ export const bookHotelFromWallet = createServerFn({ method: "POST" })
 
 // ---------- Affiliate verticals (manual fulfillment) ----------
 export const searchToursInternal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     query: z.string().min(2).max(100),
     date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -352,7 +352,7 @@ export const searchToursInternal = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<string> => JSON.stringify(await gygSearch(data)));
 
 export const searchTransfersInternal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     pickup_address: z.string().min(3).max(300),
     dropoff_address: z.string().min(3).max(300),
@@ -363,7 +363,7 @@ export const searchTransfersInternal = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<string> => JSON.stringify(await mozioSearch(data)));
 
 export const searchInsuranceInternal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     nationality: z.string().length(2),
     destination: z.string().length(2),
@@ -379,7 +379,7 @@ export const searchInsuranceInternal = createServerFn({ method: "POST" })
   })));
 
 export const searchVisasInternal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     nationality: z.string().length(2),
     destination: z.string().length(2),
@@ -393,7 +393,7 @@ export const searchVisasInternal = createServerFn({ method: "POST" })
 
 /** Generic wallet-pay handler for manual-fulfillment verticals (tours, transfers, insurance, visas). */
 export const bookManualFromWallet = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     vertical: z.enum(["tours", "transfers", "insurance", "visas"]),
     amount: z.number().positive().max(10_000_000),
@@ -444,7 +444,7 @@ export const bookManualFromWallet = createServerFn({ method: "POST" })
     return booking;
   });
 export const myBookings = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { userId } = context as unknown as { userId: string };
     const { data } = await supabaseAdmin.from("bookings").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(100);
@@ -464,7 +464,7 @@ async function assertAdmin(userId: string) {
 }
 
 export const adminListWithdrawals = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
     status: z.enum(["pending", "approved", "processing", "paid", "rejected", "failed"]).optional(),
   }).parse(d))
@@ -494,7 +494,7 @@ export const adminListWithdrawals = createServerFn({ method: "POST" })
   });
 
 export const adminApproveWithdrawal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context as unknown as { userId: string };
@@ -504,7 +504,7 @@ export const adminApproveWithdrawal = createServerFn({ method: "POST" })
   });
 
 export const adminRejectWithdrawal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), reason: z.string().min(2).max(500) }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context as unknown as { userId: string };
@@ -515,7 +515,7 @@ export const adminRejectWithdrawal = createServerFn({ method: "POST" })
   });
 
 export const adminMarkWithdrawalPaid = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), provider_reference: z.string().max(120).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context as unknown as { userId: string };
