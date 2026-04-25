@@ -42,6 +42,7 @@ import { Route as AuthenticatedAdminVisaProductsRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
 import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
 import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
+import { Route as AuthenticatedAdminBookingsRouteImport } from './routes/_authenticated/admin/bookings'
 import { Route as ApiV1VisasSearchRouteImport } from './routes/api/v1/visas.search'
 import { Route as ApiV1VisasBookingsRouteImport } from './routes/api/v1/visas.bookings'
 import { Route as ApiV1TransfersSearchRouteImport } from './routes/api/v1/transfers.search'
@@ -231,6 +232,12 @@ const AuthenticatedAdminMarkupsRoute =
     path: '/markups',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminBookingsRoute =
+  AuthenticatedAdminBookingsRouteImport.update({
+    id: '/bookings',
+    path: '/bookings',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const ApiV1VisasSearchRoute = ApiV1VisasSearchRouteImport.update({
   id: '/api/v1/visas/search',
   path: '/api/v1/visas/search',
@@ -341,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/pending-review': typeof AuthenticatedPendingReviewRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
+  '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -391,6 +399,7 @@ export interface FileRoutesByTo {
   '/pending-review': typeof AuthenticatedPendingReviewRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
+  '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -444,6 +453,7 @@ export interface FileRoutesById {
   '/_authenticated/pending-review': typeof AuthenticatedPendingReviewRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
+  '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/_authenticated/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/_authenticated/admin/processing': typeof AuthenticatedAdminProcessingRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -497,6 +507,7 @@ export interface FileRouteTypes {
     | '/pending-review'
     | '/wallet'
     | '/sdk/js'
+    | '/admin/bookings'
     | '/admin/markups'
     | '/admin/processing'
     | '/admin/users'
@@ -547,6 +558,7 @@ export interface FileRouteTypes {
     | '/pending-review'
     | '/wallet'
     | '/sdk/js'
+    | '/admin/bookings'
     | '/admin/markups'
     | '/admin/processing'
     | '/admin/users'
@@ -599,6 +611,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pending-review'
     | '/_authenticated/wallet'
     | '/sdk/js'
+    | '/_authenticated/admin/bookings'
     | '/_authenticated/admin/markups'
     | '/_authenticated/admin/processing'
     | '/_authenticated/admin/users'
@@ -897,6 +910,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMarkupsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/bookings': {
+      id: '/_authenticated/admin/bookings'
+      path: '/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AuthenticatedAdminBookingsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/api/v1/visas/search': {
       id: '/api/v1/visas/search'
       path: '/api/v1/visas/search'
@@ -1034,6 +1054,7 @@ const AuthenticatedAdminVisaQueueRouteWithChildren =
   )
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminBookingsRoute: typeof AuthenticatedAdminBookingsRoute
   AuthenticatedAdminMarkupsRoute: typeof AuthenticatedAdminMarkupsRoute
   AuthenticatedAdminProcessingRoute: typeof AuthenticatedAdminProcessingRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
@@ -1045,6 +1066,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminBookingsRoute: AuthenticatedAdminBookingsRoute,
   AuthenticatedAdminMarkupsRoute: AuthenticatedAdminMarkupsRoute,
   AuthenticatedAdminProcessingRoute: AuthenticatedAdminProcessingRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
