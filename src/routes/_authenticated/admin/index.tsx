@@ -69,6 +69,33 @@ function AdminQueue() {
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
+      {/* Platform overview */}
+      {stats && (
+        <section className="mb-8">
+          <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Platform</div>
+          <h2 className="mt-1 font-display text-2xl font-extrabold text-primary">At a glance</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <PlatformStat to="/admin/users" icon={<Users className="h-4 w-4" />} label="Total users" value={stats.counts.users} />
+            <PlatformStat to="/admin" icon={<Inbox className="h-4 w-4" />} label="Pending KYC" value={stats.counts.pending_kyc} accent />
+            <PlatformStat to="/admin/bookings" icon={<Receipt className="h-4 w-4" />} label="Total bookings" value={stats.counts.bookings} />
+            <PlatformStat to="/admin/processing" icon={<PackageCheck className="h-4 w-4" />} label="Awaiting fulfillment" value={stats.counts.processing} accent />
+            <PlatformStat to="/admin/withdrawals" icon={<Banknote className="h-4 w-4" />} label="Pending withdrawals" value={stats.counts.pending_withdrawals} accent />
+            <PlatformStat to="/admin/visa-queue" icon={<Stamp className="h-4 w-4" />} label="Active visa apps" value={stats.counts.active_visa_applications} />
+          </div>
+          {Object.keys(stats.gmv_30d).length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-white px-4 py-3 text-sm" style={{ boxShadow: "var(--shadow-soft)" }}>
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">GMV — last 30d</span>
+              {Object.entries(stats.gmv_30d).map(([cur, v]) => (
+                <span key={cur} className="rounded-md bg-surface px-2 py-1 text-xs font-semibold">
+                  {cur} {v.gross.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  <span className="ml-2 text-success">+{v.margin.toLocaleString(undefined, { maximumFractionDigits: 2 })} margin</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Compliance</div>
