@@ -40,7 +40,7 @@ export function Hero() {
       />
       <div aria-hidden className="absolute inset-0 bg-dots opacity-40" />
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 lg:grid-cols-[1.05fr_1fr] lg:py-24">
+      <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-6 pt-6 pb-14 lg:grid-cols-[1.05fr_1fr] lg:pt-8 lg:pb-20">
         {/* LEFT — copy */}
         <div>
           <div className="animate-fade-in-up inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
@@ -48,7 +48,7 @@ export function Hero() {
             One unified API · 200+ countries · 6 verticals
           </div>
 
-          <h1 className="animate-fade-in-up delay-100 mt-5 font-display text-5xl font-extrabold leading-[1.05] tracking-tight text-primary md:text-6xl lg:text-[68px]">
+          <h1 className="animate-fade-in-up delay-100 mt-4 font-display text-5xl font-extrabold leading-[1.05] tracking-tight text-primary md:text-6xl lg:text-[64px]">
             Flights. Hotels.<br />
             Transfers. Tours.<br />
             e-Visas. Insurance.<br />
