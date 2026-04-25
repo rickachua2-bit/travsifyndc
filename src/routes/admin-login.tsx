@@ -161,6 +161,17 @@ function AdminLoginPage() {
           Sign in with your Travsify staff credentials. All access is logged.
         </p>
 
+        {existingAdminSession && (
+          <button
+            type="button"
+            onClick={() => navigate({ to: getSafeAdminRedirect(search.redirect), replace: true })}
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/15"
+          >
+            Continue to admin
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        )}
+
         <form
           onSubmit={handleSubmit}
           className="mt-8 w-full space-y-4 rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl"
