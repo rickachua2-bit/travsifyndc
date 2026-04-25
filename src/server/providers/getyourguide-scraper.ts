@@ -182,9 +182,23 @@ export async function fetchAndNormalizeTours(input: TourScrapeInput): Promise<No
   })).sort((a, b) => a.price - b.price);
 }
 
+/** Build a deterministic Unsplash Source URL keyed to destination + category.
+ *  Unsplash Source returns a real photograph for any keyword and never 404s,
+ *  so every fallback card gets a relevant image. */
+function unsplashPhoto(destination: string, kind: NormalizedTourOffer["category"], idx: number): string {
+  const kindKw: Record<NormalizedTourOffer["category"], string> = {
+    city_tour: "city,landmark",
+    day_trip: "landscape,travel",
+    experience: "food,culture",
+    ticket: "monument,architecture",
+    transfer: "car,travel",
+  };
+  const kw = encodeURIComponent(`${destination},${kindKw[kind]}`);
+  // sig forces a stable but distinct image per card
+  return `https://source.unsplash.com/800x600/?${kw}&sig=${idx}`;
+}
+
 function deterministicFallback(input: TourScrapeInput): NormalizedTourOffer[] {
-  // 6 generic tour tiers. Prices seeded by destination string length so different
-  // cities produce stable but varied placeholders.
   const seed = (input.destination.length * 7) % 30;
   const base = 35 + seed;
   const tiers: Array<{ kind: NormalizedTourOffer["category"]; title: (c: string) => string; price: number; duration: string; rating: number; reviews: number }> = [
@@ -204,7 +218,7 @@ function deterministicFallback(input: TourScrapeInput): NormalizedTourOffer[] {
     currency: "USD" as const,
     rating: tier.rating,
     review_count: tier.reviews,
-    photo: null,
+    photo: unsplashPhoto(input.destination, tier.kind, idx),
     city: input.destination,
     category: tier.kind,
     _internal_underwriter: "fallback",
