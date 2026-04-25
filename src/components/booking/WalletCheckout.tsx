@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { walletCheckout } from "@/server/booking-engine";
 import { myWallets } from "@/server/dashboard.functions";
+import { ensureArray, getServerFnAuthHeaders } from "@/lib/server-fn-auth";
 import type { CheckoutInput } from "@/components/booking/GuestCheckout";
 
 /**
@@ -30,10 +31,14 @@ export function WalletCheckout({
     let cancelled = false;
     (async () => {
       try {
-        const list = await myWallets();
-        if (!cancelled) setWallets(list as Array<{ currency: string; balance: number }>);
+        const headers = await getServerFnAuthHeaders();
+        const list = await myWallets({ headers });
+        if (!cancelled) setWallets(ensureArray<{ currency: string; balance: number }>(list));
       } catch (e) {
-        if (!cancelled) toast.error((e as Error).message);
+        if (!cancelled) {
+          setWallets([]);
+          toast.error(e instanceof Error ? e.message : "Could not load wallet balance");
+        }
       } finally {
         if (!cancelled) setPricing(false);
       }
@@ -60,12 +65,13 @@ export function WalletCheckout({
   async function pay() {
     setPaying(true);
     try {
-      const res = await walletCheckout({ data: input });
+      const headers = await getServerFnAuthHeaders();
+      const res = await walletCheckout({ data: input, headers });
       setBreakdown(res.price_breakdown);
       toast.success(`Payment confirmed · ${res.reference}`);
       onSuccess({ reference: res.reference, amount: res.amount, currency: res.currency });
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(e instanceof Error ? e.message : "Could not complete wallet payment");
     } finally {
       setPaying(false);
     }
