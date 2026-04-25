@@ -27,6 +27,11 @@ function AdminQueue() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("submitted");
   const [q, setQ] = useState("");
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [stats, setStats] = useState<Awaited<ReturnType<typeof adminPlatformStats>> | null>(null);
+
+  useEffect(() => {
+    adminPlatformStats().then(setStats).catch(() => setStats(null));
+  }, []);
 
   useEffect(() => {
     setLoading(true);
