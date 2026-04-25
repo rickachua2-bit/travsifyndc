@@ -23,6 +23,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SdkJsRouteImport } from './routes/sdk.js'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedPendingReviewRouteImport } from './routes/_authenticated/pending-review'
 import { Route as AuthenticatedMarkupsRouteImport } from './routes/_authenticated/markups'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
@@ -128,6 +129,11 @@ const SdkJsRoute = SdkJsRouteImport.update({
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPendingReviewRoute =
@@ -346,6 +352,7 @@ export interface FileRoutesByFullPath {
   '/kyc': typeof AuthenticatedKycRoute
   '/markups': typeof AuthenticatedMarkupsRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
@@ -397,6 +404,7 @@ export interface FileRoutesByTo {
   '/kyc': typeof AuthenticatedKycRoute
   '/markups': typeof AuthenticatedMarkupsRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
@@ -451,6 +459,7 @@ export interface FileRoutesById {
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/markups': typeof AuthenticatedMarkupsRoute
   '/_authenticated/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
   '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
@@ -505,6 +514,7 @@ export interface FileRouteTypes {
     | '/kyc'
     | '/markups'
     | '/pending-review'
+    | '/support'
     | '/wallet'
     | '/sdk/js'
     | '/admin/bookings'
@@ -556,6 +566,7 @@ export interface FileRouteTypes {
     | '/kyc'
     | '/markups'
     | '/pending-review'
+    | '/support'
     | '/wallet'
     | '/sdk/js'
     | '/admin/bookings'
@@ -609,6 +620,7 @@ export interface FileRouteTypes {
     | '/_authenticated/kyc'
     | '/_authenticated/markups'
     | '/_authenticated/pending-review'
+    | '/_authenticated/support'
     | '/_authenticated/wallet'
     | '/sdk/js'
     | '/_authenticated/admin/bookings'
@@ -775,6 +787,13 @@ declare module '@tanstack/react-router' {
       path: '/wallet'
       fullPath: '/wallet'
       preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/pending-review': {
@@ -1090,6 +1109,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMarkupsRoute: typeof AuthenticatedMarkupsRoute
   AuthenticatedPendingReviewRoute: typeof AuthenticatedPendingReviewRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
 }
 
@@ -1102,6 +1122,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMarkupsRoute: AuthenticatedMarkupsRoute,
   AuthenticatedPendingReviewRoute: AuthenticatedPendingReviewRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
 }
 
