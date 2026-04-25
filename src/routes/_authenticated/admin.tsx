@@ -16,6 +16,7 @@ import {
   Receipt,
   LogOut,
   ExternalLink,
+  LifeBuoy,
 } from "lucide-react";
 import { Logo } from "@/components/landing/Logo";
 import {
