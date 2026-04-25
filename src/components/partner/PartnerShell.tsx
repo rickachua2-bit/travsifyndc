@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Wallet as WalletIcon, BookOpenCheck, Search, Percent,
   KeyRound, BookOpen, Clock, LogOut, Shield, Sparkles, ShieldCheck, AlertCircle,
+  LifeBuoy,
 } from "lucide-react";
 import { Logo } from "@/components/landing/Logo";
 import { useAuth } from "@/hooks/useAuth";
