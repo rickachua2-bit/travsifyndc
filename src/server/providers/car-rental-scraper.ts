@@ -184,7 +184,7 @@ export async function fetchAndNormalizeCarRentals(input: CarRentalScrapeInput): 
     `returning to ${input.dropoff_location} on ${input.dropoff_date} for a driver aged ${input.driver_age}. ` +
     `Convert all prices to USD.`;
 
-  const sources: Array<"avis" | "hertz" | "enterprise"> = ["avis", "hertz", "enterprise"];
+  const sources: Array<"kayak" | "rentalcars" | "carrentals"> = ["kayak", "rentalcars", "carrentals"];
   const results = await Promise.allSettled(
     sources.map((s) => firecrawlScrape(searchUrl(s, input), prompt).then((cars) => ({ source: s, cars }))),
   );
