@@ -16,8 +16,9 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { genBookingRef } from "@/server/gateway";
 import { createPaymentIntent } from "@/server/providers/stripe";
-import { searchFlights as duffelSearch } from "@/server/providers/duffel";
-import { searchHotelRates as liteapiSearch } from "@/server/providers/liteapi";
+import { searchFlights as duffelSearch, createOrder as duffelCreateOrder } from "@/server/providers/duffel";
+import { searchHotelRates as liteapiSearch, prebookHotel as liteapiPrebookHotel, bookHotel as liteapiBookHotel } from "@/server/providers/liteapi";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getOrScrapeTours } from "@/server/providers/getyourguide-scraper";
 import { getOrScrapeTransfers } from "@/server/providers/transfers-scraper";
 import { getOrScrapeCarRentals } from "@/server/providers/car-rental-scraper";
@@ -474,3 +475,154 @@ async function ensureGuestUser(email: string, name: string): Promise<string> {
 
   return created.user.id;
 }
+
+// =============================================================
+// WALLET CHECKOUT — for signed-in users in /dashboard-book.
+// Same input shape as guestCheckout, but pays from the user's wallet
+// instead of Stripe. Auto verticals (flights, hotels) attempt provider
+// fulfillment and confirm; manual verticals are recorded as `processing`
+// for ops to fulfill via the affiliate portal.
+// =============================================================
+
+
+
+const WalletCheckoutSchema = GuestCheckoutSchema;
+
+export const walletCheckout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => WalletCheckoutSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { userId, claims } = context as unknown as { userId: string; claims: { email?: string } };
+    const vertical = data.vertical as Vertical;
+    const display = data.display_currency || "USD";
+    const price = await publicPrice(vertical, data.base_amount, data.currency, display);
+    const reference = genBookingRef();
+    const fulfillment = FULFILLMENT[vertical];
+
+    // Initial status: confirmed for auto verticals (will attempt provider call),
+    // processing for manual ones (ops will fulfill via affiliate portal).
+    const initialStatus = fulfillment === "auto" ? "pending" : "processing";
+
+    const { data: booking, error } = await supabaseAdmin
+      .from("bookings")
+      .insert({
+        user_id: userId,
+        environment: "live",
+        vertical,
+        provider: PROVIDER[vertical],
+        reference,
+        status: initialStatus,
+        fulfillment_mode: fulfillment,
+        customer_name: data.contact.name,
+        customer_email: data.contact.email,
+        currency: price.currency,
+        total_amount: price.total,
+        margin_amount: price.travsify_markup,
+        metadata: {
+          paid_via: "wallet",
+          contact: data.contact,
+          payload: data.payload,
+          price_breakdown: price,
+          provider_currency: data.currency.toUpperCase(),
+          provider_amount: data.base_amount,
+        } as never,
+      })
+      .select("id, reference")
+      .single();
+
+    if (error || !booking) throw new Error(`Booking insert failed: ${error?.message}`);
+
+    // Debit wallet — RPC throws on insufficient balance.
+    try {
+      await supabaseAdmin.rpc("wallet_debit", {
+        p_user_id: userId,
+        p_currency: price.currency,
+        p_amount: price.total,
+        p_category: "booking_payment",
+        p_reference: `book_${reference}`,
+        p_description: `${vertical} booking ${reference}`,
+        p_provider: PROVIDER[vertical],
+        p_provider_reference: undefined,
+        p_booking_id: booking.id,
+        p_metadata: { vertical } as never,
+      });
+    } catch (e) {
+      await supabaseAdmin.from("bookings").update({
+        status: "cancelled",
+        metadata: { paid_via: "wallet", cancel_reason: (e as Error).message } as never,
+      }).eq("id", booking.id);
+      throw new Error(`Wallet payment failed: ${(e as Error).message}`);
+    }
+
+    // For auto verticals, attempt provider fulfillment immediately. On failure,
+    // refund wallet & cancel booking.
+    if (fulfillment === "auto") {
+      try {
+        if (vertical === "flights") {
+          const offerId = data.payload.offer_id as string;
+          const passengers = data.payload.passengers as Array<{
+            given_name: string; family_name: string; born_on: string;
+            gender: "m" | "f"; title: "mr" | "ms" | "mrs" | "miss" | "dr";
+            email: string; phone_number: string;
+          }>;
+          const order = await duffelCreateOrder("live", {
+            offer_id: offerId,
+            passengers,
+            payment_amount: String(data.base_amount),
+            payment_currency: data.currency.toUpperCase(),
+          });
+          const orderData = order.data as Record<string, unknown>;
+          await supabaseAdmin.from("bookings").update({
+            status: "confirmed",
+            provider_reference: (orderData.id as string) || null,
+          }).eq("id", booking.id);
+        } else if (vertical === "hotels") {
+          const offerId = data.payload.offer_id as string;
+          const holder = data.payload.holder as { firstName: string; lastName: string; email: string; phone?: string };
+          const guests = (data.payload.guests as Array<{ firstName: string; lastName: string; email: string }>) || [holder];
+          const pre = await liteapiPrebookHotel(offerId) as { data?: { prebookId?: string } };
+          const prebookId = pre.data?.prebookId;
+          if (!prebookId) throw new Error("Hotel prebook failed");
+          const booked = await liteapiBookHotel({
+            prebookId,
+            guests,
+            holder,
+            payment: { method: "WALLET" },
+          }) as { data?: { bookingId?: string } };
+          await supabaseAdmin.from("bookings").update({
+            status: "confirmed",
+            provider_reference: booked.data?.bookingId || prebookId,
+          }).eq("id", booking.id);
+        }
+      } catch (e) {
+        // Refund wallet on provider failure
+        await supabaseAdmin.rpc("wallet_credit", {
+          p_user_id: userId,
+          p_currency: price.currency,
+          p_amount: price.total,
+          p_category: "refund",
+          p_reference: `refund_${reference}`,
+          p_description: `${vertical} fulfillment failed: ${(e as Error).message}`,
+          p_provider: PROVIDER[vertical],
+          p_provider_reference: undefined,
+          p_booking_id: booking.id,
+          p_metadata: {} as never,
+        });
+        await supabaseAdmin.from("bookings").update({
+          status: "cancelled",
+          metadata: { paid_via: "wallet", cancel_reason: (e as Error).message } as never,
+        }).eq("id", booking.id);
+        throw e;
+      }
+    }
+
+    void claims;
+    return {
+      reference: booking.reference,
+      booking_id: booking.id,
+      amount: price.total,
+      currency: price.currency,
+      price_breakdown: price,
+      status: fulfillment === "auto" ? "confirmed" : "processing",
+    };
+  });
