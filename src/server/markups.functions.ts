@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const VERTICALS = ["flights", "hotels", "transfers", "tours", "visas", "insurance"] as const;
+const VERTICALS = ["flights", "hotels", "transfers", "tours", "visas", "insurance", "car_rentals"] as const;
 
 const MarkupInput = z.object({
   vertical: z.enum(VERTICALS),
