@@ -28,6 +28,7 @@ type Section = {
 
 const SECTIONS: Section[] = [
   { id: "intro", label: "Introduction", icon: BookOpen, group: "Start here" },
+  { id: "one-liner", label: "The one-liner", icon: Sparkles, group: "Start here" },
   { id: "quickstart", label: "5-minute quickstart", icon: Rocket, group: "Start here" },
   { id: "authentication", label: "Authentication", icon: KeyRound, group: "Start here" },
   { id: "wallet", label: "Wallet & funding", icon: WalletIcon, group: "Build" },
@@ -120,6 +121,7 @@ function DocsPage() {
 
         <article className="min-w-0 space-y-16 pb-24">
           <Intro />
+          <OneLiner />
           <Quickstart />
           <Authentication />
           <WalletDocs />
@@ -292,6 +294,73 @@ function Intro() {
         Anyone building a travel product — even if you've never touched an airline API. We assume you know how to
         send an HTTP request. That's it.
       </Callout>
+    </section>
+  );
+}
+
+type LangTab = { id: string; label: string; code: string };
+
+function OneLiner() {
+  const KEY = "tsk_sandbox_your_key_here";
+  const URL = "https://api.travsify.com/api/v1/flights/search";
+  const PAYLOAD = `{"origin":"LOS","destination":"DXB","departure_date":"2026-06-01","adults":1}`;
+
+  const tabs: LangTab[] = [
+    { id: "curl", label: "cURL", code: `curl -X POST ${URL} -H "Authorization: Bearer ${KEY}" -H "Content-Type: application/json" -d '${PAYLOAD}'` },
+    { id: "js", label: "JavaScript", code: `fetch("${URL}",{method:"POST",headers:{Authorization:"Bearer ${KEY}","Content-Type":"application/json"},body:'${PAYLOAD}'}).then(r=>r.json()).then(console.log)` },
+    { id: "ts", label: "TypeScript", code: `const r = await fetch("${URL}",{method:"POST",headers:{Authorization:"Bearer ${KEY}","Content-Type":"application/json"},body:'${PAYLOAD}'}); console.log(await r.json());` },
+    { id: "python", label: "Python", code: `import requests; print(requests.post("${URL}", headers={"Authorization":"Bearer ${KEY}"}, json=${PAYLOAD}).json())` },
+    { id: "php", label: "PHP", code: `<?php echo file_get_contents("${URL}", false, stream_context_create(["http"=>["method"=>"POST","header"=>"Authorization: Bearer ${KEY}\\r\\nContent-Type: application/json","content"=>'${PAYLOAD}']]));` },
+    { id: "ruby", label: "Ruby", code: `require 'net/http';require 'json'; puts Net::HTTP.post(URI("${URL}"), '${PAYLOAD}', {"Authorization"=>"Bearer ${KEY}","Content-Type"=>"application/json"}).body` },
+    { id: "go", label: "Go", code: `r,_:=http.Post("${URL}","application/json",strings.NewReader(\`${PAYLOAD}\`)); r.Header.Set("Authorization","Bearer ${KEY}"); io.Copy(os.Stdout,r.Body)` },
+    { id: "java", label: "Java", code: `HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create("${URL}")).header("Authorization","Bearer ${KEY}").header("Content-Type","application/json").POST(BodyPublishers.ofString("${PAYLOAD}")).build(), BodyHandlers.ofString()).body();` },
+    { id: "csharp", label: "C#", code: `await new HttpClient{DefaultRequestHeaders={{"Authorization","Bearer ${KEY}"}}}.PostAsync("${URL}", new StringContent("${PAYLOAD}", Encoding.UTF8, "application/json"));` },
+    { id: "swift", label: "Swift", code: `var r=URLRequest(url:URL(string:"${URL}")!); r.httpMethod="POST"; r.setValue("Bearer ${KEY}",forHTTPHeaderField:"Authorization"); r.httpBody=#"${PAYLOAD}"#.data(using:.utf8); URLSession.shared.dataTask(with:r){d,_,_ in print(String(data:d!,encoding:.utf8)!)}.resume()` },
+    { id: "kotlin", label: "Kotlin", code: `OkHttpClient().newCall(Request.Builder().url("${URL}").header("Authorization","Bearer ${KEY}").post("${PAYLOAD}".toRequestBody("application/json".toMediaType())).build()).execute().body?.string()` },
+    { id: "rust", label: "Rust", code: `reqwest::Client::new().post("${URL}").bearer_auth("${KEY}").json(&serde_json::json!(${PAYLOAD})).send().await?.text().await?;` },
+    { id: "html", label: "HTML <script>", code: `<script src="https://api.travsify.com/sdk.js"></script><script>Travsify.init("${KEY}").flights.search(${PAYLOAD}).then(console.log)</script>` },
+  ];
+  const [active, setActive] = useState("curl");
+  const current = tabs.find((t) => t.id === active) ?? tabs[0];
+
+  return (
+    <section className="space-y-5">
+      <H2 id="one-liner" icon={Sparkles}>The one-liner</H2>
+      <P>
+        <strong>One line of code. Any language. Live data.</strong> Travsify is a plain REST API — every language on
+        Earth can speak HTTP, so the entire travel stack is one HTTP call away. Pick your stack, paste the line,
+        swap in your key. That's the integration.
+      </P>
+      <div className="rounded-2xl border border-border bg-white p-2" style={{ boxShadow: "var(--shadow-soft)" }}>
+        <div className="flex flex-wrap gap-1 border-b border-border p-2">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActive(t.id)}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                active === t.id
+                  ? "bg-accent text-accent-foreground"
+                  : "text-foreground hover:bg-surface"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="p-3">
+          <Code lang={current.id} code={current.code} />
+        </div>
+      </div>
+      <Callout tone="success" title="Why this works everywhere">
+        Travsify is REST + JSON over HTTPS — the universal language of the web. There is nothing to install, no SDK
+        to import, no native dependency. If your runtime can make an HTTP request (and they all can), you have
+        access to every flight, hotel, tour, transfer, e-Visa and insurance plan we connect to.
+      </Callout>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Stat k="13+" v="Languages · same one line" />
+        <Stat k="0" v="SDK installs required" />
+        <Stat k="1" v="Header. 1 endpoint. 1 key." />
+      </div>
     </section>
   );
 }
