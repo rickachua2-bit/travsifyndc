@@ -130,10 +130,12 @@ export async function createNgnCharge(input: {
   redirect_url: string;
 }) {
   const { fullName, firstName, lastName } = normalizeCustomerName(input.customer_name);
+  // Fincra requires amount as an integer (in major NGN units) >= 1.
+  const amountInt = Math.max(1, Math.floor(Number(input.amount) || 0));
   return call<{ data?: { link?: string; reference?: string } }>("/checkout/payments", {
     method: "POST",
     body: JSON.stringify({
-      amount: String(input.amount),
+      amount: amountInt,
       currency: "NGN",
       reference: input.reference,
       customer: {
