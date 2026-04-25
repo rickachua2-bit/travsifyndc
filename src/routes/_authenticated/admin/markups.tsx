@@ -90,11 +90,6 @@ export function MarkupEditor({ scope, title, subtitle, list, upsert, remove }: {
         <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Pricing</div>
         <h1 className="mt-1 font-display text-3xl font-extrabold text-primary">{title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-        {scope === "partner" && (
-          <p className="mt-2 inline-block rounded-md bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">
-            Your markup is added on top of provider base + Travsify markup, and credited to your wallet on every confirmed booking.
-          </p>
-        )}
       </div>
 
       <section className="mt-8 rounded-2xl border border-border bg-white p-5" style={{ boxShadow: "var(--shadow-soft)" }}>
