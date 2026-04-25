@@ -19,7 +19,7 @@ function PartnerMarkupsPage() {
         <MarkupEditor
           scope="partner"
           title="Your markup rules"
-          subtitle="Added on top of provider base + Travsify markup. Charged to your customers, paid into your wallet."
+          subtitle=""
           list={list}
           upsert={upsert}
           remove={remove}
