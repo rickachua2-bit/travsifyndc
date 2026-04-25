@@ -1,5 +1,6 @@
 import { ArrowRight, Plane, Hotel, Car, MapPin, FileCheck2, ShieldPlus, Wallet, Code2, Sparkles, Globe2, Zap } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import logoMark from "@/assets/travsify-logo-mark.png";
 
 const verticals = [
   { icon: Plane,       label: "Flights",    sub: "Duffel · NDC",   tone: "from-sky-500 to-blue-600",       delay: "0s" },
@@ -146,7 +147,13 @@ export function Hero() {
                   style={{ background: "var(--gradient-accent)" }}
                 />
                 <div className="relative text-center">
-                  <Code2 className="mx-auto h-7 w-7 text-white" />
+                  <img
+                    src={logoMark}
+                    alt="Travsify"
+                    width={40}
+                    height={40}
+                    className="mx-auto h-10 w-10 object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
+                  />
                   <div className="mt-1 font-display text-[11px] font-bold uppercase tracking-wider text-white">
                     Travsify
                   </div>
