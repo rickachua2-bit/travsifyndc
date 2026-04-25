@@ -29,7 +29,8 @@ function getSafeNext(next?: string) {
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"request" | "set">("request");
+  const search = Route.useSearch();
+  const [mode, setMode] = useState<"checking" | "request" | "set">("checking");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,8 +38,15 @@ function ResetPasswordPage() {
   const [err, setErr] = useState<string | undefined>();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.location.hash.includes("type=recovery")) setMode("set");
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      const hasRecoveryHash = typeof window !== "undefined" && window.location.hash.includes("type=recovery");
+      setMode(hasRecoveryHash || !!data.session ? "set" : "request");
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function requestReset(e: React.FormEvent) {
