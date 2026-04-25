@@ -214,9 +214,9 @@ function WalletPage() {
                       <button onClick={() => setFundOpen(cur)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-95">
                         <Plus className="h-3 w-3" /> Add funds
                       </button>
-                      <Link to="/bookings" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground hover:border-accent hover:text-accent">
-                        Activity <ExternalLink className="h-3 w-3" />
-                      </Link>
+                      <a href="#wallet-activity" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground hover:border-accent hover:text-accent">
+                        Activity <ArrowDownLeft className="h-3 w-3" />
+                      </a>
                     </div>
                   </div>
                 );
