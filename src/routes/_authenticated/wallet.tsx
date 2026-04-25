@@ -319,6 +319,16 @@ function WalletPage() {
               </div>
             )}
 
+            {vaccError && !vacc && (
+              <div className="mt-4 flex gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <h3 className="font-display text-sm font-bold">NGN bank transfer unavailable</h3>
+                  <p className="mt-1 text-xs text-destructive/85">{vaccError}</p>
+                </div>
+              </div>
+            )}
+
             {/* Saved cards */}
             <section className="mt-8 rounded-2xl border border-border bg-white p-5" style={{ boxShadow: "var(--shadow-soft)" }}>
               <div className="flex items-center justify-between gap-3">
