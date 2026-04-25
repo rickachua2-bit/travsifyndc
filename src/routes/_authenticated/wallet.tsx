@@ -487,20 +487,21 @@ function FundDialog({
   useEffect(() => { if (open) { setAmount(""); setNgnMethod("virtual_account"); } }, [open]);
 
   if (!currency) return null;
-  const presets = currency === "USD" ? PRESETS_USD : PRESETS_NGN;
-  const min = currency === "USD" ? MIN_USD : MIN_NGN;
-  const symbol = currency === "USD" ? "$" : "₦";
+  const cur: "USD" | "NGN" = currency;
+  const presets = cur === "USD" ? PRESETS_USD : PRESETS_NGN;
+  const min = cur === "USD" ? MIN_USD : MIN_NGN;
+  const symbol = cur === "USD" ? "$" : "₦";
   const num = Number(amount);
   const valid = Number.isFinite(num) && num >= min;
-  const showAmount = currency === "USD" || ngnMethod === "card";
+  const showAmount = cur === "USD" || ngnMethod === "card";
 
   function submit() {
-    if (currency === "NGN" && ngnMethod === "virtual_account") {
-      onConfirm(currency, 0, ngnMethod);
+    if (cur === "NGN" && ngnMethod === "virtual_account") {
+      onConfirm(cur, 0, ngnMethod);
       return;
     }
     if (!valid) return;
-    onConfirm(currency, num, ngnMethod);
+    onConfirm(cur, num, ngnMethod);
   }
 
   return (
