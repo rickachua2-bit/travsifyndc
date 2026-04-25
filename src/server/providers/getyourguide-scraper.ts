@@ -166,25 +166,42 @@ export async function fetchAndNormalizeTours(input: TourScrapeInput): Promise<No
     }
   }
 
-  return Array.from(byTitle.values()).slice(0, 24).map((item, idx) => ({
-    id: `tour_${idx}_${Date.now().toString(36)}`,
-    title: item.t.title || "Tour",
-    abstract: item.t.abstract || "",
-    duration: item.t.duration || "Flexible",
-    price: Number((item.t.price_usd ?? 0).toFixed(2)),
-    currency: "USD" as const,
-    rating: item.t.rating ?? 4.5,
-    review_count: item.t.review_count ?? 100,
-    photo: item.t.photo_url || null,
-    city: input.destination,
-    category: normalizeCategory(item.t.category),
-    _internal_underwriter: item.source,
-  })).sort((a, b) => a.price - b.price);
+  return Array.from(byTitle.values()).slice(0, 24).map((item, idx) => {
+    const category = normalizeCategory(item.t.category);
+    return {
+      id: `tour_${idx}_${Date.now().toString(36)}`,
+      title: item.t.title || "Tour",
+      abstract: item.t.abstract || "",
+      duration: item.t.duration || "Flexible",
+      price: Number((item.t.price_usd ?? 0).toFixed(2)),
+      currency: "USD" as const,
+      rating: item.t.rating ?? 4.5,
+      review_count: item.t.review_count ?? 100,
+      photo: item.t.photo_url || unsplashPhoto(input.destination, category, idx),
+      city: input.destination,
+      category,
+      _internal_underwriter: item.source,
+    };
+  }).sort((a, b) => a.price - b.price);
+}
+
+/** Build a deterministic Unsplash Source URL keyed to destination + category.
+ *  Unsplash Source returns a real photograph for any keyword and never 404s,
+ *  so every fallback card gets a relevant image. */
+function unsplashPhoto(destination: string, kind: NormalizedTourOffer["category"], idx: number): string {
+  const kindKw: Record<NormalizedTourOffer["category"], string> = {
+    city_tour: "city,landmark",
+    day_trip: "landscape,travel",
+    experience: "food,culture",
+    ticket: "monument,architecture",
+    transfer: "car,travel",
+  };
+  const kw = encodeURIComponent(`${destination},${kindKw[kind]}`);
+  // sig forces a stable but distinct image per card
+  return `https://source.unsplash.com/800x600/?${kw}&sig=${idx}`;
 }
 
 function deterministicFallback(input: TourScrapeInput): NormalizedTourOffer[] {
-  // 6 generic tour tiers. Prices seeded by destination string length so different
-  // cities produce stable but varied placeholders.
   const seed = (input.destination.length * 7) % 30;
   const base = 35 + seed;
   const tiers: Array<{ kind: NormalizedTourOffer["category"]; title: (c: string) => string; price: number; duration: string; rating: number; reviews: number }> = [
@@ -204,7 +221,7 @@ function deterministicFallback(input: TourScrapeInput): NormalizedTourOffer[] {
     currency: "USD" as const,
     rating: tier.rating,
     review_count: tier.reviews,
-    photo: null,
+    photo: unsplashPhoto(input.destination, tier.kind, idx),
     city: input.destination,
     category: tier.kind,
     _internal_underwriter: "fallback",
