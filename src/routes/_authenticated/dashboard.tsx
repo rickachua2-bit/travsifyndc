@@ -40,21 +40,27 @@ function DashboardPage() {
 
   useEffect(() => {
     if (!user) return;
+    let active = true;
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    Promise.all([
+    // Use allSettled so a failure on one query doesn't break the whole dashboard.
+    Promise.allSettled([
       supabase.from("api_logs").select("created_at,status_code,vertical").eq("user_id", user.id).gte("created_at", since).order("created_at", { ascending: false }).limit(1000),
       supabase.from("bookings").select("id,reference,vertical,provider,customer_name,total_amount,currency,status,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
       supabase.from("wallets").select("currency,balance").eq("user_id", user.id),
-    ]).then(([l, b, w]) => {
-      setLogs((l.data ?? []) as LogRow[]);
-      setBookings((b.data ?? []) as BookingRow[]);
-      const wallets = (w.data ?? []) as { currency: string; balance: number }[];
+    ]).then(([lRes, bRes, wRes]) => {
+      if (!active) return;
+      const l = lRes.status === "fulfilled" ? lRes.value : null;
+      const b = bRes.status === "fulfilled" ? bRes.value : null;
+      const w = wRes.status === "fulfilled" ? wRes.value : null;
+      setLogs((l?.data ?? []) as LogRow[]);
+      setBookings((b?.data ?? []) as BookingRow[]);
+      const wallets = (w?.data ?? []) as { currency: string; balance: number }[];
       setWalletTotal({
         usd: Number(wallets.find((x) => x.currency === "USD")?.balance ?? 0),
         ngn: Number(wallets.find((x) => x.currency === "NGN")?.balance ?? 0),
       });
-      setLoading(false);
-    });
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [user]);
 
   const stats = useMemo(() => {

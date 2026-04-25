@@ -159,6 +159,37 @@ export const myWithdrawals = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+/** Cancel a still-pending withdrawal and refund the wallet. */
+export const cancelWithdrawal = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { userId } = context as unknown as { userId: string };
+    const { data: w, error } = await supabaseAdmin
+      .from("withdrawal_requests").select("*").eq("id", data.id).eq("user_id", userId).maybeSingle();
+    if (error || !w) throw new Error("Withdrawal not found");
+    if (w.status !== "pending") throw new Error(`Cannot cancel withdrawal in status ${w.status}`);
+
+    // Refund the wallet for the full debited amount
+    await supabaseAdmin.rpc("wallet_credit", {
+      p_user_id: userId,
+      p_currency: w.currency,
+      p_amount: Number(w.amount),
+      p_category: "refund",
+      p_reference: `cancel_${w.id}`,
+      p_description: "Withdrawal cancelled by user",
+      p_provider: w.provider ?? undefined,
+      p_provider_reference: undefined,
+      p_booking_id: undefined,
+      p_metadata: { withdrawal_id: w.id },
+    });
+    await supabaseAdmin.from("withdrawal_requests").update({
+      status: "cancelled",
+      updated_at: new Date().toISOString(),
+    }).eq("id", w.id);
+    return { ok: true };
+  });
+
 // We return a JSON string from these search endpoints because the supplier shapes are deeply typed
 // with `unknown` fields that TanStack Start's serializability check rejects. The client parses it.
 export const searchFlightsInternal = createServerFn({ method: "POST" })

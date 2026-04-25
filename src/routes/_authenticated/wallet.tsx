@@ -2,12 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Wallet as WalletIcon, Plus, Building2, ArrowUpRight, Copy, CreditCard,
-  Trash2, ArrowDownLeft, Loader2, ExternalLink, AlertCircle, Sparkles,
+  Trash2, ArrowDownLeft, Loader2, AlertCircle, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   myWallets, myWalletTransactions, myBankAccounts, addBankAccount, deleteBankAccount,
-  requestWithdrawal, myWithdrawals, fundWallet, myVirtualAccount,
+  requestWithdrawal, myWithdrawals, cancelWithdrawal, fundWallet, myVirtualAccount,
   startCardLink, myCards, removeCard,
 } from "@/server/dashboard.functions";
 import { StripeProvider } from "@/components/wallet/StripeProvider";
@@ -170,6 +170,15 @@ function WalletPage() {
     finally { setBusy(false); }
   }
 
+  async function handleCancelWithdrawal(id: string) {
+    if (!confirm("Cancel this withdrawal? Your wallet will be refunded immediately.")) return;
+    try {
+      await cancelWithdrawal({ data: { id } });
+      toast.success("Withdrawal cancelled, wallet refunded");
+      refresh();
+    } catch (e) { toast.error((e as Error).message); }
+  }
+
   return (
     <PartnerShell>
       <div className="mx-auto max-w-7xl px-6 py-8">
@@ -214,9 +223,9 @@ function WalletPage() {
                       <button onClick={() => setFundOpen(cur)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-95">
                         <Plus className="h-3 w-3" /> Add funds
                       </button>
-                      <Link to="/bookings" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground hover:border-accent hover:text-accent">
-                        Activity <ExternalLink className="h-3 w-3" />
-                      </Link>
+                      <a href="#wallet-activity" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground hover:border-accent hover:text-accent">
+                        Activity <ArrowDownLeft className="h-3 w-3" />
+                      </a>
                     </div>
                   </div>
                 );
@@ -354,7 +363,7 @@ function WalletPage() {
                 <div className="mt-3 overflow-hidden rounded-lg border border-border">
                   <table className="w-full text-sm">
                     <thead className="bg-surface text-[11px] uppercase tracking-wider text-muted-foreground">
-                      <tr><th className="px-3 py-2 text-left">Date</th><th className="px-3 py-2 text-left">Amount</th><th className="px-3 py-2 text-left">Status</th></tr>
+                      <tr><th className="px-3 py-2 text-left">Date</th><th className="px-3 py-2 text-left">Amount</th><th className="px-3 py-2 text-left">Status</th><th className="px-3 py-2 text-right"></th></tr>
                     </thead>
                     <tbody>
                       {withdrawals.map((w) => (
@@ -362,6 +371,11 @@ function WalletPage() {
                           <td className="px-3 py-2 text-xs text-muted-foreground">{new Date(w.created_at).toLocaleString()}</td>
                           <td className="px-3 py-2 font-semibold">{w.currency} {Number(w.amount).toLocaleString()}</td>
                           <td className="px-3 py-2"><WithdrawalStatus status={w.status} /></td>
+                          <td className="px-3 py-2 text-right">
+                            {w.status === "pending" && (
+                              <button onClick={() => handleCancelWithdrawal(w.id)} className="text-[11px] font-semibold text-destructive hover:underline">Cancel</button>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -370,7 +384,7 @@ function WalletPage() {
               )}
             </section>
 
-            <section className="mt-8 rounded-2xl border border-border bg-white p-5" style={{ boxShadow: "var(--shadow-soft)" }}>
+            <section id="wallet-activity" className="mt-8 rounded-2xl border border-border bg-white p-5" style={{ boxShadow: "var(--shadow-soft)" }}>
               <h2 className="font-display text-base font-bold text-primary">Recent transactions</h2>
               <p className="text-xs text-muted-foreground">Last 50 wallet movements.</p>
               {txns.length === 0 ? (
