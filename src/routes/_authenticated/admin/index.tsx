@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Search, Loader2, Building2, Clock, CheckCircle2, XCircle, Inbox } from "lucide-react";
+import { ArrowRight, Search, Loader2, Building2, Clock, CheckCircle2, XCircle, Inbox, Users, Receipt, PackageCheck, Banknote, Stamp } from "lucide-react";
+import { adminPlatformStats } from "@/server/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminQueue,
@@ -26,6 +27,11 @@ function AdminQueue() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("submitted");
   const [q, setQ] = useState("");
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [stats, setStats] = useState<Awaited<ReturnType<typeof adminPlatformStats>> | null>(null);
+
+  useEffect(() => {
+    adminPlatformStats().then(setStats).catch(() => setStats(null));
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -63,6 +69,33 @@ function AdminQueue() {
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
+      {/* Platform overview */}
+      {stats && (
+        <section className="mb-8">
+          <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Platform</div>
+          <h2 className="mt-1 font-display text-2xl font-extrabold text-primary">At a glance</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <PlatformStat to="/admin/users" icon={<Users className="h-4 w-4" />} label="Total users" value={stats.counts.users} />
+            <PlatformStat to="/admin" icon={<Inbox className="h-4 w-4" />} label="Pending KYC" value={stats.counts.pending_kyc} accent />
+            <PlatformStat to="/admin/bookings" icon={<Receipt className="h-4 w-4" />} label="Total bookings" value={stats.counts.bookings} />
+            <PlatformStat to="/admin/processing" icon={<PackageCheck className="h-4 w-4" />} label="Awaiting fulfillment" value={stats.counts.processing} accent />
+            <PlatformStat to="/admin/withdrawals" icon={<Banknote className="h-4 w-4" />} label="Pending withdrawals" value={stats.counts.pending_withdrawals} accent />
+            <PlatformStat to="/admin/visa-queue" icon={<Stamp className="h-4 w-4" />} label="Active visa apps" value={stats.counts.active_visa_applications} />
+          </div>
+          {Object.keys(stats.gmv_30d).length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-white px-4 py-3 text-sm" style={{ boxShadow: "var(--shadow-soft)" }}>
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">GMV — last 30d</span>
+              {Object.entries(stats.gmv_30d).map(([cur, v]) => (
+                <span key={cur} className="rounded-md bg-surface px-2 py-1 text-xs font-semibold">
+                  {cur} {v.gross.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  <span className="ml-2 text-success">+{v.margin.toLocaleString(undefined, { maximumFractionDigits: 2 })} margin</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Compliance</div>
@@ -166,4 +199,30 @@ function Th({ children, className = "" }: { children: React.ReactNode; className
 }
 function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <td className={`px-4 py-3 text-foreground ${className}`}>{children}</td>;
+}
+
+function PlatformStat({
+  to, icon, label, value, accent,
+}: {
+  to: string; icon: React.ReactNode; label: string; value: number; accent?: boolean;
+}) {
+  return (
+    <Link
+      to={to}
+      className={`group flex items-center gap-3 rounded-xl border bg-white p-3 transition hover:-translate-y-0.5 ${
+        accent && value > 0 ? "border-accent/50" : "border-border"
+      }`}
+      style={{ boxShadow: "var(--shadow-soft)" }}
+    >
+      <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+        accent && value > 0 ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground"
+      }`}>
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-display text-xl font-extrabold text-primary leading-none">{value}</div>
+        <div className="mt-1 truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      </div>
+    </Link>
+  );
 }
