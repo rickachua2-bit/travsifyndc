@@ -109,7 +109,7 @@ function AdminLoginPage() {
     }
     setLoading(false);
     toast.success("Welcome, admin");
-    navigate({ to: search.redirect || "/admin" });
+    navigate({ to: getSafeAdminRedirect(search.redirect), replace: true });
   }
 
   if (checking) {
