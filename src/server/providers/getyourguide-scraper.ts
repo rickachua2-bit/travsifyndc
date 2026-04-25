@@ -166,20 +166,23 @@ export async function fetchAndNormalizeTours(input: TourScrapeInput): Promise<No
     }
   }
 
-  return Array.from(byTitle.values()).slice(0, 24).map((item, idx) => ({
-    id: `tour_${idx}_${Date.now().toString(36)}`,
-    title: item.t.title || "Tour",
-    abstract: item.t.abstract || "",
-    duration: item.t.duration || "Flexible",
-    price: Number((item.t.price_usd ?? 0).toFixed(2)),
-    currency: "USD" as const,
-    rating: item.t.rating ?? 4.5,
-    review_count: item.t.review_count ?? 100,
-    photo: item.t.photo_url || null,
-    city: input.destination,
-    category: normalizeCategory(item.t.category),
-    _internal_underwriter: item.source,
-  })).sort((a, b) => a.price - b.price);
+  return Array.from(byTitle.values()).slice(0, 24).map((item, idx) => {
+    const category = normalizeCategory(item.t.category);
+    return {
+      id: `tour_${idx}_${Date.now().toString(36)}`,
+      title: item.t.title || "Tour",
+      abstract: item.t.abstract || "",
+      duration: item.t.duration || "Flexible",
+      price: Number((item.t.price_usd ?? 0).toFixed(2)),
+      currency: "USD" as const,
+      rating: item.t.rating ?? 4.5,
+      review_count: item.t.review_count ?? 100,
+      photo: item.t.photo_url || unsplashPhoto(input.destination, category, idx),
+      city: input.destination,
+      category,
+      _internal_underwriter: item.source,
+    };
+  }).sort((a, b) => a.price - b.price);
 }
 
 /** Build a deterministic Unsplash Source URL keyed to destination + category.
