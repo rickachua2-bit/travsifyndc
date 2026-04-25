@@ -92,6 +92,17 @@ export const fundWallet = createServerFn({ method: "POST" })
     return fundNgnWallet({ userId, email, fullName, amount: data.amount, method: data.ngn_method || "virtual_account" });
   });
 
+function virtualAccountUnavailableMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "NGN virtual account is unavailable";
+  console.warn("NGN virtual account provisioning failed:", message);
+
+  if (/fincra error 403|ip address is not allowed|FINCRA_API_KEY|FINCRA_BUSINESS_ID/i.test(message)) {
+    return "NGN bank-transfer funding is temporarily unavailable because the payment provider is blocking account creation. Please use card funding or contact support.";
+  }
+
+  return message;
+}
+
 export const myVirtualAccount = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
@@ -99,7 +110,11 @@ export const myVirtualAccount = createServerFn({ method: "POST" })
     const email = claims.email || `${userId}@user.travsify.app`;
     const { data: profile } = await supabaseAdmin.from("profiles").select("full_name, legal_name").eq("id", userId).maybeSingle();
     const fullName = profile?.legal_name || profile?.full_name || email.split("@")[0];
-    return ensureVirtualAccount(userId, email, fullName);
+    try {
+      return await ensureVirtualAccount(userId, email, fullName);
+    } catch (error) {
+      return { ok: false as const, error: virtualAccountUnavailableMessage(error) };
+    }
   });
 
 // ---------- Bank accounts & withdrawals ----------

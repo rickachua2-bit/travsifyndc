@@ -33,6 +33,7 @@ type Txn = { id: string; currency: string; direction: string; amount: number; ba
 type Bank = { id: string; currency: string; account_name: string; account_number: string; bank_name: string | null };
 type Withdrawal = { id: string; currency: string; amount: number; status: string; created_at: string };
 type VAccount = { account_number?: string; account_name?: string; bank_name?: string };
+type VirtualAccountResult = VAccount | { ok: false; error: string };
 type Card = { id: string; brand: string | null; last4: string | null; exp_month: number | null; exp_year: number | null };
 
 const PRESETS_USD = [50, 100, 250, 500, 1000];
@@ -51,6 +52,7 @@ function WalletPage() {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
   const [vacc, setVacc] = useState<VAccount | null>(null);
+  const [vaccError, setVaccError] = useState<string | null>(null);
   const [vaccLoading, setVaccLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cardLinkSecret, setCardLinkSecret] = useState<{ client_secret: string; setup_intent_id: string } | null>(null);
@@ -100,11 +102,24 @@ function WalletPage() {
   async function loadVA() {
     setVaccLoading(true);
     try {
+      setVaccError(null);
       const headers = await getServerFnAuthHeaders();
-      const v = await myVirtualAccount({ headers });
+      const v = await myVirtualAccount({ headers }) as VirtualAccountResult;
+      if ("ok" in v && v.ok === false) {
+        setVacc(null);
+        setVaccError(v.error);
+        toast.error(v.error);
+        return null;
+      }
       setVacc(v as VAccount);
+      return v as VAccount;
     }
-    catch (e) { toast.error(getMessage(e)); }
+    catch (e) {
+      const message = getMessage(e);
+      setVaccError(message);
+      toast.error(message);
+      return null;
+    }
     finally { setVaccLoading(false); }
   }
 
@@ -130,9 +145,11 @@ function WalletPage() {
         }
       } else {
         if (ngnMethod === "virtual_account") {
-          await loadVA();
-          setFundOpen(null);
-          toast.success("Virtual account ready below");
+          const account = await loadVA();
+          if (account) {
+            setFundOpen(null);
+            toast.success("Virtual account ready below");
+          }
         } else {
           const r = await fundWallet({ data: { currency: "NGN", amount, ngn_method: "card" }, headers }) as { link?: string };
           if (r.link) window.location.href = r.link;
@@ -298,6 +315,16 @@ function WalletPage() {
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Account name</span>
                     <div className="font-semibold text-foreground">{vacc.account_name}</div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {vaccError && !vacc && (
+              <div className="mt-4 flex gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <h3 className="font-display text-sm font-bold">NGN bank transfer unavailable</h3>
+                  <p className="mt-1 text-xs text-destructive/85">{vaccError}</p>
                 </div>
               </div>
             )}
