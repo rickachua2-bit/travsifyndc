@@ -363,7 +363,7 @@ function WalletPage() {
                 <div className="mt-3 overflow-hidden rounded-lg border border-border">
                   <table className="w-full text-sm">
                     <thead className="bg-surface text-[11px] uppercase tracking-wider text-muted-foreground">
-                      <tr><th className="px-3 py-2 text-left">Date</th><th className="px-3 py-2 text-left">Amount</th><th className="px-3 py-2 text-left">Status</th></tr>
+                      <tr><th className="px-3 py-2 text-left">Date</th><th className="px-3 py-2 text-left">Amount</th><th className="px-3 py-2 text-left">Status</th><th className="px-3 py-2 text-right"></th></tr>
                     </thead>
                     <tbody>
                       {withdrawals.map((w) => (
@@ -371,6 +371,11 @@ function WalletPage() {
                           <td className="px-3 py-2 text-xs text-muted-foreground">{new Date(w.created_at).toLocaleString()}</td>
                           <td className="px-3 py-2 font-semibold">{w.currency} {Number(w.amount).toLocaleString()}</td>
                           <td className="px-3 py-2"><WithdrawalStatus status={w.status} /></td>
+                          <td className="px-3 py-2 text-right">
+                            {w.status === "pending" && (
+                              <button onClick={() => handleCancelWithdrawal(w.id)} className="text-[11px] font-semibold text-destructive hover:underline">Cancel</button>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
