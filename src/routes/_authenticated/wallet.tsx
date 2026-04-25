@@ -14,6 +14,7 @@ import { StripeProvider } from "@/components/wallet/StripeProvider";
 import { CardLinkForm } from "@/components/wallet/CardLinkForm";
 import { UsdTopUpForm } from "@/components/wallet/UsdTopUpForm";
 import { PartnerShell } from "@/components/partner/PartnerShell";
+import { ensureArray, getServerFnAuthHeaders } from "@/lib/server-fn-auth";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -39,6 +40,10 @@ const PRESETS_NGN = [25_000, 50_000, 100_000, 250_000, 500_000];
 const MIN_USD = 5;
 const MIN_NGN = 5_000;
 
+function getMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Something went wrong";
+}
+
 function WalletPage() {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [txns, setTxns] = useState<Txn[]>([]);
@@ -60,23 +65,32 @@ function WalletPage() {
 
   async function refresh() {
     try {
+      const headers = await getServerFnAuthHeaders();
       const results = await Promise.allSettled([
-        myWallets(),
-        myWalletTransactions({ data: { limit: 50 } }),
-        myBankAccounts(),
-        myWithdrawals(),
-        myCards(),
+        myWallets({ headers }),
+        myWalletTransactions({ data: { limit: 50 }, headers }),
+        myBankAccounts({ headers }),
+        myWithdrawals({ headers }),
+        myCards({ headers }),
       ]);
       const [w, t, b, wd, c] = results;
-      if (w.status === "fulfilled") setWallets(w.value as Wallet[]); else setWallets([]);
-      if (t.status === "fulfilled") setTxns(t.value as Txn[]); else setTxns([]);
-      if (b.status === "fulfilled") setBanks(b.value as Bank[]); else setBanks([]);
-      if (wd.status === "fulfilled") setWithdrawals(wd.value as Withdrawal[]); else setWithdrawals([]);
-      if (c.status === "fulfilled") setCards(c.value as Card[]); else setCards([]);
+      setWallets(w.status === "fulfilled" ? ensureArray<Wallet>(w.value) : []);
+      setTxns(t.status === "fulfilled" ? ensureArray<Txn>(t.value) : []);
+      setBanks(b.status === "fulfilled" ? ensureArray<Bank>(b.value) : []);
+      setWithdrawals(wd.status === "fulfilled" ? ensureArray<Withdrawal>(wd.value) : []);
+      setCards(c.status === "fulfilled" ? ensureArray<Card>(c.value) : []);
       const failed = results.filter((r) => r.status === "rejected") as PromiseRejectedResult[];
       if (failed.length) {
         console.warn("Wallet partial load failure:", failed.map((f) => f.reason));
       }
+    } catch (error) {
+      console.warn("Wallet load failure:", error);
+      toast.error(getMessage(error));
+      setWallets([]);
+      setTxns([]);
+      setBanks([]);
+      setWithdrawals([]);
+      setCards([]);
     } finally {
       setLoading(false);
     }
@@ -85,23 +99,29 @@ function WalletPage() {
 
   async function loadVA() {
     setVaccLoading(true);
-    try { const v = await myVirtualAccount(); setVacc(v as VAccount); }
-    catch (e) { toast.error((e as Error).message); }
+    try {
+      const headers = await getServerFnAuthHeaders();
+      const v = await myVirtualAccount({ headers });
+      setVacc(v as VAccount);
+    }
+    catch (e) { toast.error(getMessage(e)); }
     finally { setVaccLoading(false); }
   }
 
   async function linkCard() {
     try {
-      const r = await startCardLink();
+      const headers = await getServerFnAuthHeaders();
+      const r = await startCardLink({ headers });
       setCardLinkSecret({ client_secret: r.client_secret as string, setup_intent_id: r.setup_intent_id });
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { toast.error(getMessage(e)); }
   }
 
   async function handleFund(currency: "USD" | "NGN", amount: number, ngnMethod: "card" | "virtual_account") {
     setBusy(true);
     try {
+      const headers = await getServerFnAuthHeaders();
       if (currency === "USD") {
-        const r = await fundWallet({ data: { currency: "USD", amount } }) as { client_secret?: string };
+        const r = await fundWallet({ data: { currency: "USD", amount }, headers }) as { client_secret?: string };
         if (r.client_secret) {
           setTopUpSecret(r.client_secret);
           setFundOpen(null);
@@ -114,12 +134,12 @@ function WalletPage() {
           setFundOpen(null);
           toast.success("Virtual account ready below");
         } else {
-          const r = await fundWallet({ data: { currency: "NGN", amount, ngn_method: "card" } }) as { link?: string };
+          const r = await fundWallet({ data: { currency: "NGN", amount, ngn_method: "card" }, headers }) as { link?: string };
           if (r.link) window.location.href = r.link;
           else toast.error("Could not get checkout link");
         }
       }
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { toast.error(getMessage(e)); }
     finally { setBusy(false); }
   }
 
@@ -127,17 +147,18 @@ function WalletPage() {
     const fd = new FormData(form);
     setBusy(true);
     try {
+      const headers = await getServerFnAuthHeaders();
       await addBankAccount({ data: {
         currency: fd.get("currency") as "USD" | "NGN",
         account_name: String(fd.get("account_name")),
         account_number: String(fd.get("account_number")),
         bank_name: String(fd.get("bank_name")),
         bank_code: String(fd.get("bank_code") || "") || undefined,
-      } });
+      }, headers });
       toast.success("Bank account added");
       form.reset();
       refresh();
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { toast.error(getMessage(e)); }
     finally { setBusy(false); }
   }
 
@@ -145,11 +166,12 @@ function WalletPage() {
     if (!withdrawTarget) return;
     setBusy(true);
     try {
-      await requestWithdrawal({ data: { bank_account_id: withdrawTarget.id, amount } });
+      const headers = await getServerFnAuthHeaders();
+      await requestWithdrawal({ data: { bank_account_id: withdrawTarget.id, amount }, headers });
       toast.success("Withdrawal submitted for review");
       setWithdrawTarget(null);
       refresh();
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { toast.error(getMessage(e)); }
     finally { setBusy(false); }
   }
 
@@ -157,11 +179,12 @@ function WalletPage() {
     if (!confirmDeleteCard) return;
     setBusy(true);
     try {
-      await removeCard({ data: { card_id: confirmDeleteCard.id } });
+      const headers = await getServerFnAuthHeaders();
+      await removeCard({ data: { card_id: confirmDeleteCard.id }, headers });
       toast.success("Card removed");
       setConfirmDeleteCard(null);
       refresh();
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { toast.error(getMessage(e)); }
     finally { setBusy(false); }
   }
 
@@ -169,21 +192,23 @@ function WalletPage() {
     if (!confirmDeleteBank) return;
     setBusy(true);
     try {
-      await deleteBankAccount({ data: { id: confirmDeleteBank.id } });
+      const headers = await getServerFnAuthHeaders();
+      await deleteBankAccount({ data: { id: confirmDeleteBank.id }, headers });
       toast.success("Bank account removed");
       setConfirmDeleteBank(null);
       refresh();
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { toast.error(getMessage(e)); }
     finally { setBusy(false); }
   }
 
   async function handleCancelWithdrawal(id: string) {
     if (!confirm("Cancel this withdrawal? Your wallet will be refunded immediately.")) return;
     try {
-      await cancelWithdrawal({ data: { id } });
+      const headers = await getServerFnAuthHeaders();
+      await cancelWithdrawal({ data: { id }, headers });
       toast.success("Withdrawal cancelled, wallet refunded");
       refresh();
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { toast.error(getMessage(e)); }
   }
 
   return (
