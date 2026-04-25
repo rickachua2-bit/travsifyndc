@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Plane, Hotel, Inbox, Search, MapPin, Car, Shield, Globe2, Bus, X, ExternalLink } from "lucide-react";
 import { myBookings } from "@/server/dashboard.functions";
 import { PartnerShell } from "@/components/partner/PartnerShell";
+import { getServerFnAuthHeaders } from "@/lib/server-fn-auth";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   component: BookingsPage,
@@ -36,10 +37,19 @@ function BookingsPage() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    myBookings()
-      .then((r) => { if (active) { setRows((r ?? []) as Booking[]); setError(null); } })
-      .catch((e) => { if (active) setError((e as Error).message || "Failed to load bookings"); })
-      .finally(() => { if (active) setLoading(false); });
+    (async () => {
+      try {
+        const headers = await getServerFnAuthHeaders();
+        const r = await myBookings({ headers });
+        if (!active) return;
+        setRows(Array.isArray(r) ? (r as Booking[]) : []);
+        setError(null);
+      } catch (e) {
+        if (active) setError((e as Error).message || "Failed to load bookings");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
     return () => { active = false; };
   }, []);
 
