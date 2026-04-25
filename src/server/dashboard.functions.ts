@@ -71,6 +71,16 @@ export const myWalletTransactions = createServerFn({ method: "POST" })
     return rows ?? [];
   });
 
+function normalizeFullName(...candidates: Array<string | null | undefined>): string {
+  for (const candidate of candidates) {
+    const parts = String(candidate || "").trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return parts.join(" ");
+    if (parts.length === 1 && parts[0].includes("@")) return "Travsify Customer";
+    if (parts.length === 1) return `${parts[0]} Customer`;
+  }
+  return "Travsify Customer";
+}
+
 export const fundWallet = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .inputValidator((d: unknown) => z.object({
