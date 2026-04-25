@@ -48,7 +48,7 @@ export function Hero() {
             One unified API · 200+ countries · 6 verticals
           </div>
 
-          <h1 className="animate-fade-in-up delay-100 mt-5 font-display text-5xl font-extrabold leading-[1.05] tracking-tight text-primary md:text-6xl lg:text-[68px]">
+          <h1 className="animate-fade-in-up delay-100 mt-4 font-display text-5xl font-extrabold leading-[1.05] tracking-tight text-primary md:text-6xl lg:text-[64px]">
             Flights. Hotels.<br />
             Transfers. Tours.<br />
             e-Visas. Insurance.<br />
