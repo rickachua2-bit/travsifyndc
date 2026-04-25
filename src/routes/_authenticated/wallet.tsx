@@ -60,16 +60,23 @@ function WalletPage() {
 
   async function refresh() {
     try {
-      const [w, t, b, wd, c] = await Promise.all([
-        myWallets(), myWalletTransactions({ data: { limit: 50 } }), myBankAccounts(), myWithdrawals(), myCards(),
+      const results = await Promise.allSettled([
+        myWallets(),
+        myWalletTransactions({ data: { limit: 50 } }),
+        myBankAccounts(),
+        myWithdrawals(),
+        myCards(),
       ]);
-      setWallets(w as Wallet[]);
-      setTxns(t as Txn[]);
-      setBanks(b as Bank[]);
-      setWithdrawals(wd as Withdrawal[]);
-      setCards(c as Card[]);
-    } catch (e) {
-      toast.error("Couldn't load wallet — " + (e as Error).message);
+      const [w, t, b, wd, c] = results;
+      if (w.status === "fulfilled") setWallets(w.value as Wallet[]); else setWallets([]);
+      if (t.status === "fulfilled") setTxns(t.value as Txn[]); else setTxns([]);
+      if (b.status === "fulfilled") setBanks(b.value as Bank[]); else setBanks([]);
+      if (wd.status === "fulfilled") setWithdrawals(wd.value as Withdrawal[]); else setWithdrawals([]);
+      if (c.status === "fulfilled") setCards(c.value as Card[]); else setCards([]);
+      const failed = results.filter((r) => r.status === "rejected") as PromiseRejectedResult[];
+      if (failed.length) {
+        console.warn("Wallet partial load failure:", failed.map((f) => f.reason));
+      }
     } finally {
       setLoading(false);
     }
