@@ -58,16 +58,22 @@ export function useProfile() {
 }
 
 export function useIsAdmin() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Wait for auth to settle before deciding.
+    if (authLoading) {
+      setLoading(true);
+      return;
+    }
     if (!user) {
       setIsAdmin(false);
       setLoading(false);
       return;
     }
+    setLoading(true);
     supabase
       .from("user_roles")
       .select("role")
@@ -78,7 +84,7 @@ export function useIsAdmin() {
         setIsAdmin(!!data);
         setLoading(false);
       });
-  }, [user]);
+  }, [user, authLoading]);
 
-  return { isAdmin, loading };
+  return { isAdmin, loading: authLoading || loading };
 }
