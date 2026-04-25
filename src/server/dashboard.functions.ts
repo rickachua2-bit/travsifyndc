@@ -89,15 +89,19 @@ export const fundWallet = createServerFn({ method: "POST" })
       const amountCents = Math.round(data.amount * 100);
       return { kind: "stripe", ...(await fundUsdWalletIntent({ userId, email, amountCents, paymentMethodId: data.payment_method_id, name: fullName })) };
     }
-    return fundNgnWallet({ userId, email, fullName, amount: data.amount, method: data.ngn_method || "virtual_account" });
+    try {
+      return await fundNgnWallet({ userId, email, fullName, amount: data.amount, method: data.ngn_method || "virtual_account" });
+    } catch (error) {
+      return { ok: false as const, error: virtualAccountUnavailableMessage(error) };
+    }
   });
 
 function virtualAccountUnavailableMessage(error: unknown) {
   const message = error instanceof Error ? error.message : "NGN virtual account is unavailable";
   console.warn("NGN virtual account provisioning failed:", message);
 
-  if (/fincra error 403|ip address is not allowed|FINCRA_API_KEY|FINCRA_BUSINESS_ID/i.test(message)) {
-    return "NGN bank-transfer funding is temporarily unavailable because the payment provider is blocking account creation. Please use card funding or contact support.";
+  if (/fincra error (401|403)|x-pub-key|ip address is not allowed|FINCRA_(API_KEY|BUSINESS_ID|PUBLIC_KEY)/i.test(message)) {
+    return "NGN funding is temporarily unavailable — the payment provider rejected our credentials. Please contact support.";
   }
 
   return message;
