@@ -7,7 +7,7 @@ import {
 import { toast } from "sonner";
 import {
   myWallets, myWalletTransactions, myBankAccounts, addBankAccount, deleteBankAccount,
-  requestWithdrawal, myWithdrawals, fundWallet, myVirtualAccount,
+  requestWithdrawal, myWithdrawals, cancelWithdrawal, fundWallet, myVirtualAccount,
   startCardLink, myCards, removeCard,
 } from "@/server/dashboard.functions";
 import { StripeProvider } from "@/components/wallet/StripeProvider";
