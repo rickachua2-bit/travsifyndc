@@ -43,11 +43,14 @@ import { Route as AuthenticatedAdminVisaQueueRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminVisaProductsRouteImport } from './routes/_authenticated/admin/visa-products'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
 import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin/support'
+import { Route as AuthenticatedAdminScrapeRunsRouteImport } from './routes/_authenticated/admin/scrape-runs'
 import { Route as AuthenticatedAdminRevenueRouteImport } from './routes/_authenticated/admin/revenue'
+import { Route as AuthenticatedAdminProviderHealthRouteImport } from './routes/_authenticated/admin/provider-health'
 import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
 import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
 import { Route as AuthenticatedAdminLedgerRouteImport } from './routes/_authenticated/admin/ledger'
 import { Route as AuthenticatedAdminContactSubmissionsRouteImport } from './routes/_authenticated/admin/contact-submissions'
+import { Route as AuthenticatedAdminCachesRouteImport } from './routes/_authenticated/admin/caches'
 import { Route as AuthenticatedAdminBookingsRouteImport } from './routes/_authenticated/admin/bookings'
 import { Route as AuthenticatedAdminApiLogsRouteImport } from './routes/_authenticated/admin/api-logs'
 import { Route as AuthenticatedAdminApiKeysRouteImport } from './routes/_authenticated/admin/api-keys'
@@ -247,10 +250,22 @@ const AuthenticatedAdminSupportRoute =
     path: '/support',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminScrapeRunsRoute =
+  AuthenticatedAdminScrapeRunsRouteImport.update({
+    id: '/scrape-runs',
+    path: '/scrape-runs',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminRevenueRoute =
   AuthenticatedAdminRevenueRouteImport.update({
     id: '/revenue',
     path: '/revenue',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminProviderHealthRoute =
+  AuthenticatedAdminProviderHealthRouteImport.update({
+    id: '/provider-health',
+    path: '/provider-health',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminProcessingRoute =
@@ -275,6 +290,12 @@ const AuthenticatedAdminContactSubmissionsRoute =
   AuthenticatedAdminContactSubmissionsRouteImport.update({
     id: '/contact-submissions',
     path: '/contact-submissions',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCachesRoute =
+  AuthenticatedAdminCachesRouteImport.update({
+    id: '/caches',
+    path: '/caches',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminBookingsRoute =
@@ -422,11 +443,14 @@ export interface FileRoutesByFullPath {
   '/admin/api-keys': typeof AuthenticatedAdminApiKeysRoute
   '/admin/api-logs': typeof AuthenticatedAdminApiLogsRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
+  '/admin/caches': typeof AuthenticatedAdminCachesRoute
   '/admin/contact-submissions': typeof AuthenticatedAdminContactSubmissionsRoute
   '/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/admin/provider-health': typeof AuthenticatedAdminProviderHealthRoute
   '/admin/revenue': typeof AuthenticatedAdminRevenueRoute
+  '/admin/scrape-runs': typeof AuthenticatedAdminScrapeRunsRoute
   '/admin/support': typeof AuthenticatedAdminSupportRouteWithChildren
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
@@ -483,11 +507,14 @@ export interface FileRoutesByTo {
   '/admin/api-keys': typeof AuthenticatedAdminApiKeysRoute
   '/admin/api-logs': typeof AuthenticatedAdminApiLogsRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
+  '/admin/caches': typeof AuthenticatedAdminCachesRoute
   '/admin/contact-submissions': typeof AuthenticatedAdminContactSubmissionsRoute
   '/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/admin/provider-health': typeof AuthenticatedAdminProviderHealthRoute
   '/admin/revenue': typeof AuthenticatedAdminRevenueRoute
+  '/admin/scrape-runs': typeof AuthenticatedAdminScrapeRunsRoute
   '/admin/support': typeof AuthenticatedAdminSupportRouteWithChildren
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
@@ -547,11 +574,14 @@ export interface FileRoutesById {
   '/_authenticated/admin/api-keys': typeof AuthenticatedAdminApiKeysRoute
   '/_authenticated/admin/api-logs': typeof AuthenticatedAdminApiLogsRoute
   '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
+  '/_authenticated/admin/caches': typeof AuthenticatedAdminCachesRoute
   '/_authenticated/admin/contact-submissions': typeof AuthenticatedAdminContactSubmissionsRoute
   '/_authenticated/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/_authenticated/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/_authenticated/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/_authenticated/admin/provider-health': typeof AuthenticatedAdminProviderHealthRoute
   '/_authenticated/admin/revenue': typeof AuthenticatedAdminRevenueRoute
+  '/_authenticated/admin/scrape-runs': typeof AuthenticatedAdminScrapeRunsRoute
   '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRouteWithChildren
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
@@ -611,11 +641,14 @@ export interface FileRouteTypes {
     | '/admin/api-keys'
     | '/admin/api-logs'
     | '/admin/bookings'
+    | '/admin/caches'
     | '/admin/contact-submissions'
     | '/admin/ledger'
     | '/admin/markups'
     | '/admin/processing'
+    | '/admin/provider-health'
     | '/admin/revenue'
+    | '/admin/scrape-runs'
     | '/admin/support'
     | '/admin/users'
     | '/admin/visa-products'
@@ -672,11 +705,14 @@ export interface FileRouteTypes {
     | '/admin/api-keys'
     | '/admin/api-logs'
     | '/admin/bookings'
+    | '/admin/caches'
     | '/admin/contact-submissions'
     | '/admin/ledger'
     | '/admin/markups'
     | '/admin/processing'
+    | '/admin/provider-health'
     | '/admin/revenue'
+    | '/admin/scrape-runs'
     | '/admin/support'
     | '/admin/users'
     | '/admin/visa-products'
@@ -735,11 +771,14 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/api-keys'
     | '/_authenticated/admin/api-logs'
     | '/_authenticated/admin/bookings'
+    | '/_authenticated/admin/caches'
     | '/_authenticated/admin/contact-submissions'
     | '/_authenticated/admin/ledger'
     | '/_authenticated/admin/markups'
     | '/_authenticated/admin/processing'
+    | '/_authenticated/admin/provider-health'
     | '/_authenticated/admin/revenue'
+    | '/_authenticated/admin/scrape-runs'
     | '/_authenticated/admin/support'
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/visa-products'
@@ -1046,11 +1085,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSupportRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/scrape-runs': {
+      id: '/_authenticated/admin/scrape-runs'
+      path: '/scrape-runs'
+      fullPath: '/admin/scrape-runs'
+      preLoaderRoute: typeof AuthenticatedAdminScrapeRunsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/revenue': {
       id: '/_authenticated/admin/revenue'
       path: '/revenue'
       fullPath: '/admin/revenue'
       preLoaderRoute: typeof AuthenticatedAdminRevenueRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/provider-health': {
+      id: '/_authenticated/admin/provider-health'
+      path: '/provider-health'
+      fullPath: '/admin/provider-health'
+      preLoaderRoute: typeof AuthenticatedAdminProviderHealthRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/processing': {
@@ -1079,6 +1132,13 @@ declare module '@tanstack/react-router' {
       path: '/contact-submissions'
       fullPath: '/admin/contact-submissions'
       preLoaderRoute: typeof AuthenticatedAdminContactSubmissionsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/caches': {
+      id: '/_authenticated/admin/caches'
+      path: '/caches'
+      fullPath: '/admin/caches'
+      preLoaderRoute: typeof AuthenticatedAdminCachesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/bookings': {
@@ -1271,11 +1331,14 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminApiKeysRoute: typeof AuthenticatedAdminApiKeysRoute
   AuthenticatedAdminApiLogsRoute: typeof AuthenticatedAdminApiLogsRoute
   AuthenticatedAdminBookingsRoute: typeof AuthenticatedAdminBookingsRoute
+  AuthenticatedAdminCachesRoute: typeof AuthenticatedAdminCachesRoute
   AuthenticatedAdminContactSubmissionsRoute: typeof AuthenticatedAdminContactSubmissionsRoute
   AuthenticatedAdminLedgerRoute: typeof AuthenticatedAdminLedgerRoute
   AuthenticatedAdminMarkupsRoute: typeof AuthenticatedAdminMarkupsRoute
   AuthenticatedAdminProcessingRoute: typeof AuthenticatedAdminProcessingRoute
+  AuthenticatedAdminProviderHealthRoute: typeof AuthenticatedAdminProviderHealthRoute
   AuthenticatedAdminRevenueRoute: typeof AuthenticatedAdminRevenueRoute
+  AuthenticatedAdminScrapeRunsRoute: typeof AuthenticatedAdminScrapeRunsRoute
   AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRouteWithChildren
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminVisaProductsRoute: typeof AuthenticatedAdminVisaProductsRoute
@@ -1291,12 +1354,15 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminApiKeysRoute: AuthenticatedAdminApiKeysRoute,
   AuthenticatedAdminApiLogsRoute: AuthenticatedAdminApiLogsRoute,
   AuthenticatedAdminBookingsRoute: AuthenticatedAdminBookingsRoute,
+  AuthenticatedAdminCachesRoute: AuthenticatedAdminCachesRoute,
   AuthenticatedAdminContactSubmissionsRoute:
     AuthenticatedAdminContactSubmissionsRoute,
   AuthenticatedAdminLedgerRoute: AuthenticatedAdminLedgerRoute,
   AuthenticatedAdminMarkupsRoute: AuthenticatedAdminMarkupsRoute,
   AuthenticatedAdminProcessingRoute: AuthenticatedAdminProcessingRoute,
+  AuthenticatedAdminProviderHealthRoute: AuthenticatedAdminProviderHealthRoute,
   AuthenticatedAdminRevenueRoute: AuthenticatedAdminRevenueRoute,
+  AuthenticatedAdminScrapeRunsRoute: AuthenticatedAdminScrapeRunsRoute,
   AuthenticatedAdminSupportRoute: AuthenticatedAdminSupportRouteWithChildren,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminVisaProductsRoute: AuthenticatedAdminVisaProductsRoute,
