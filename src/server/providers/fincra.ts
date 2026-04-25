@@ -1,5 +1,7 @@
 // Fincra client — supplier payouts, virtual accounts (NGN funding), card charges.
 // Docs: https://docs.fincra.com/reference
+import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
+
 const BASE = "https://api.fincra.com";
 
 function key(): string {
@@ -43,8 +45,8 @@ function fincraErrorMessage(status: number, payload: unknown): string {
   return `Fincra error ${status}${detail ? `: ${detail}` : ""}.${authHint}`;
 }
 
-async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+async function call<T>(path: string, init: RequestInit = {}, timeoutMs = TIMEOUTS.booking): Promise<T> {
+  const res = await fetchWithTimeout(`${BASE}${path}`, {
     ...init,
     headers: {
       "api-key": key(),
@@ -53,7 +55,7 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
       ...optionalFincraHeaders(),
       ...(init.headers || {}),
     },
-  });
+  }, { providerName: "Fincra", timeoutMs });
   const json = await readJsonResponse(res);
   if (!res.ok) {
     throw new Error(fincraErrorMessage(res.status, json));

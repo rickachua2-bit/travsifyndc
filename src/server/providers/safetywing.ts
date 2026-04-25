@@ -2,6 +2,8 @@
 // Affiliate model: we attach our affiliate ID; customers complete purchase intent in our flow,
 // ops finalises the policy on the SafetyWing partner portal after wallet payment.
 // Docs: https://safetywing.com/affiliates  (quote endpoint is public-ish; binding is portal-side)
+import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
+
 const BASE = "https://api.safetywing.com/v1";
 
 function affiliateId(): string {
@@ -10,12 +12,12 @@ function affiliateId(): string {
   return id;
 }
 
-async function call<T>(path: string, init?: RequestInit): Promise<T> {
+async function call<T>(path: string, init?: RequestInit, timeoutMs = TIMEOUTS.search): Promise<T> {
   const url = `${BASE}${path}${path.includes("?") ? "&" : "?"}affiliate_id=${affiliateId()}`;
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     ...init,
     headers: { "Accept": "application/json", "Content-Type": "application/json", ...(init?.headers || {}) },
-  });
+  }, { providerName: "SafetyWing", timeoutMs });
   const text = await res.text();
   let json: unknown = null;
   try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }

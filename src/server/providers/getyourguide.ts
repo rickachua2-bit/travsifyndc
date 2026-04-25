@@ -2,6 +2,8 @@
 // Affiliate model: we attach our partner_id to all calls. Customers stay in our flow;
 // ops manually fulfill on the GYG partner portal after receiving the booking.
 // Docs: https://partner.getyourguide.com/en/affiliate-api
+import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
+
 const BASE = "https://api.getyourguide.com/1";
 
 function partnerId(): string {
@@ -25,7 +27,7 @@ async function call<T>(path: string): Promise<T> {
     const token = Buffer.from(`${partnerId()}:${apiPassword}`).toString("base64");
     headers["Authorization"] = `Basic ${token}`;
   }
-  const res = await fetch(url.toString(), { headers });
+  const res = await fetchWithTimeout(url.toString(), { headers }, { providerName: "GetYourGuide", timeoutMs: TIMEOUTS.search });
   const text = await res.text();
   let json: unknown = null;
   try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
