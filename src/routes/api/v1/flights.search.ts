@@ -1,10 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
-import { searchFlights } from "@/server/providers/duffel";
-import { ndcSearch, isNdcEnabled } from "@/server/providers/ndc";
-import { composePrice } from "@/server/bookings";
-import { ProviderTimeoutError } from "@/server/providers/fetch-with-timeout";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const Schema = z.object({
   origin: z.string().trim().length(3).regex(/^[A-Z]{3}$/i),
@@ -35,56 +32,60 @@ export const Route = createFileRoute("/api/v1/flights/search")({
             cabin: parsed.data.cabin,
           };
 
-          const [duffelRes, ndcRes] = await Promise.allSettled([
-            searchFlights(key.environment, input),
-            isNdcEnabled() ? ndcSearch(input) : Promise.resolve({ offers: [] as Array<Record<string, unknown>> }),
-          ]);
-
-          const duffelOffers = duffelRes.status === "fulfilled" ? duffelRes.value.offers : [];
-          const ndcOffers = ndcRes.status === "fulfilled" ? (ndcRes.value as { offers: Array<Record<string, unknown>> }).offers : [];
-
-          // Surface upstream failures with the right status code so partners can retry intelligently.
-          if (duffelRes.status === "rejected" && ndcOffers.length === 0) {
-            const reason = duffelRes.reason as Error;
-            if (reason instanceof ProviderTimeoutError) {
-              return errorResponse(
-                "upstream_timeout",
-                "Duffel did not respond in time. This is usually transient — please retry the request.",
-                504,
-              );
-            }
-            return errorResponse("supplier_error", reason.message, 502);
+          // ---- Async queue model ---------------------------------------------------
+          // We never call the slow supplier inline. Instead:
+          //   1. Insert a job row (status=queued) and return its id IMMEDIATELY.
+          //   2. Fire-and-forget an internal HTTP call to the processor route, which
+          //      runs the actual Duffel/NDC search in its own request budget and
+          //      writes the result back to the job row.
+          //   3. The partner polls GET /api/v1/flights/search/{search_id} until
+          //      status is `succeeded` or `failed`.
+          //
+          // This means the partner's POST always returns in <1s, eliminating
+          // Cloudflare 522 errors regardless of supplier latency.
+          const { data: job, error: insertErr } = await supabaseAdmin
+            .from("flight_search_jobs")
+            .insert({
+              user_id: key.userId,
+              api_key_id: key.apiKeyId,
+              environment: key.environment,
+              status: "queued",
+              input,
+            })
+            .select("id")
+            .single();
+          if (insertErr || !job) {
+            return errorResponse("server_error", insertErr?.message || "Failed to enqueue search.", 500);
           }
 
-          // Apply two-tier markup so partners see customer-facing totals.
-          const allOffers = [
-            ...duffelOffers.map((o) => ({ ...o, source: "duffel" })),
-            ...ndcOffers.map((o) => ({ ...o, source: "ndc" })),
-          ];
-          const priced = await Promise.all(allOffers.map(async (o) => {
-            const baseAmount = Number((o as Record<string, unknown>).total_amount);
-            const currency = String((o as Record<string, unknown>).total_currency || "USD");
-            if (!Number.isFinite(baseAmount) || baseAmount <= 0) return o;
-            const price = await composePrice({
-              partnerId: key.userId,
-              vertical: "flights",
-              providerBase: baseAmount,
-              currency,
-            });
-            return {
-              ...o,
-              base_amount: baseAmount.toFixed(2),
-              total_amount: price.total.toFixed(2),
-              price_breakdown: price,
-            };
-          }));
+          // Fire-and-forget: trigger the processor without waiting.
+          // The processor route lives under /api/public/* so it skips auth — we
+          // protect it with a shared secret derived from the service role key.
+          try {
+            const url = new URL(request.url);
+            const processorUrl = `${url.protocol}//${url.host}/api/public/internal/process-flight-search`;
+            // Best-effort kick. We deliberately do not await the response.
+            void fetch(processorUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Internal-Token": process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+              },
+              body: JSON.stringify({ job_id: job.id }),
+            }).catch((e) => console.error("[flights.search] processor kick failed", e));
+          } catch (e) {
+            console.error("[flights.search] failed to schedule processor", e);
+          }
 
           return jsonResponse({
             data: {
-              flights: priced,
-              suppliers_called: ["duffel", ...(isNdcEnabled() ? ["ndc"] : [])],
+              search_id: job.id,
+              status: "queued",
+              poll_url: `/api/v1/flights/search/${job.id}`,
+              poll_interval_ms: 2000,
+              expires_in_seconds: 1800,
             },
-          });
+          }, 202);
         }),
     },
   },
