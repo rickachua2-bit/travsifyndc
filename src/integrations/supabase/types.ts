@@ -736,6 +736,80 @@ export type Database = {
         }
         Relationships: []
       }
+      support_ticket_messages: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          is_staff: boolean
+          ticket_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          is_staff?: boolean
+          ticket_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          is_staff?: boolean
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_admin_id: string | null
+          category: string
+          created_at: string
+          id: string
+          last_message_at: string
+          priority: Database["public"]["Enums"]["support_ticket_priority"]
+          status: Database["public"]["Enums"]["support_ticket_status"]
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_admin_id?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          status?: Database["public"]["Enums"]["support_ticket_status"]
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_admin_id?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          status?: Database["public"]["Enums"]["support_ticket_status"]
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tour_quote_cache: {
         Row: {
           created_at: string
@@ -1524,6 +1598,8 @@ export type Database = {
         | "rejected"
       markup_owner_type: "travsify" | "partner"
       markup_value_type: "fixed" | "percentage"
+      support_ticket_priority: "low" | "normal" | "high" | "urgent"
+      support_ticket_status: "open" | "pending" | "resolved" | "closed"
       travel_vertical:
         | "flights"
         | "hotels"
@@ -1681,6 +1757,8 @@ export const Constants = {
       ],
       markup_owner_type: ["travsify", "partner"],
       markup_value_type: ["fixed", "percentage"],
+      support_ticket_priority: ["low", "normal", "high", "urgent"],
+      support_ticket_status: ["open", "pending", "resolved", "closed"],
       travel_vertical: [
         "flights",
         "hotels",

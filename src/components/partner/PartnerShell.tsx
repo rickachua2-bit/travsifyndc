@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Wallet as WalletIcon, BookOpenCheck, Search, Percent,
   KeyRound, BookOpen, Clock, LogOut, Shield, Sparkles, ShieldCheck, AlertCircle,
+  LifeBuoy,
 } from "lucide-react";
 import { Logo } from "@/components/landing/Logo";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,7 +17,7 @@ import type { ReactNode } from "react";
 
 type NavItem = {
   title: string;
-  to: "/dashboard" | "/dashboard-book" | "/bookings" | "/wallet" | "/markups" | "/api-keys" | "/docs" | "/pending-review";
+  to: "/dashboard" | "/dashboard-book" | "/bookings" | "/wallet" | "/markups" | "/api-keys" | "/docs" | "/pending-review" | "/support";
   icon: typeof LayoutDashboard;
   external?: boolean;
 };
@@ -31,6 +32,7 @@ const PRIMARY: NavItem[] = [
 ];
 
 const SECONDARY: NavItem[] = [
+  { title: "Support", to: "/support", icon: LifeBuoy },
   { title: "Docs", to: "/docs", icon: BookOpen },
 ];
 

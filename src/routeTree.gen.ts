@@ -23,6 +23,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SdkJsRouteImport } from './routes/sdk.js'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedPendingReviewRouteImport } from './routes/_authenticated/pending-review'
 import { Route as AuthenticatedMarkupsRouteImport } from './routes/_authenticated/markups'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
@@ -40,6 +41,7 @@ import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminVisaQueueRouteImport } from './routes/_authenticated/admin/visa-queue'
 import { Route as AuthenticatedAdminVisaProductsRouteImport } from './routes/_authenticated/admin/visa-products'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
+import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin/support'
 import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
 import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
 import { Route as AuthenticatedAdminBookingsRouteImport } from './routes/_authenticated/admin/bookings'
@@ -59,6 +61,7 @@ import { Route as ApiV1FlightsOrdersRouteImport } from './routes/api/v1/flights.
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks.stripe'
 import { Route as ApiPublicWebhooksFincraRouteImport } from './routes/api/public/webhooks.fincra'
 import { Route as AuthenticatedAdminVisaQueueIdRouteImport } from './routes/_authenticated/admin/visa-queue.$id'
+import { Route as AuthenticatedAdminSupportIdRouteImport } from './routes/_authenticated/admin/support.$id'
 import { Route as AuthenticatedAdminApplicationsIdRouteImport } from './routes/_authenticated/admin/applications.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -128,6 +131,11 @@ const SdkJsRoute = SdkJsRouteImport.update({
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPendingReviewRoute =
@@ -220,6 +228,12 @@ const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminSupportRoute =
+  AuthenticatedAdminSupportRouteImport.update({
+    id: '/support',
+    path: '/support',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminProcessingRoute =
   AuthenticatedAdminProcessingRouteImport.update({
     id: '/processing',
@@ -319,6 +333,12 @@ const AuthenticatedAdminVisaQueueIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminVisaQueueRoute,
   } as any)
+const AuthenticatedAdminSupportIdRoute =
+  AuthenticatedAdminSupportIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminSupportRoute,
+  } as any)
 const AuthenticatedAdminApplicationsIdRoute =
   AuthenticatedAdminApplicationsIdRouteImport.update({
     id: '/applications/$id',
@@ -346,11 +366,13 @@ export interface FileRoutesByFullPath {
   '/kyc': typeof AuthenticatedKycRoute
   '/markups': typeof AuthenticatedMarkupsRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/admin/support': typeof AuthenticatedAdminSupportRouteWithChildren
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
   '/admin/visa-queue': typeof AuthenticatedAdminVisaQueueRouteWithChildren
@@ -361,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/visa/track/$reference': typeof VisaTrackReferenceRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
+  '/admin/support/$id': typeof AuthenticatedAdminSupportIdRoute
   '/admin/visa-queue/$id': typeof AuthenticatedAdminVisaQueueIdRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
@@ -397,11 +420,13 @@ export interface FileRoutesByTo {
   '/kyc': typeof AuthenticatedKycRoute
   '/markups': typeof AuthenticatedMarkupsRoute
   '/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/admin/support': typeof AuthenticatedAdminSupportRouteWithChildren
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
   '/admin/visa-queue': typeof AuthenticatedAdminVisaQueueRouteWithChildren
@@ -412,6 +437,7 @@ export interface FileRoutesByTo {
   '/visa/track/$reference': typeof VisaTrackReferenceRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
+  '/admin/support/$id': typeof AuthenticatedAdminSupportIdRoute
   '/admin/visa-queue/$id': typeof AuthenticatedAdminVisaQueueIdRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
@@ -451,11 +477,13 @@ export interface FileRoutesById {
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/markups': typeof AuthenticatedMarkupsRoute
   '/_authenticated/pending-review': typeof AuthenticatedPendingReviewRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/sdk/js': typeof SdkJsRoute
   '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/_authenticated/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/_authenticated/admin/processing': typeof AuthenticatedAdminProcessingRoute
+  '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRouteWithChildren
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/visa-products': typeof AuthenticatedAdminVisaProductsRoute
   '/_authenticated/admin/visa-queue': typeof AuthenticatedAdminVisaQueueRouteWithChildren
@@ -466,6 +494,7 @@ export interface FileRoutesById {
   '/visa/track/$reference': typeof VisaTrackReferenceRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
+  '/_authenticated/admin/support/$id': typeof AuthenticatedAdminSupportIdRoute
   '/_authenticated/admin/visa-queue/$id': typeof AuthenticatedAdminVisaQueueIdRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
@@ -505,11 +534,13 @@ export interface FileRouteTypes {
     | '/kyc'
     | '/markups'
     | '/pending-review'
+    | '/support'
     | '/wallet'
     | '/sdk/js'
     | '/admin/bookings'
     | '/admin/markups'
     | '/admin/processing'
+    | '/admin/support'
     | '/admin/users'
     | '/admin/visa-products'
     | '/admin/visa-queue'
@@ -520,6 +551,7 @@ export interface FileRouteTypes {
     | '/visa/track/$reference'
     | '/admin/'
     | '/admin/applications/$id'
+    | '/admin/support/$id'
     | '/admin/visa-queue/$id'
     | '/api/public/webhooks/fincra'
     | '/api/public/webhooks/stripe'
@@ -556,11 +588,13 @@ export interface FileRouteTypes {
     | '/kyc'
     | '/markups'
     | '/pending-review'
+    | '/support'
     | '/wallet'
     | '/sdk/js'
     | '/admin/bookings'
     | '/admin/markups'
     | '/admin/processing'
+    | '/admin/support'
     | '/admin/users'
     | '/admin/visa-products'
     | '/admin/visa-queue'
@@ -571,6 +605,7 @@ export interface FileRouteTypes {
     | '/visa/track/$reference'
     | '/admin'
     | '/admin/applications/$id'
+    | '/admin/support/$id'
     | '/admin/visa-queue/$id'
     | '/api/public/webhooks/fincra'
     | '/api/public/webhooks/stripe'
@@ -609,11 +644,13 @@ export interface FileRouteTypes {
     | '/_authenticated/kyc'
     | '/_authenticated/markups'
     | '/_authenticated/pending-review'
+    | '/_authenticated/support'
     | '/_authenticated/wallet'
     | '/sdk/js'
     | '/_authenticated/admin/bookings'
     | '/_authenticated/admin/markups'
     | '/_authenticated/admin/processing'
+    | '/_authenticated/admin/support'
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/visa-products'
     | '/_authenticated/admin/visa-queue'
@@ -624,6 +661,7 @@ export interface FileRouteTypes {
     | '/visa/track/$reference'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/applications/$id'
+    | '/_authenticated/admin/support/$id'
     | '/_authenticated/admin/visa-queue/$id'
     | '/api/public/webhooks/fincra'
     | '/api/public/webhooks/stripe'
@@ -777,6 +815,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWalletRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/pending-review': {
       id: '/_authenticated/pending-review'
       path: '/pending-review'
@@ -894,6 +939,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/support': {
+      id: '/_authenticated/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AuthenticatedAdminSupportRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/processing': {
@@ -1029,6 +1081,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminVisaQueueIdRouteImport
       parentRoute: typeof AuthenticatedAdminVisaQueueRoute
     }
+    '/_authenticated/admin/support/$id': {
+      id: '/_authenticated/admin/support/$id'
+      path: '/$id'
+      fullPath: '/admin/support/$id'
+      preLoaderRoute: typeof AuthenticatedAdminSupportIdRouteImport
+      parentRoute: typeof AuthenticatedAdminSupportRoute
+    }
     '/_authenticated/admin/applications/$id': {
       id: '/_authenticated/admin/applications/$id'
       path: '/applications/$id'
@@ -1038,6 +1097,20 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedAdminSupportRouteChildren {
+  AuthenticatedAdminSupportIdRoute: typeof AuthenticatedAdminSupportIdRoute
+}
+
+const AuthenticatedAdminSupportRouteChildren: AuthenticatedAdminSupportRouteChildren =
+  {
+    AuthenticatedAdminSupportIdRoute: AuthenticatedAdminSupportIdRoute,
+  }
+
+const AuthenticatedAdminSupportRouteWithChildren =
+  AuthenticatedAdminSupportRoute._addFileChildren(
+    AuthenticatedAdminSupportRouteChildren,
+  )
 
 interface AuthenticatedAdminVisaQueueRouteChildren {
   AuthenticatedAdminVisaQueueIdRoute: typeof AuthenticatedAdminVisaQueueIdRoute
@@ -1057,6 +1130,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminBookingsRoute: typeof AuthenticatedAdminBookingsRoute
   AuthenticatedAdminMarkupsRoute: typeof AuthenticatedAdminMarkupsRoute
   AuthenticatedAdminProcessingRoute: typeof AuthenticatedAdminProcessingRoute
+  AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRouteWithChildren
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminVisaProductsRoute: typeof AuthenticatedAdminVisaProductsRoute
   AuthenticatedAdminVisaQueueRoute: typeof AuthenticatedAdminVisaQueueRouteWithChildren
@@ -1069,6 +1143,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminBookingsRoute: AuthenticatedAdminBookingsRoute,
   AuthenticatedAdminMarkupsRoute: AuthenticatedAdminMarkupsRoute,
   AuthenticatedAdminProcessingRoute: AuthenticatedAdminProcessingRoute,
+  AuthenticatedAdminSupportRoute: AuthenticatedAdminSupportRouteWithChildren,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminVisaProductsRoute: AuthenticatedAdminVisaProductsRoute,
   AuthenticatedAdminVisaQueueRoute:
@@ -1090,6 +1165,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMarkupsRoute: typeof AuthenticatedMarkupsRoute
   AuthenticatedPendingReviewRoute: typeof AuthenticatedPendingReviewRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
 }
 
@@ -1102,6 +1178,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMarkupsRoute: AuthenticatedMarkupsRoute,
   AuthenticatedPendingReviewRoute: AuthenticatedPendingReviewRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
 }
 
