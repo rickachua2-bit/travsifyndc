@@ -70,6 +70,7 @@ import { Route as ApiV1FlightsSearchRouteImport } from './routes/api/v1/flights.
 import { Route as ApiV1FlightsOrdersRouteImport } from './routes/api/v1/flights.orders'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks.stripe'
 import { Route as ApiPublicWebhooksFincraRouteImport } from './routes/api/public/webhooks.fincra'
+import { Route as ApiPublicInternalProcessFlightSearchRouteImport } from './routes/api/public/internal/process-flight-search'
 import { Route as AuthenticatedAdminVisaQueueIdRouteImport } from './routes/_authenticated/admin/visa-queue.$id'
 import { Route as AuthenticatedAdminSupportIdRouteImport } from './routes/_authenticated/admin/support.$id'
 import { Route as AuthenticatedAdminApplicationsIdRouteImport } from './routes/_authenticated/admin/applications.$id'
@@ -398,6 +399,12 @@ const ApiPublicWebhooksFincraRoute = ApiPublicWebhooksFincraRouteImport.update({
   path: '/api/public/webhooks/fincra',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicInternalProcessFlightSearchRoute =
+  ApiPublicInternalProcessFlightSearchRouteImport.update({
+    id: '/api/public/internal/process-flight-search',
+    path: '/api/public/internal/process-flight-search',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminVisaQueueIdRoute =
   AuthenticatedAdminVisaQueueIdRouteImport.update({
     id: '/$id',
@@ -472,6 +479,7 @@ export interface FileRoutesByFullPath {
   '/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
   '/admin/support/$id': typeof AuthenticatedAdminSupportIdRoute
   '/admin/visa-queue/$id': typeof AuthenticatedAdminVisaQueueIdRoute
+  '/api/public/internal/process-flight-search': typeof ApiPublicInternalProcessFlightSearchRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
@@ -537,6 +545,7 @@ export interface FileRoutesByTo {
   '/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
   '/admin/support/$id': typeof AuthenticatedAdminSupportIdRoute
   '/admin/visa-queue/$id': typeof AuthenticatedAdminVisaQueueIdRoute
+  '/api/public/internal/process-flight-search': typeof ApiPublicInternalProcessFlightSearchRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
@@ -605,6 +614,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/applications/$id': typeof AuthenticatedAdminApplicationsIdRoute
   '/_authenticated/admin/support/$id': typeof AuthenticatedAdminSupportIdRoute
   '/_authenticated/admin/visa-queue/$id': typeof AuthenticatedAdminVisaQueueIdRoute
+  '/api/public/internal/process-flight-search': typeof ApiPublicInternalProcessFlightSearchRoute
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
@@ -673,6 +683,7 @@ export interface FileRouteTypes {
     | '/admin/applications/$id'
     | '/admin/support/$id'
     | '/admin/visa-queue/$id'
+    | '/api/public/internal/process-flight-search'
     | '/api/public/webhooks/fincra'
     | '/api/public/webhooks/stripe'
     | '/api/v1/flights/orders'
@@ -738,6 +749,7 @@ export interface FileRouteTypes {
     | '/admin/applications/$id'
     | '/admin/support/$id'
     | '/admin/visa-queue/$id'
+    | '/api/public/internal/process-flight-search'
     | '/api/public/webhooks/fincra'
     | '/api/public/webhooks/stripe'
     | '/api/v1/flights/orders'
@@ -805,6 +817,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/applications/$id'
     | '/_authenticated/admin/support/$id'
     | '/_authenticated/admin/visa-queue/$id'
+    | '/api/public/internal/process-flight-search'
     | '/api/public/webhooks/fincra'
     | '/api/public/webhooks/stripe'
     | '/api/v1/flights/orders'
@@ -841,6 +854,7 @@ export interface RootRouteChildren {
   ApiV1HealthRoute: typeof ApiV1HealthRoute
   ApiV1PayoutsRoute: typeof ApiV1PayoutsRoute
   VisaTrackReferenceRoute: typeof VisaTrackReferenceRoute
+  ApiPublicInternalProcessFlightSearchRoute: typeof ApiPublicInternalProcessFlightSearchRoute
   ApiPublicWebhooksFincraRoute: typeof ApiPublicWebhooksFincraRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
   ApiV1FlightsOrdersRoute: typeof ApiV1FlightsOrdersRoute
@@ -1287,6 +1301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksFincraRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/internal/process-flight-search': {
+      id: '/api/public/internal/process-flight-search'
+      path: '/api/public/internal/process-flight-search'
+      fullPath: '/api/public/internal/process-flight-search'
+      preLoaderRoute: typeof ApiPublicInternalProcessFlightSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/visa-queue/$id': {
       id: '/_authenticated/admin/visa-queue/$id'
       path: '/$id'
@@ -1456,6 +1477,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1HealthRoute: ApiV1HealthRoute,
   ApiV1PayoutsRoute: ApiV1PayoutsRoute,
   VisaTrackReferenceRoute: VisaTrackReferenceRoute,
+  ApiPublicInternalProcessFlightSearchRoute:
+    ApiPublicInternalProcessFlightSearchRoute,
   ApiPublicWebhooksFincraRoute: ApiPublicWebhooksFincraRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
   ApiV1FlightsOrdersRoute: ApiV1FlightsOrdersRoute,
