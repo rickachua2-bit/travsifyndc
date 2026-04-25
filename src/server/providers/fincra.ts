@@ -122,13 +122,21 @@ export async function createNgnCharge(input: {
   customer_name: string;
   redirect_url: string;
 }) {
+  const parts = input.customer_name.trim().split(/\s+/).filter(Boolean);
+  const firstName = parts[0] || "Customer";
+  const lastName = parts.slice(1).join(" ") || firstName;
   return call<{ data?: { link?: string; reference?: string } }>("/checkout/payments", {
     method: "POST",
     body: JSON.stringify({
       amount: String(input.amount),
       currency: "NGN",
       reference: input.reference,
-      customer: { name: input.customer_name, email: input.email },
+      customer: {
+        name: input.customer_name,
+        firstName,
+        lastName,
+        email: input.email,
+      },
       paymentMethods: ["card", "bank_transfer"],
       successMessage: "Wallet funded — you can return to Travsify.",
       defaultPaymentMethod: "card",
