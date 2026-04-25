@@ -72,16 +72,18 @@ const PROVIDER_PAGE_SCHEMA = {
   required: ["cars"],
 };
 
-function searchUrl(provider: "avis" | "hertz" | "enterprise", input: CarRentalScrapeInput): string {
+function searchUrl(provider: "kayak" | "rentalcars" | "carrentals", input: CarRentalScrapeInput): string {
   const pu = encodeURIComponent(input.pickup_location);
   const dp = encodeURIComponent(input.dropoff_location);
-  if (provider === "avis") {
-    return `https://www.avis.com/en/reservation/reserve-a-car?pickupLocation=${pu}&dropoffLocation=${dp}&pickupDate=${input.pickup_date}&dropoffDate=${input.dropoff_date}`;
+  // These aggregator pages render results server-side without login, so Firecrawl
+  // gets real listings (unlike avis.com / hertz.com which need JS auth flows).
+  if (provider === "kayak") {
+    return `https://www.kayak.com/cars/${pu}/${dp}/${input.pickup_date}/${input.dropoff_date}`;
   }
-  if (provider === "hertz") {
-    return `https://www.hertz.com/rentacar/reservation/?pickupLocation=${pu}&returnLocation=${dp}&pickupDate=${input.pickup_date}&returnDate=${input.dropoff_date}&driverAge=${input.driver_age}`;
+  if (provider === "rentalcars") {
+    return `https://www.rentalcars.com/SearchResults.do?puYear=${input.pickup_date.slice(0,4)}&puMonth=${input.pickup_date.slice(5,7)}&puDay=${input.pickup_date.slice(8,10)}&doYear=${input.dropoff_date.slice(0,4)}&doMonth=${input.dropoff_date.slice(5,7)}&doDay=${input.dropoff_date.slice(8,10)}&puString=${pu}&doString=${dp}&driversAge=${input.driver_age}`;
   }
-  return `https://www.enterprise.com/en/car-rental/locations.html?pickupLocation=${pu}&dropoffLocation=${dp}&pickupDate=${input.pickup_date}&dropoffDate=${input.dropoff_date}`;
+  return `https://www.carrentals.com/Car-Rentals/${pu}-Car-Rentals.d178293.Car-Rental-Guide?fromDate=${input.pickup_date}&toDate=${input.dropoff_date}`;
 }
 
 type RawCar = {
