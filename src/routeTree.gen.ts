@@ -73,6 +73,7 @@ import { Route as ApiPublicWebhooksFincraRouteImport } from './routes/api/public
 import { Route as AuthenticatedAdminVisaQueueIdRouteImport } from './routes/_authenticated/admin/visa-queue.$id'
 import { Route as AuthenticatedAdminSupportIdRouteImport } from './routes/_authenticated/admin/support.$id'
 import { Route as AuthenticatedAdminApplicationsIdRouteImport } from './routes/_authenticated/admin/applications.$id'
+import { Route as ApiV1FlightsSearchSearchIdRouteImport } from './routes/api/v1/flights.search.$searchId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -415,6 +416,12 @@ const AuthenticatedAdminApplicationsIdRoute =
     path: '/applications/$id',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const ApiV1FlightsSearchSearchIdRoute =
+  ApiV1FlightsSearchSearchIdRouteImport.update({
+    id: '/$searchId',
+    path: '/$searchId',
+    getParentRoute: () => ApiV1FlightsSearchRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -468,7 +475,7 @@ export interface FileRoutesByFullPath {
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
-  '/api/v1/flights/search': typeof ApiV1FlightsSearchRoute
+  '/api/v1/flights/search': typeof ApiV1FlightsSearchRouteWithChildren
   '/api/v1/hotels/bookings': typeof ApiV1HotelsBookingsRoute
   '/api/v1/hotels/search': typeof ApiV1HotelsSearchRoute
   '/api/v1/insurance/bookings': typeof ApiV1InsuranceBookingsRoute
@@ -480,6 +487,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/transfers/search': typeof ApiV1TransfersSearchRoute
   '/api/v1/visas/bookings': typeof ApiV1VisasBookingsRoute
   '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
+  '/api/v1/flights/search/$searchId': typeof ApiV1FlightsSearchSearchIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -532,7 +540,7 @@ export interface FileRoutesByTo {
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
-  '/api/v1/flights/search': typeof ApiV1FlightsSearchRoute
+  '/api/v1/flights/search': typeof ApiV1FlightsSearchRouteWithChildren
   '/api/v1/hotels/bookings': typeof ApiV1HotelsBookingsRoute
   '/api/v1/hotels/search': typeof ApiV1HotelsSearchRoute
   '/api/v1/insurance/bookings': typeof ApiV1InsuranceBookingsRoute
@@ -544,6 +552,7 @@ export interface FileRoutesByTo {
   '/api/v1/transfers/search': typeof ApiV1TransfersSearchRoute
   '/api/v1/visas/bookings': typeof ApiV1VisasBookingsRoute
   '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
+  '/api/v1/flights/search/$searchId': typeof ApiV1FlightsSearchSearchIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -599,7 +608,7 @@ export interface FileRoutesById {
   '/api/public/webhooks/fincra': typeof ApiPublicWebhooksFincraRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/v1/flights/orders': typeof ApiV1FlightsOrdersRoute
-  '/api/v1/flights/search': typeof ApiV1FlightsSearchRoute
+  '/api/v1/flights/search': typeof ApiV1FlightsSearchRouteWithChildren
   '/api/v1/hotels/bookings': typeof ApiV1HotelsBookingsRoute
   '/api/v1/hotels/search': typeof ApiV1HotelsSearchRoute
   '/api/v1/insurance/bookings': typeof ApiV1InsuranceBookingsRoute
@@ -611,6 +620,7 @@ export interface FileRoutesById {
   '/api/v1/transfers/search': typeof ApiV1TransfersSearchRoute
   '/api/v1/visas/bookings': typeof ApiV1VisasBookingsRoute
   '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
+  '/api/v1/flights/search/$searchId': typeof ApiV1FlightsSearchSearchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -678,6 +688,7 @@ export interface FileRouteTypes {
     | '/api/v1/transfers/search'
     | '/api/v1/visas/bookings'
     | '/api/v1/visas/search'
+    | '/api/v1/flights/search/$searchId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -742,6 +753,7 @@ export interface FileRouteTypes {
     | '/api/v1/transfers/search'
     | '/api/v1/visas/bookings'
     | '/api/v1/visas/search'
+    | '/api/v1/flights/search/$searchId'
   id:
     | '__root__'
     | '/'
@@ -808,6 +820,7 @@ export interface FileRouteTypes {
     | '/api/v1/transfers/search'
     | '/api/v1/visas/bookings'
     | '/api/v1/visas/search'
+    | '/api/v1/flights/search/$searchId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -831,7 +844,7 @@ export interface RootRouteChildren {
   ApiPublicWebhooksFincraRoute: typeof ApiPublicWebhooksFincraRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
   ApiV1FlightsOrdersRoute: typeof ApiV1FlightsOrdersRoute
-  ApiV1FlightsSearchRoute: typeof ApiV1FlightsSearchRoute
+  ApiV1FlightsSearchRoute: typeof ApiV1FlightsSearchRouteWithChildren
   ApiV1HotelsBookingsRoute: typeof ApiV1HotelsBookingsRoute
   ApiV1HotelsSearchRoute: typeof ApiV1HotelsSearchRoute
   ApiV1InsuranceBookingsRoute: typeof ApiV1InsuranceBookingsRoute
@@ -1295,6 +1308,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminApplicationsIdRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/api/v1/flights/search/$searchId': {
+      id: '/api/v1/flights/search/$searchId'
+      path: '/$searchId'
+      fullPath: '/api/v1/flights/search/$searchId'
+      preLoaderRoute: typeof ApiV1FlightsSearchSearchIdRouteImport
+      parentRoute: typeof ApiV1FlightsSearchRoute
+    }
   }
 }
 
@@ -1407,6 +1427,17 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface ApiV1FlightsSearchRouteChildren {
+  ApiV1FlightsSearchSearchIdRoute: typeof ApiV1FlightsSearchSearchIdRoute
+}
+
+const ApiV1FlightsSearchRouteChildren: ApiV1FlightsSearchRouteChildren = {
+  ApiV1FlightsSearchSearchIdRoute: ApiV1FlightsSearchSearchIdRoute,
+}
+
+const ApiV1FlightsSearchRouteWithChildren =
+  ApiV1FlightsSearchRoute._addFileChildren(ApiV1FlightsSearchRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
@@ -1428,7 +1459,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicWebhooksFincraRoute: ApiPublicWebhooksFincraRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
   ApiV1FlightsOrdersRoute: ApiV1FlightsOrdersRoute,
-  ApiV1FlightsSearchRoute: ApiV1FlightsSearchRoute,
+  ApiV1FlightsSearchRoute: ApiV1FlightsSearchRouteWithChildren,
   ApiV1HotelsBookingsRoute: ApiV1HotelsBookingsRoute,
   ApiV1HotelsSearchRoute: ApiV1HotelsSearchRoute,
   ApiV1InsuranceBookingsRoute: ApiV1InsuranceBookingsRoute,
