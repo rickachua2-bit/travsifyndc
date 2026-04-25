@@ -17,6 +17,12 @@ import {
   LogOut,
   ExternalLink,
   LifeBuoy,
+  Wallet,
+  BookOpen,
+  KeyRound,
+  Activity,
+  Inbox,
+  Mailbox,
 } from "lucide-react";
 import { Logo } from "@/components/landing/Logo";
 import {
@@ -62,6 +68,21 @@ const OPERATIONS: NavItem[] = [
   { to: "/admin/visa-queue", label: "Visa applications", icon: Stamp },
   { to: "/admin/visa-products", label: "Visa products", icon: FileBadge },
   { to: "/admin/withdrawals", label: "Withdrawals", icon: Banknote },
+];
+
+const TREASURY: NavItem[] = [
+  { to: "/admin/wallets", label: "Wallets", icon: Wallet },
+  { to: "/admin/ledger", label: "Ledger", icon: BookOpen },
+];
+
+const DEVELOPERS: NavItem[] = [
+  { to: "/admin/api-keys", label: "API keys", icon: KeyRound },
+  { to: "/admin/api-logs", label: "API logs", icon: Activity },
+  { to: "/admin/access-requests", label: "API access requests", icon: Inbox },
+];
+
+const INBOX: NavItem[] = [
+  { to: "/admin/contact-submissions", label: "Contact inbox", icon: Mailbox },
 ];
 
 const FINANCE: NavItem[] = [
