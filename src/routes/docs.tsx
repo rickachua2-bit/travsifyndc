@@ -28,6 +28,7 @@ type Section = {
 
 const SECTIONS: Section[] = [
   { id: "intro", label: "Introduction", icon: BookOpen, group: "Start here" },
+  { id: "one-liner", label: "The one-liner", icon: Sparkles, group: "Start here" },
   { id: "quickstart", label: "5-minute quickstart", icon: Rocket, group: "Start here" },
   { id: "authentication", label: "Authentication", icon: KeyRound, group: "Start here" },
   { id: "wallet", label: "Wallet & funding", icon: WalletIcon, group: "Build" },
@@ -120,6 +121,7 @@ function DocsPage() {
 
         <article className="min-w-0 space-y-16 pb-24">
           <Intro />
+          <OneLiner />
           <Quickstart />
           <Authentication />
           <WalletDocs />
