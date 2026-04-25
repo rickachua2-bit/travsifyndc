@@ -37,10 +37,19 @@ function BookingsPage() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    myBookings()
-      .then((r) => { if (active) { setRows((r ?? []) as Booking[]); setError(null); } })
-      .catch((e) => { if (active) setError((e as Error).message || "Failed to load bookings"); })
-      .finally(() => { if (active) setLoading(false); });
+    (async () => {
+      try {
+        const headers = await getServerFnAuthHeaders();
+        const r = await myBookings({ headers });
+        if (!active) return;
+        setRows(Array.isArray(r) ? (r as Booking[]) : []);
+        setError(null);
+      } catch (e) {
+        if (active) setError((e as Error).message || "Failed to load bookings");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
     return () => { active = false; };
   }, []);
 
