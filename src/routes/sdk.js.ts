@@ -78,17 +78,21 @@ export const Route = createFileRoute("/sdk/js")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const url = new URL(request.url);
-        const base = `${url.protocol}//${url.host}`;
-        return new Response(SDK_SOURCE.replace("%BASE%", base), {
-          status: 200,
-          headers: {
-            "Content-Type": "application/javascript; charset=utf-8",
-            "Cache-Control": "public, max-age=300, s-maxage=300",
-            "Access-Control-Allow-Origin": "*",
-          },
-        });
+        return sdkResponse(request);
       },
     },
   },
 });
+
+export function sdkResponse(request: Request) {
+  const url = new URL(request.url);
+  const base = `${url.protocol}//${url.host}`;
+  return new Response(SDK_SOURCE.replace("%BASE%", base), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/javascript; charset=utf-8",
+      "Cache-Control": "public, max-age=300, s-maxage=300",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+}
