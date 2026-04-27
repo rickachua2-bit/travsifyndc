@@ -8,13 +8,15 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
+      - fromGroup: travsify-config
+
+envVarGroups:
+  - name: travsify-config
+    envVars:
       - key: SUPABASE_URL
-        fromEnvVar: SUPABASE_URL
       - key: SUPABASE_PUBLISHABLE_KEY
-        fromEnvVar: SUPABASE_PUBLISHABLE_KEY
+      - key: VITE_SUPABASE_PROJECT_ID
       - key: VITE_SUPABASE_URL
         fromEnvVar: SUPABASE_URL
       - key: VITE_SUPABASE_PUBLISHABLE_KEY
         fromEnvVar: SUPABASE_PUBLISHABLE_KEY
-      - key: VITE_SUPABASE_PROJECT_ID
-        fromEnvVar: VITE_SUPABASE_PROJECT_ID
