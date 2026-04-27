@@ -14,6 +14,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { processFlightSearchJob } from "@/server/flight-search-processor";
 
 /**
  * Self-healing kick: if the original enqueue's fire-and-forget subrequest was
@@ -61,21 +62,41 @@ async function rekickProcessor(request: Request, jobId: string) {
   }
 }
 
+async function readJob(jobId: string) {
+  return supabaseAdmin
+    .from("flight_search_jobs")
+    .select("id, status, result, error_code, error_message, suppliers_called, created_at, started_at, completed_at, expires_at, user_id")
+    .eq("id", jobId)
+    .maybeSingle();
+}
+
 export const Route = createFileRoute("/api/v1/flights/search/$searchId")({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: API_CORS_HEADERS }),
       GET: async ({ request, params }) =>
         withGateway(request, { endpoint: "/v1/flights/search/:id", vertical: "flights" }, async (key) => {
-          const { data, error } = await supabaseAdmin
-            .from("flight_search_jobs")
-            .select("id, status, result, error_code, error_message, suppliers_called, created_at, started_at, completed_at, expires_at, user_id")
-            .eq("id", params.searchId)
-            .maybeSingle();
+          let { data, error } = await readJob(params.searchId);
 
           if (error) return errorResponse("server_error", error.message, 500);
           if (!data || data.user_id !== key.userId) {
             return errorResponse("not_found", "Search id not found or expired.", 404);
+          }
+
+          if (data.status === "queued" || shouldRekick(data.status, data.started_at, data.created_at)) {
+            if (data.status === "running") {
+              await supabaseAdmin
+                .from("flight_search_jobs")
+                .update({ status: "queued", started_at: null })
+                .eq("id", data.id)
+                .eq("status", "running")
+                .lt("attempts", 3);
+            }
+            await processFlightSearchJob(data.id).catch((e) => console.error("[flights.search.poll] inline processor failed", e));
+            const refreshed = await readJob(params.searchId);
+            data = refreshed.data ?? data;
+            error = refreshed.error;
+            if (error) return errorResponse("server_error", error.message, 500);
           }
 
           if (data.status === "succeeded") {
@@ -99,10 +120,8 @@ export const Route = createFileRoute("/api/v1/flights/search/$searchId")({
               },
             });
           }
-          // queued or running — self-heal if stuck
-          if (shouldRekick(data.status, data.started_at, data.created_at)) {
-            await rekickProcessor(request, data.id);
-          }
+          // queued or running — also best-effort self-heal via internal route
+          if (shouldRekick(data.status, data.started_at, data.created_at)) await rekickProcessor(request, data.id);
           return jsonResponse({
             data: {
               search_id: data.id,
