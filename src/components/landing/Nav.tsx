@@ -29,8 +29,8 @@ export function Nav() {
     <nav
       className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
         scrolled
-          ? "border-border/60 bg-background/85 shadow-sm backdrop-blur-xl"
-          : "border-transparent bg-background/60 backdrop-blur-md"
+          ? "border-white/10 bg-black/40 shadow-xl backdrop-blur-xl"
+          : "border-transparent bg-transparent"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -77,7 +77,7 @@ export function Nav() {
             type="button"
             aria-label="Toggle menu"
             onClick={() => setOpen((o) => !o)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-white text-primary md:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/10 bg-white/5 text-foreground md:hidden backdrop-blur-sm"
           >
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
@@ -159,11 +159,11 @@ function AccountMenu() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((s) => !s)}
-        className="inline-flex items-center gap-2 rounded-full border border-border bg-white py-1 pl-1 pr-2.5 text-sm font-semibold text-foreground transition hover:border-accent"
+        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1 pl-1 pr-2.5 text-sm font-semibold text-foreground transition hover:border-primary backdrop-blur-md"
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-xs font-bold text-white">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-deep text-xs font-bold text-white">
           {initial}
         </span>
         <span className="hidden max-w-[140px] truncate sm:inline">{display}</span>
@@ -173,10 +173,9 @@ function AccountMenu() {
       {open && (
         <div
           role="menu"
-          className="animate-fade-in-up absolute right-0 mt-2 w-60 overflow-hidden rounded-xl border border-border bg-white py-1 shadow-xl"
-          style={{ boxShadow: "var(--shadow-soft)" }}
+          className="animate-fade-in-up absolute right-0 mt-2 w-60 overflow-hidden rounded-xl border border-white/10 bg-black/80 py-1 shadow-2xl backdrop-blur-xl"
         >
-          <div className="border-b border-border px-3 py-2.5">
+          <div className="border-b border-white/10 px-3 py-2.5">
             <div className="truncate text-sm font-semibold text-foreground">{display}</div>
             <div className="truncate text-xs text-muted-foreground">{user?.email}</div>
           </div>
@@ -185,7 +184,7 @@ function AccountMenu() {
           <MenuItem to="/api-keys" icon={Settings} label="API keys" onSelect={() => setOpen(false)} />
           <button
             onClick={handleSignOut}
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-surface"
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-white/5"
             role="menuitem"
           >
             <LogOut className="h-4 w-4 text-muted-foreground" />
@@ -212,7 +211,7 @@ function MenuItem({
     <Link
       to={to}
       onClick={onSelect}
-      className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-foreground hover:bg-surface"
+      className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-foreground hover:bg-white/5"
       role="menuitem"
     >
       <Icon className="h-4 w-4 text-muted-foreground" />

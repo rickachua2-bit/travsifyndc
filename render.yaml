@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: travsify-ndc
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: node dist/server/index.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: SUPABASE_URL
+        fromEnvVar: SUPABASE_URL
+      - key: SUPABASE_PUBLISHABLE_KEY
+        fromEnvVar: SUPABASE_PUBLISHABLE_KEY
+      - key: VITE_SUPABASE_URL
+        fromEnvVar: SUPABASE_URL
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        fromEnvVar: SUPABASE_PUBLISHABLE_KEY
+      - key: VITE_SUPABASE_PROJECT_ID
+        fromEnvVar: VITE_SUPABASE_PROJECT_ID
