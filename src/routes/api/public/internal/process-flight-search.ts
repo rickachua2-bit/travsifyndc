@@ -46,10 +46,32 @@ export const Route = createFileRoute("/api/public/internal/process-flight-search
 
         // ----- Atomically claim the job (queued -> running) -----
         // We only proceed if the row is still `queued`, preventing duplicate runs
-        // if the enqueue endpoint accidentally fired the kick twice.
+        // if the enqueue endpoint accidentally fired the kick twice. The poll
+        // endpoint may reset a stale `running` job back to `queued` and re-kick
+        // us; the `attempts` counter caps total tries at 3.
+        // First read attempts, then claim with attempts+1.
+        const { data: existing } = await supabaseAdmin
+          .from("flight_search_jobs")
+          .select("attempts")
+          .eq("id", parsed.job_id)
+          .maybeSingle();
+        const nextAttempts = (existing?.attempts ?? 0) + 1;
+        if (nextAttempts > 3) {
+          await supabaseAdmin
+            .from("flight_search_jobs")
+            .update({
+              status: "failed",
+              error_code: "max_attempts_exceeded",
+              error_message: "Search could not be completed after 3 attempts.",
+              completed_at: new Date().toISOString(),
+            })
+            .eq("id", parsed.job_id);
+          return ok({ status: "failed", reason: "max_attempts" });
+        }
+
         const { data: claimed, error: claimErr } = await supabaseAdmin
           .from("flight_search_jobs")
-          .update({ status: "running", started_at: new Date().toISOString(), attempts: 1 })
+          .update({ status: "running", started_at: new Date().toISOString(), attempts: nextAttempts })
           .eq("id", parsed.job_id)
           .eq("status", "queued")
           .select("id, user_id, environment, input")
