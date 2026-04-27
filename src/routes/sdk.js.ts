@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const SDK_VERSION = "1.1.0";
+const SDK_VERSION = "1.1.1";
 
 const SDK_SOURCE = `/* Travsify Unified API SDK v${SDK_VERSION} */
 (function (global) {
@@ -45,15 +45,17 @@ const SDK_SOURCE = `/* Travsify Unified API SDK v${SDK_VERSION} */
       apiKey: apiKey,
       health: function () { return call("GET", "/api/v1/health"); },
       flights: {
-        // Async: returns { search_id, status: 'queued', poll_url }. Use getResults() to poll.
-        search: function (p) { return call("POST", "/api/v1/flights/search", p); },
-        getResults: function (searchId) { return call("GET", "/api/v1/flights/search/" + searchId); },
-        // Convenience: enqueue + poll until done in one call.
-        searchAndWait: function (p, opts) {
+        // Backward-compatible: returns final flight results, not just the queued job.
+        search: function (p, opts) {
           return call("POST", "/api/v1/flights/search", p).then(function (queued) {
             return waitForFlightResults(queued.search_id, opts);
           });
         },
+        // Low-level async queue: returns { search_id, status: 'queued', poll_url }.
+        enqueue: function (p) { return call("POST", "/api/v1/flights/search", p); },
+        getResults: function (searchId) { return call("GET", "/api/v1/flights/search/" + searchId); },
+        // Convenience: enqueue + poll until done in one call.
+        searchAndWait: function (p, opts) { return this.search(p, opts); },
         book:   function (p) { return call("POST", "/api/v1/flights/orders", p); }
       },
       hotels: {
@@ -76,17 +78,21 @@ export const Route = createFileRoute("/sdk/js")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const url = new URL(request.url);
-        const base = `${url.protocol}//${url.host}`;
-        return new Response(SDK_SOURCE.replace("%BASE%", base), {
-          status: 200,
-          headers: {
-            "Content-Type": "application/javascript; charset=utf-8",
-            "Cache-Control": "public, max-age=300, s-maxage=300",
-            "Access-Control-Allow-Origin": "*",
-          },
-        });
+        return sdkResponse(request);
       },
     },
   },
 });
+
+export function sdkResponse(request: Request) {
+  const url = new URL(request.url);
+  const base = `${url.protocol}//${url.host}`;
+  return new Response(SDK_SOURCE.replace("%BASE%", base), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/javascript; charset=utf-8",
+      "Cache-Control": "public, max-age=300, s-maxage=300",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+}

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
+import { Route as SdkDotjsRouteImport } from './routes/sdk[.]js'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as GetApiAccessRouteImport } from './routes/get-api-access'
 import { Route as DocsRouteImport } from './routes/docs'
@@ -84,6 +85,11 @@ const SignupRoute = SignupRouteImport.update({
 const SigninRoute = SigninRouteImport.update({
   id: '/signin',
   path: '/signin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SdkDotjsRoute = SdkDotjsRouteImport.update({
+  id: '/sdk.js',
+  path: '/sdk.js',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -440,6 +446,7 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRoute
   '/get-api-access': typeof GetApiAccessRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sdk.js': typeof SdkDotjsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -507,6 +514,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/get-api-access': typeof GetApiAccessRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sdk.js': typeof SdkDotjsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/api-keys': typeof AuthenticatedApiKeysRoute
@@ -575,6 +583,7 @@ export interface FileRoutesById {
   '/docs': typeof DocsRoute
   '/get-api-access': typeof GetApiAccessRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sdk.js': typeof SdkDotjsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -644,6 +653,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/get-api-access'
     | '/reset-password'
+    | '/sdk.js'
     | '/signin'
     | '/signup'
     | '/admin'
@@ -711,6 +721,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/get-api-access'
     | '/reset-password'
+    | '/sdk.js'
     | '/signin'
     | '/signup'
     | '/api-keys'
@@ -778,6 +789,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/get-api-access'
     | '/reset-password'
+    | '/sdk.js'
     | '/signin'
     | '/signup'
     | '/_authenticated/admin'
@@ -847,6 +859,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   GetApiAccessRoute: typeof GetApiAccessRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SdkDotjsRoute: typeof SdkDotjsRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   SdkJsRoute: typeof SdkJsRoute
@@ -886,6 +899,13 @@ declare module '@tanstack/react-router' {
       path: '/signin'
       fullPath: '/signin'
       preLoaderRoute: typeof SigninRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sdk.js': {
+      id: '/sdk.js'
+      path: '/sdk.js'
+      fullPath: '/sdk.js'
+      preLoaderRoute: typeof SdkDotjsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -1470,6 +1490,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   GetApiAccessRoute: GetApiAccessRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SdkDotjsRoute: SdkDotjsRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   SdkJsRoute: SdkJsRoute,
