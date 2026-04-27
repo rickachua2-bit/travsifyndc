@@ -58,21 +58,32 @@ export const Route = createFileRoute("/api/v1/flights/search")({
             return errorResponse("server_error", insertErr?.message || "Failed to enqueue search.", 500);
           }
 
-          // Fire-and-forget: trigger the processor without waiting.
-          // The processor route lives under /api/public/* so it skips auth — we
-          // protect it with a shared secret derived from the service role key.
+          // Trigger the processor. On Cloudflare Workers, fire-and-forget
+          // subrequests can be killed when the response is sent, so we await a
+          // brief race: either the processor accepts the job (returns 200/401
+          // header), or 800ms passes — whichever comes first. The poll
+          // endpoint also self-heals stuck jobs, so even if the kick is
+          // dropped entirely, the next poll will re-trigger it.
           try {
             const url = new URL(request.url);
             const processorUrl = `${url.protocol}//${url.host}/api/public/internal/process-flight-search`;
-            // Best-effort kick. We deliberately do not await the response.
-            void fetch(processorUrl, {
+            const kick = fetch(processorUrl, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 "X-Internal-Token": process.env.SUPABASE_SERVICE_ROLE_KEY || "",
               },
               body: JSON.stringify({ job_id: job.id }),
-            }).catch((e) => console.error("[flights.search] processor kick failed", e));
+            }).catch((e) => {
+              console.error("[flights.search] processor kick failed", e);
+              return null;
+            });
+            // Race the kick against an 800ms ceiling so we still return well
+            // under 1s but give the subrequest a chance to be initiated.
+            await Promise.race([
+              kick,
+              new Promise((resolve) => setTimeout(resolve, 800)),
+            ]);
           } catch (e) {
             console.error("[flights.search] failed to schedule processor", e);
           }
