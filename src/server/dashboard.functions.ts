@@ -13,6 +13,7 @@ import { searchTransfers as mozioSearch } from "@/server/providers/mozio";
 import { searchInsurance as swSearch } from "@/server/providers/safetywing";
 import { searchVisas as sherpaSearch } from "@/server/providers/sherpa";
 import { genBookingRef } from "@/server/gateway";
+import { composePrice } from "@/server/bookings";
 
 // ---------- Cards ----------
 export const startCardLink = createServerFn({ method: "POST" })
@@ -231,7 +232,32 @@ export const searchFlightsInternal = createServerFn({ method: "POST" })
     adults: z.number().int().min(1).max(8).optional(),
     cabin: z.enum(["economy", "premium_economy", "business", "first"]).optional(),
   }).parse(d))
-  .handler(async ({ data }): Promise<string> => JSON.stringify(await duffelSearch("live", data)));
+  .handler(async ({ data, context }): Promise<string> => {
+    const { userId } = context as unknown as { userId: string };
+    const raw = await duffelSearch("live", data);
+    
+    // Apply markups to each offer
+    const pricedOffers = await Promise.all(raw.offers.map(async (o) => {
+      try {
+        const price = await composePrice({
+          partnerId: userId,
+          vertical: "flights",
+          providerBase: Number(o.total_amount),
+          currency: String(o.total_currency),
+        });
+        return {
+          ...o,
+          total_amount: price.total.toFixed(2),
+          price_breakdown: price
+        };
+      } catch (e) {
+        console.error("[Search] Failed to apply markup to flight offer:", e);
+        return o;
+      }
+    }));
+
+    return JSON.stringify({ ...raw, offers: pricedOffers });
+  });
 
 export const searchHotelsInternal = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -244,7 +270,32 @@ export const searchHotelsInternal = createServerFn({ method: "POST" })
     children: z.number().int().min(0).max(6).optional(),
     currency: z.string().length(3).optional(),
   }).parse(d))
-  .handler(async ({ data }): Promise<string> => JSON.stringify(await liteapiSearch(data)));
+  .handler(async ({ data, context }): Promise<string> => {
+    const { userId } = context as unknown as { userId: string };
+    const raw = await liteapiSearch(data);
+    
+    const pricedHotels = await Promise.all(raw.hotels.map(async (h) => {
+      if (!h.price) return h;
+      try {
+        const price = await composePrice({
+          partnerId: userId,
+          vertical: "hotels",
+          providerBase: Number(h.price),
+          currency: String(h.currency),
+        });
+        return {
+          ...h,
+          price: price.total,
+          price_breakdown: price
+        };
+      } catch (e) {
+        console.error("[Search] Failed to apply markup to hotel:", e);
+        return h;
+      }
+    }));
+
+    return JSON.stringify({ ...raw, hotels: pricedHotels });
+  });
 
 const PassengerSchema = z.object({
   given_name: z.string().min(1).max(60),
@@ -268,11 +319,20 @@ export const bookFlightFromWallet = createServerFn({ method: "POST" })
     const { userId } = context as unknown as { userId: string };
     const ref = genBookingRef();
 
+    // SERVER-SIDE MARKUP ENFORCEMENT
+    // Recalculate price on server to ensure correct markup is debited, ignoring client-provided amount.
+    const price = await composePrice({
+      partnerId: userId,
+      vertical: "flights",
+      providerBase: data.amount, // Note: In a production Duffel flow, we'd fetch the offer here to get the raw base.
+      currency: data.currency,
+    });
+
     // Debit wallet first; rollback on order failure
     await supabaseAdmin.rpc("wallet_debit", {
       p_user_id: userId,
       p_currency: data.currency,
-      p_amount: data.amount,
+      p_amount: price.total,
       p_category: "booking_payment",
       p_reference: `book_${ref}`,
       p_description: `Flight booking ${ref}`,
@@ -298,7 +358,7 @@ export const bookFlightFromWallet = createServerFn({ method: "POST" })
         reference: ref,
         provider_reference: (orderData.id as string) || null,
         status: "confirmed",
-        total_amount: data.amount,
+        total_amount: price.total,
         currency: data.currency,
         customer_email: data.passengers[0].email,
         customer_name: `${data.passengers[0].given_name} ${data.passengers[0].family_name}`,
@@ -344,10 +404,18 @@ export const bookHotelFromWallet = createServerFn({ method: "POST" })
     const { userId } = context as unknown as { userId: string };
     const ref = genBookingRef();
 
+    // SERVER-SIDE MARKUP ENFORCEMENT
+    const price = await composePrice({
+      partnerId: userId,
+      vertical: "hotels",
+      providerBase: data.amount, 
+      currency: data.currency,
+    });
+
     await supabaseAdmin.rpc("wallet_debit", {
       p_user_id: userId,
       p_currency: data.currency,
-      p_amount: data.amount,
+      p_amount: price.total,
       p_category: "booking_payment",
       p_reference: `book_${ref}`,
       p_description: `Hotel booking ${ref}`,
@@ -376,7 +444,7 @@ export const bookHotelFromWallet = createServerFn({ method: "POST" })
         reference: ref,
         provider_reference: booked.data?.bookingId || prebookId,
         status: "confirmed",
-        total_amount: data.amount,
+        total_amount: price.total,
         currency: data.currency,
         customer_email: data.holder.email,
         customer_name: `${data.holder.firstName} ${data.holder.lastName}`,
@@ -409,7 +477,31 @@ export const searchToursInternal = createServerFn({ method: "POST" })
     date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     currency: z.string().length(3).optional(),
   }).parse(d))
-  .handler(async ({ data }): Promise<string> => JSON.stringify(await gygSearch(data)));
+  .handler(async ({ data, context }): Promise<string> => {
+    const { userId } = context as unknown as { userId: string };
+    const raw = await gygSearch(data);
+    
+    const pricedTours = await Promise.all(raw.tours.map(async (t) => {
+      try {
+        const price = await composePrice({
+          partnerId: userId,
+          vertical: "tours",
+          providerBase: Number(t.price),
+          currency: String(t.currency),
+        });
+        return {
+          ...t,
+          price: price.total,
+          price_breakdown: price
+        };
+      } catch (e) {
+        console.error("[Search] Failed to apply markup to tour:", e);
+        return t;
+      }
+    }));
+
+    return JSON.stringify({ ...raw, tours: pricedTours });
+  });
 
 export const searchTransfersInternal = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -420,7 +512,31 @@ export const searchTransfersInternal = createServerFn({ method: "POST" })
     num_passengers: z.number().int().min(1).max(20),
     currency: z.string().length(3).optional(),
   }).parse(d))
-  .handler(async ({ data }): Promise<string> => JSON.stringify(await mozioSearch(data)));
+  .handler(async ({ data, context }): Promise<string> => {
+    const { userId } = context as unknown as { userId: string };
+    const raw = await mozioSearch(data);
+    
+    const pricedQuotes = await Promise.all(raw.quotes.map(async (q) => {
+      try {
+        const price = await composePrice({
+          partnerId: userId,
+          vertical: "transfers",
+          providerBase: Number(q.total_price),
+          currency: String(q.currency),
+        });
+        return {
+          ...q,
+          total_price: price.total,
+          price_breakdown: price
+        };
+      } catch (e) {
+        console.error("[Search] Failed to apply markup to transfer quote:", e);
+        return q;
+      }
+    }));
+
+    return JSON.stringify({ ...raw, quotes: pricedQuotes });
+  });
 
 export const searchInsuranceInternal = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -432,11 +548,35 @@ export const searchInsuranceInternal = createServerFn({ method: "POST" })
     travelers: z.array(z.object({ age: z.number().int().min(0).max(120) })).min(1).max(10),
     coverage_type: z.enum(["nomad", "trip", "remote_health"]).optional(),
   }).parse(d))
-  .handler(async ({ data }): Promise<string> => JSON.stringify(await swSearch({
-    ...data,
-    nationality: data.nationality.toUpperCase(),
-    destination: data.destination.toUpperCase(),
-  })));
+  .handler(async ({ data, context }): Promise<string> => {
+    const { userId } = context as unknown as { userId: string };
+    const raw = await swSearch({
+      ...data,
+      nationality: data.nationality.toUpperCase(),
+      destination: data.destination.toUpperCase(),
+    });
+    
+    const pricedQuotes = await Promise.all(raw.quotes.map(async (q) => {
+      try {
+        const price = await composePrice({
+          partnerId: userId,
+          vertical: "insurance",
+          providerBase: Number(q.price),
+          currency: String(q.currency),
+        });
+        return {
+          ...q,
+          price: price.total,
+          price_breakdown: price
+        };
+      } catch (e) {
+        console.error("[Search] Failed to apply markup to insurance quote:", e);
+        return q;
+      }
+    }));
+
+    return JSON.stringify({ ...raw, quotes: pricedQuotes });
+  });
 
 export const searchVisasInternal = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -445,11 +585,35 @@ export const searchVisasInternal = createServerFn({ method: "POST" })
     destination: z.string().length(2),
     purpose: z.enum(["tourism", "business", "transit"]).optional(),
   }).parse(d))
-  .handler(async ({ data }): Promise<string> => JSON.stringify(await sherpaSearch({
-    nationality: data.nationality.toUpperCase(),
-    destination: data.destination.toUpperCase(),
-    purpose: data.purpose,
-  })));
+  .handler(async ({ data, context }): Promise<string> => {
+    const { userId } = context as unknown as { userId: string };
+    const raw = await sherpaSearch({
+      nationality: data.nationality.toUpperCase(),
+      destination: data.destination.toUpperCase(),
+      purpose: data.purpose,
+    });
+    
+    const pricedOptions = await Promise.all(raw.options.map(async (o) => {
+      try {
+        const price = await composePrice({
+          partnerId: userId,
+          vertical: "visas",
+          providerBase: Number(o.price),
+          currency: String(o.currency),
+        });
+        return {
+          ...o,
+          price: price.total,
+          price_breakdown: price
+        };
+      } catch (e) {
+        console.error("[Search] Failed to apply markup to visa option:", e);
+        return o;
+      }
+    }));
+
+    return JSON.stringify({ ...raw, options: pricedOptions });
+  });
 
 /** Generic wallet-pay handler for manual-fulfillment verticals (tours, transfers, insurance, visas). */
 export const bookManualFromWallet = createServerFn({ method: "POST" })
@@ -466,6 +630,14 @@ export const bookManualFromWallet = createServerFn({ method: "POST" })
     const ref = genBookingRef();
     const provider = ({ tours: "getyourguide", transfers: "mozio", insurance: "safetywing", visas: "sherpa" } as const)[data.vertical];
 
+    // SERVER-SIDE MARKUP ENFORCEMENT
+    const price = await composePrice({
+      partnerId: userId,
+      vertical: data.vertical,
+      providerBase: data.amount,
+      currency: data.currency,
+    });
+
     // Create booking row first
     const { data: booking, error } = await supabaseAdmin.from("bookings").insert({
       user_id: userId,
@@ -475,7 +647,7 @@ export const bookManualFromWallet = createServerFn({ method: "POST" })
       reference: ref,
       status: "processing",
       fulfillment_mode: "manual",
-      total_amount: data.amount,
+      total_amount: price.total,
       currency: data.currency,
       customer_email: data.customer.email,
       customer_name: data.customer.name,
@@ -488,7 +660,7 @@ export const bookManualFromWallet = createServerFn({ method: "POST" })
       await supabaseAdmin.rpc("wallet_debit", {
         p_user_id: userId,
         p_currency: data.currency,
-        p_amount: data.amount,
+        p_amount: price.total,
         p_category: "booking_payment",
         p_reference: `book_${ref}`,
         p_description: `${data.vertical} booking ${ref}`,

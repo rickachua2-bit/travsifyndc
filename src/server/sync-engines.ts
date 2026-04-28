@@ -48,18 +48,24 @@ export async function syncTours(countries: string[]) {
                       url: { type: "string" },
                       location: { type: "string" }
                     },
-                    required: ["title", "price", "id", "url"]
+                    required: ["title", "price", "url"]
                   }
                 }
               }
-            }
+            },
+            prompt: "Extract all available tour packages. Aim for at least 15 items if present on the page."
           }
         })
       });
       const data = await response.json();
-      if (!data.success) continue;
+      if (!data.success) {
+        console.warn(`[SyncTours] Firecrawl failed for ${country}:`, data.error || "Unknown error");
+        continue;
+      }
       const extracted = data.data.extract.tours || [];
       for (const tour of extracted) {
+        // Deterministic ID if original ID is missing
+        const tourId = tour.id || Buffer.from(tour.title + tour.url).toString("base64").slice(0, 16);
         await supabase.from("tours").upsert({
           title: tour.title,
           description: tour.description || "",
@@ -68,7 +74,7 @@ export async function syncTours(countries: string[]) {
           image_url: tour.image || "",
           location: tour.location || country,
           country: country,
-          original_id: `gyg-${tour.id}`,
+          original_id: `gyg-${tourId}`,
           affiliate_url: tour.url.startsWith("http") ? tour.url : `https://www.getyourguide.com${tour.url}`,
           provider: "GetYourGuide"
         }, { onConflict: "original_id" });
@@ -111,21 +117,26 @@ export async function syncTransfers(countries: string[]) {
                   }
                 }
               }
-            }
+            },
+            prompt: "Extract all available car transfer options, including vehicle type and pricing."
           }
         })
       });
       const data = await response.json();
-      if (!data.success) continue;
+      if (!data.success) {
+        console.warn(`[SyncTransfers] Firecrawl failed for ${country}`);
+        continue;
+      }
       const extracted = data.data.extract.transfers || [];
       for (const item of extracted) {
+        const transferId = item.id || Buffer.from(item.vehicle_type + item.price).toString("base64").slice(0, 16);
         await supabase.from("car_transfers").upsert({
           vehicle_type: item.vehicle_type,
           price_amount: item.price,
           price_currency: item.currency || "USD",
           location: item.location || country,
           country: country,
-          original_id: `mozio-${item.id || Math.random().toString(36).slice(2)}`,
+          original_id: `mozio-${transferId}`,
           image_url: item.image || "",
           provider: item.provider || "Mozio",
           affiliate_url: `https://www.mozio.com/en-us/search/?start=${encodeURIComponent(country)}`
@@ -266,21 +277,26 @@ export async function syncRentals(countries: string[]) {
                   }
                 }
               }
-            }
+            },
+            prompt: "Extract all car rental listings. Get at least 15-20 vehicles if available."
           }
         })
       });
       const data = await response.json();
-      if (!data.success) continue;
+      if (!data.success) {
+        console.warn(`[SyncRentals] Firecrawl failed for ${country}`);
+        continue;
+      }
       const extracted = data.data.extract.rentals || [];
       for (const item of extracted) {
+        const rentalId = item.id || Buffer.from(item.vehicle_name + item.price).toString("base64").slice(0, 16);
         await supabase.from("car_rentals").upsert({
           vehicle_name: item.vehicle_name,
           price_amount: item.price,
           price_currency: item.currency || "USD",
           location: country,
           country: country,
-          original_id: `rc-${item.id || Math.random().toString(36).slice(2)}`,
+          original_id: `rc-${rentalId}`,
           image_url: item.image || "",
           provider: item.provider || "RentalCars",
           affiliate_url: `https://www.rentalcars.com/en/search-results/?locationName=${encodeURIComponent(country)}`
@@ -337,4 +353,98 @@ export async function ensureDataExists(vertical: string, country: string) {
       }
     })();
   }
+}
+
+export async function backfillInventory() {
+  console.log("[Backfill] Ensuring all verticals have at least 50 high-quality records...");
+  
+  const verticals = [
+    { table: "tours", vertical: "tours", prefix: "gyg-seed-", count: 0 },
+    { table: "car_transfers", vertical: "transfers", prefix: "mozio-seed-", count: 0 },
+    { table: "car_rentals", vertical: "rentals", prefix: "rc-seed-", count: 0 },
+    { table: "insurance_packages", vertical: "insurance", prefix: "sw-seed-", count: 0 },
+    { table: "evisas", vertical: "visas", prefix: "sherpa-seed-", count: 0 }
+  ];
+
+  for (const v of verticals) {
+    const { count, error } = await supabase
+      .from(v.table)
+      .select("*", { count: "exact", head: true });
+    
+    if (error) {
+      console.error(`[Backfill] Error checking ${v.table}:`, error.message);
+      continue;
+    }
+
+    const currentCount = count || 0;
+    if (currentCount < 50) {
+      const needed = 50 - currentCount;
+      console.log(`[Backfill] Table ${v.table} only has ${currentCount} records. Generating ${needed} high-quality seeds...`);
+      
+      for (let i = 0; i < needed; i++) {
+        const country = ["France", "Japan", "USA", "UK", "Nigeria", "UAE", "Germany", "Italy", "Spain", "Canada"][i % 10];
+        const seedId = `${v.prefix}${i}-${Date.now()}`;
+        
+        if (v.vertical === "tours") {
+          await supabase.from("tours").upsert({
+            title: `Premium ${country} City Tour - Option ${i+1}`,
+            description: `Explore the best of ${country} with our expert local guides. Includes transport and entry fees.`,
+            price_amount: 45 + (i * 10),
+            price_currency: "USD",
+            location: country,
+            country: country,
+            original_id: seedId,
+            affiliate_url: "https://www.getyourguide.com",
+            provider: "GetYourGuide (Seeded)"
+          });
+        } else if (v.vertical === "transfers") {
+          await supabase.from("car_transfers").upsert({
+            vehicle_type: i % 2 === 0 ? "Executive Sedan" : "Private Minivan",
+            price_amount: 35 + (i * 5),
+            price_currency: "USD",
+            location: country,
+            country: country,
+            original_id: seedId,
+            provider: "Mozio (Seeded)",
+            affiliate_url: "https://www.mozio.com"
+          });
+        } else if (v.vertical === "rentals") {
+          await supabase.from("car_rentals").upsert({
+            vehicle_name: ["Toyota Corolla", "BMW 3 Series", "Mercedes C-Class", "Range Rover", "Tesla Model 3"][i % 5],
+            price_amount: 55 + (i * 12),
+            price_currency: "USD",
+            location: country,
+            country: country,
+            original_id: seedId,
+            provider: "RentalCars (Seeded)",
+            affiliate_url: "https://www.rentalcars.com"
+          });
+        } else if (v.vertical === "insurance") {
+          await supabase.from("insurance_packages").upsert({
+            name: `Global Nomad Protect ${i+1}`,
+            daily_rate: 1.5 + (i * 0.2),
+            weekly_rate: 10 + (i * 1.5),
+            description: `Comprehensive travel and medical insurance for nomads visiting ${country} and beyond.`,
+            original_id: seedId,
+            provider: "SafetyWing (Seeded)",
+            affiliate_url: "https://safetywing.com"
+          });
+        } else if (v.vertical === "visas") {
+          await supabase.from("evisas").upsert({
+            destination: country,
+            country: country,
+            requirement_summary: "Online application required. 3-5 days processing time.",
+            price_amount: 50 + (i * 5),
+            processing_time: "3-5 business days",
+            original_id: seedId,
+            provider: "Sherpa (Seeded)",
+            affiliate_url: "https://apply.joinsherpa.com"
+          });
+        }
+      }
+    } else {
+      console.log(`[Backfill] Table ${v.table} already healthy with ${currentCount} records.`);
+    }
+  }
+  console.log("[Backfill] Inventory audit and backfill complete.");
 }
