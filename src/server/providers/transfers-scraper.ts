@@ -242,12 +242,39 @@ function paxBucket(n: number): number {
   return 14;
 }
 
+import { ensureDataExists } from "@/server/sync-engines";
+
 export async function getOrScrapeTransfers(input: TransferScrapeInput): Promise<NormalizedTransferQuote[]> {
   const pk = bucketKey(input.pickup_address);
   const dk = bucketKey(input.dropoff_address);
   const tb = datetimeBucket(input.pickup_datetime);
   const pb = paxBucket(input.num_passengers);
 
+  // Trigger JIT sync if needed (using pickup location as country heuristic)
+  ensureDataExists("transfers", input.pickup_address);
+
+  // 1. Check synced 'car_transfers' table
+  const { data: synced } = await supabaseAdmin
+    .from("car_transfers")
+    .select("*")
+    .or(`pickup_location.ilike.%${input.pickup_address}%,dropoff_location.ilike.%${input.dropoff_address}%,country.ilike.%${input.pickup_address}%,country.ilike.%${input.dropoff_address}%`)
+    .limit(10);
+
+  if (synced && synced.length > 0) {
+    return synced.map((q, idx) => ({
+      id: q.original_id || `synced_${idx}`,
+      vehicle_class: "sedan",
+      vehicle_description: q.vehicle_type || "Standard Sedan",
+      provider_name: "Travsify Partner",
+      total_price: Number(q.price_amount),
+      currency: "USD" as const,
+      duration_minutes: 60,
+      cancellation_policy: "Free cancellation up to 4 hours before pickup",
+      _internal_underwriter: q.provider || "synced",
+    }));
+  }
+
+  // 2. Check scrape cache
   const { data: cached } = await supabaseAdmin
     .from("transfer_quote_cache")
     .select("quotes, last_scraped_at")
@@ -263,9 +290,11 @@ export async function getOrScrapeTransfers(input: TransferScrapeInput): Promise<
     if (Array.isArray(quotes) && quotes.length > 0) return quotes;
   }
 
+  // 3. Background scrape
   scheduleBackgroundScrape(input, pk, dk, tb, pb);
   return deterministicFallback(input);
 }
+
 
 function scheduleBackgroundScrape(
   input: TransferScrapeInput,

@@ -2,7 +2,8 @@ import {
   syncTours, 
   syncTransfers, 
   syncRentals, 
-  syncVisas 
+  syncVisas,
+  syncInsurance
 } from "./sync-engines";
 
 export const TOP_50_COUNTRIES = [
@@ -25,6 +26,9 @@ export const TOP_50_COUNTRIES = [
 export async function seedGlobalData() {
   console.log(`[Seeder] Starting global warm-up for ${TOP_50_COUNTRIES.length} countries...`);
   
+  // Seed global insurance once (country-agnostic)
+  await syncInsurance();
+
   // We process in small batches to avoid hitting Firecrawl rate limits too hard
   const batchSize = 5;
   for (let i = 0; i < TOP_50_COUNTRIES.length; i += batchSize) {
@@ -44,3 +48,4 @@ export async function seedGlobalData() {
   
   console.log("[Seeder] Global warm-up complete!");
 }
+

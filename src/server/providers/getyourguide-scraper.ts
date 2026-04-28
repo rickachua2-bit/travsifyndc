@@ -244,11 +244,42 @@ function travelersBucket(n: number): number {
   return 10;
 }
 
+import { ensureDataExists } from "@/server/sync-engines";
+
 export async function getOrScrapeTours(input: TourScrapeInput): Promise<NormalizedTourOffer[]> {
   const dk = destinationKey(input.destination);
   const db = dateBucket(input.date_from, input.date_to);
   const tb = travelersBucket(input.travelers);
 
+  // Trigger JIT sync if needed
+  ensureDataExists("tours", input.destination);
+
+  // 1. Check the synced 'tours' table first (populated by admin sync / auto-fetch)
+  const { data: syncedTours } = await supabaseAdmin
+    .from("tours")
+    .select("*")
+    .or(`title.ilike.%${input.destination}%,location.ilike.%${input.destination}%,country.ilike.%${input.destination}%`)
+    .limit(24);
+
+  if (syncedTours && syncedTours.length > 0) {
+    console.log(`[Tours] Found ${syncedTours.length} synced results for "${input.destination}"`);
+    return syncedTours.map((t, idx) => ({
+      id: t.original_id || `synced_${idx}`,
+      title: t.title,
+      abstract: t.description || "",
+      duration: "Flexible",
+      price: Number(t.price_amount) * (input.travelers || 1),
+      currency: "USD" as const,
+      rating: 4.5,
+      review_count: 100,
+      photo: t.image_url || unsplashPhoto(input.destination, "city_tour", idx),
+      city: t.location || input.destination,
+      category: "city_tour" as const,
+      _internal_underwriter: t.provider || "synced",
+    }));
+  }
+
+  // 2. Check scrape cache
   const { data: cached } = await supabaseAdmin
     .from("tour_quote_cache")
     .select("tours, last_scraped_at")
@@ -263,9 +294,11 @@ export async function getOrScrapeTours(input: TourScrapeInput): Promise<Normaliz
     if (Array.isArray(tours) && tours.length > 0) return tours;
   }
 
+  // 3. Schedule background scrape and return fallback
   scheduleBackgroundScrape(input, dk, db, tb);
   return deterministicFallback(input);
 }
+
 
 function scheduleBackgroundScrape(
   input: TourScrapeInput,

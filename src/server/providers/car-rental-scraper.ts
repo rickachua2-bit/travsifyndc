@@ -327,11 +327,48 @@ function locKey(s: string): string {
   return s.toLowerCase().replace(/\s+/g, " ").trim().slice(0, 200);
 }
 
+import { ensureDataExists } from "@/server/sync-engines";
+
 export async function getOrScrapeCarRentals(input: CarRentalScrapeInput): Promise<NormalizedCarRentalQuote[]> {
   const pl = locKey(input.pickup_location);
   const dl = locKey(input.dropoff_location);
   const ab = ageBucket(input.driver_age);
 
+  // Trigger JIT sync
+  ensureDataExists("rentals", input.pickup_location);
+  const days = rentalDays(input.pickup_date, input.dropoff_date);
+
+  // 1. Check synced 'car_rentals' table
+  const { data: synced } = await supabaseAdmin
+    .from("car_rentals")
+    .select("*")
+    .or(`location.ilike.%${input.pickup_location}%,country.ilike.%${input.pickup_location}%`)
+    .limit(10);
+
+  if (synced && synced.length > 0) {
+    return synced.map((q, idx) => ({
+      id: q.original_id || `synced_${idx}`,
+      car_class: "economy",
+      car_description: q.vehicle_name,
+      example_model: q.vehicle_name,
+      transmission: "automatic",
+      passengers: 4,
+      bags: 2,
+      air_conditioning: true,
+      unlimited_mileage: true,
+      total_price: Number(q.price_amount) * days,
+      currency: "USD" as const,
+      per_day_price: Number(q.price_amount),
+      rental_days: days,
+      pickup_location: input.pickup_location,
+      dropoff_location: input.dropoff_location,
+      cancellation_policy: "Free cancellation up to 48 hours before pickup",
+      provider_name: "Travsify Partner",
+      _internal_underwriter: q.provider || "synced",
+    }));
+  }
+
+  // 2. Check scrape cache
   const { data: cached } = await supabaseAdmin
     .from("car_rental_quote_cache")
     .select("quotes, last_scraped_at")
@@ -348,9 +385,11 @@ export async function getOrScrapeCarRentals(input: CarRentalScrapeInput): Promis
     if (Array.isArray(quotes) && quotes.length > 0) return quotes;
   }
 
+  // 3. Background scrape
   scheduleBackgroundScrape(input, pl, dl, ab);
   return deterministicFallback(input);
 }
+
 
 function scheduleBackgroundScrape(
   input: CarRentalScrapeInput, pl: string, dl: string, ab: number,

@@ -93,6 +93,7 @@ const INBOX: NavItem[] = [
 ];
 
 const HEALTH: NavItem[] = [
+  { to: "/admin/inventory", label: "Global inventory", icon: Database },
   { to: "/admin/data-sync", label: "Data synchronization", icon: RefreshCw },
   { to: "/admin/provider-health", label: "Provider health", icon: HeartPulse },
   { to: "/admin/caches", label: "Cache management", icon: Database },

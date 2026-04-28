@@ -325,13 +325,45 @@ function ageBucket(maxAge: number): number {
   return 99;
 }
 
+import { ensureDataExists } from "@/server/sync-engines";
+
 export async function getOrScrapeInsurance(input: InsuranceScrapeInput): Promise<NormalizedInsuranceQuote[]> {
   const days = daysBetween(input.start_date, input.end_date);
   const dBucket = durationBucket(days);
   const aBucket = ageBucket(Math.max(...input.travelers.map((t) => t.age)));
   const tCount = input.travelers.length;
 
-  // Try cache first.
+  // Trigger JIT sync
+  ensureDataExists("insurance", input.destination_iso2);
+
+  // 1. Check synced 'insurance_packages' table
+  const { data: synced } = await supabaseAdmin
+    .from("insurance_packages")
+    .select("*")
+    .limit(3);
+
+  if (synced && synced.length > 0) {
+    return synced.map((pkg, idx) => ({
+      id: pkg.original_id || `synced_${idx}`,
+      tier: idx === 0 ? "essential" : idx === 1 ? "standard" : "premium",
+      plan_name: pkg.name,
+      coverage_type: "nomad",
+      duration_days: days,
+      price: Number(pkg.daily_rate) * days * tCount,
+      currency: "USD" as const,
+      per_traveler: Number(pkg.daily_rate) * days,
+      coverage_summary: {
+        medical_max: idx === 0 ? 100000 : idx === 1 ? 250000 : 1000000,
+        deductible: 250,
+        covid_covered: true,
+        adventure_sports: idx === 2,
+      },
+      benefits: [pkg.description || "Comprehensive travel coverage"],
+      _internal_underwriter: pkg.provider || "synced",
+    }));
+  }
+
+  // 2. Try cache
   const { data: cached } = await supabaseAdmin
     .from("insurance_quote_cache")
     .select("quotes, last_scraped_at")
@@ -346,8 +378,6 @@ export async function getOrScrapeInsurance(input: InsuranceScrapeInput): Promise
   if (cached && new Date(cached.last_scraped_at).getTime() > cutoff) {
     const quotes = cached.quotes as unknown as NormalizedInsuranceQuote[];
     if (Array.isArray(quotes) && quotes.length > 0) {
-      // Re-scale price proportionally to actual days within the bucket — keeps
-      // the cache useful without quoting the bucket-edge price exactly.
       return quotes.map((q) => ({
         ...q,
         duration_days: days,
@@ -357,12 +387,11 @@ export async function getOrScrapeInsurance(input: InsuranceScrapeInput): Promise
     }
   }
 
-  // Cache miss or stale — return deterministic fallback IMMEDIATELY so the
-  // user never waits for Firecrawl, and kick off a background scrape to
-  // populate the cache for the next visitor.
+  // 3. Background scrape
   scheduleBackgroundScrape(input, dBucket, aBucket, tCount);
   return deterministicFallback(input, days);
 }
+
 
 /**
  * Fire-and-forget background scrape. Failures are swallowed — the next caller

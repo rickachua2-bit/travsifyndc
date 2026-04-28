@@ -686,3 +686,43 @@ export const adminProviderHealth = createServerFn({ method: "POST" })
     providers.sort((a, b) => b.total - a.total);
     return { providers, window_hours: 24 };
   });
+
+// ============================================================================
+// Inventory Management
+// ============================================================================
+
+export const adminListInventory = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator(z.object({
+    vertical: z.enum(["tours", "transfers", "rentals", "insurance", "visas"]),
+    q: z.string().optional(),
+    limit: z.number().int().optional().default(100)
+  }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    
+    const tableMap: Record<string, string> = {
+      tours: "tours",
+      transfers: "car_transfers",
+      rentals: "car_rentals",
+      insurance: "insurance_packages",
+      visas: "evisas"
+    };
+    
+    const table = tableMap[data.vertical];
+    // Some tables might not have created_at, let's check or just default order.
+    let q = supabaseAdmin.from(table).select("*").limit(data.limit);
+    
+    if (data.q) {
+      if (data.vertical === "tours") q = q.or(`title.ilike.%${data.q}%,location.ilike.%${data.q}%,country.ilike.%${data.q}%`);
+      else if (data.vertical === "transfers") q = q.or(`pickup_address.ilike.%${data.q}%,dropoff_address.ilike.%${data.q}%,country.ilike.%${data.q}%`);
+      else if (data.vertical === "rentals") q = q.or(`vehicle_name.ilike.%${data.q}%,location.ilike.%${data.q}%,country.ilike.%${data.q}%`);
+      else if (data.vertical === "insurance") q = q.ilike("name", `%${data.q}%`);
+      else if (data.vertical === "visas") q = q.or(`destination.ilike.%${data.q}%,country.ilike.%${data.q}%`);
+    }
+
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    
+    return { rows: rows ?? [] };
+  });

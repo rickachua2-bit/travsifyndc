@@ -300,7 +300,8 @@ export async function ensureDataExists(vertical: string, country: string) {
     tours: "tours",
     transfers: "car_transfers",
     visas: "evisas",
-    rentals: "car_rentals"
+    rentals: "car_rentals",
+    insurance: "insurance_packages"
   };
 
   const table = tableMap[vertical];
@@ -327,6 +328,7 @@ export async function ensureDataExists(vertical: string, country: string) {
         if (vertical === "transfers") await syncTransfers([country]);
         if (vertical === "visas") await syncVisas([country]);
         if (vertical === "rentals") await syncRentals([country]);
+        if (vertical === "insurance") await syncInsurance();
         console.log(`[Auto-Fetch] Successfully populated ${syncKey}`);
       } catch (err) {
         console.error(`[Auto-Fetch] Failed for ${syncKey}:`, err);

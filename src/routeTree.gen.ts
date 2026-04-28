@@ -50,6 +50,7 @@ import { Route as AuthenticatedAdminProviderHealthRouteImport } from './routes/_
 import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
 import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
 import { Route as AuthenticatedAdminLedgerRouteImport } from './routes/_authenticated/admin/ledger'
+import { Route as AuthenticatedAdminInventoryRouteImport } from './routes/_authenticated/admin/inventory'
 import { Route as AuthenticatedAdminDataSyncRouteImport } from './routes/_authenticated/admin/data-sync'
 import { Route as AuthenticatedAdminContactSubmissionsRouteImport } from './routes/_authenticated/admin/contact-submissions'
 import { Route as AuthenticatedAdminCachesRouteImport } from './routes/_authenticated/admin/caches'
@@ -302,6 +303,12 @@ const AuthenticatedAdminLedgerRoute =
     path: '/ledger',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminInventoryRoute =
+  AuthenticatedAdminInventoryRouteImport.update({
+    id: '/inventory',
+    path: '/inventory',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminDataSyncRoute =
   AuthenticatedAdminDataSyncRouteImport.update({
     id: '/data-sync',
@@ -516,6 +523,7 @@ export interface FileRoutesByFullPath {
   '/admin/caches': typeof AuthenticatedAdminCachesRoute
   '/admin/contact-submissions': typeof AuthenticatedAdminContactSubmissionsRoute
   '/admin/data-sync': typeof AuthenticatedAdminDataSyncRoute
+  '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
@@ -591,6 +599,7 @@ export interface FileRoutesByTo {
   '/admin/caches': typeof AuthenticatedAdminCachesRoute
   '/admin/contact-submissions': typeof AuthenticatedAdminContactSubmissionsRoute
   '/admin/data-sync': typeof AuthenticatedAdminDataSyncRoute
+  '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
@@ -669,6 +678,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/caches': typeof AuthenticatedAdminCachesRoute
   '/_authenticated/admin/contact-submissions': typeof AuthenticatedAdminContactSubmissionsRoute
   '/_authenticated/admin/data-sync': typeof AuthenticatedAdminDataSyncRoute
+  '/_authenticated/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/_authenticated/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/_authenticated/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/_authenticated/admin/processing': typeof AuthenticatedAdminProcessingRoute
@@ -747,6 +757,7 @@ export interface FileRouteTypes {
     | '/admin/caches'
     | '/admin/contact-submissions'
     | '/admin/data-sync'
+    | '/admin/inventory'
     | '/admin/ledger'
     | '/admin/markups'
     | '/admin/processing'
@@ -822,6 +833,7 @@ export interface FileRouteTypes {
     | '/admin/caches'
     | '/admin/contact-submissions'
     | '/admin/data-sync'
+    | '/admin/inventory'
     | '/admin/ledger'
     | '/admin/markups'
     | '/admin/processing'
@@ -899,6 +911,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/caches'
     | '/_authenticated/admin/contact-submissions'
     | '/_authenticated/admin/data-sync'
+    | '/_authenticated/admin/inventory'
     | '/_authenticated/admin/ledger'
     | '/_authenticated/admin/markups'
     | '/_authenticated/admin/processing'
@@ -1278,6 +1291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminLedgerRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/inventory': {
+      id: '/_authenticated/admin/inventory'
+      path: '/inventory'
+      fullPath: '/admin/inventory'
+      preLoaderRoute: typeof AuthenticatedAdminInventoryRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/data-sync': {
       id: '/_authenticated/admin/data-sync'
       path: '/data-sync'
@@ -1555,6 +1575,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCachesRoute: typeof AuthenticatedAdminCachesRoute
   AuthenticatedAdminContactSubmissionsRoute: typeof AuthenticatedAdminContactSubmissionsRoute
   AuthenticatedAdminDataSyncRoute: typeof AuthenticatedAdminDataSyncRoute
+  AuthenticatedAdminInventoryRoute: typeof AuthenticatedAdminInventoryRoute
   AuthenticatedAdminLedgerRoute: typeof AuthenticatedAdminLedgerRoute
   AuthenticatedAdminMarkupsRoute: typeof AuthenticatedAdminMarkupsRoute
   AuthenticatedAdminProcessingRoute: typeof AuthenticatedAdminProcessingRoute
@@ -1580,6 +1601,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminContactSubmissionsRoute:
     AuthenticatedAdminContactSubmissionsRoute,
   AuthenticatedAdminDataSyncRoute: AuthenticatedAdminDataSyncRoute,
+  AuthenticatedAdminInventoryRoute: AuthenticatedAdminInventoryRoute,
   AuthenticatedAdminLedgerRoute: AuthenticatedAdminLedgerRoute,
   AuthenticatedAdminMarkupsRoute: AuthenticatedAdminMarkupsRoute,
   AuthenticatedAdminProcessingRoute: AuthenticatedAdminProcessingRoute,
