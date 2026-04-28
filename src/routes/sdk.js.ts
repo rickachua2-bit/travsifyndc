@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const SDK_VERSION = "1.2.0";
+const SDK_VERSION = "1.3.0";
 
 const SDK_SOURCE = `/* Travsify Unified API SDK v${SDK_VERSION} */
 (function (global) {
@@ -78,6 +78,22 @@ const SDK_SOURCE = `/* Travsify Unified API SDK v${SDK_VERSION} */
       visas: {
         search: function (p) { return call("POST", "/api/v1/visas/search", p); },
         book:   function (p) { return call("POST", "/api/v1/visas/bookings", p); }
+      },
+      tours: {
+        search: function (p) { return call("POST", "/api/v1/tours/search", p); },
+        book:   function (p) { return call("POST", "/api/v1/tours/bookings", p); }
+      },
+      transfers: {
+        search: function (p) { return call("POST", "/api/v1/transfers/search", p); },
+        book:   function (p) { return call("POST", "/api/v1/transfers/bookings", p); }
+      },
+      rentals: {
+        search: function (p) { return call("POST", "/api/v1/rentals/search", p); },
+        book:   function (p) { return call("POST", "/api/v1/rentals/bookings", p); }
+      },
+      insurance: {
+        search: function (p) { return call("POST", "/api/v1/insurance/search", p); },
+        book:   function (p) { return call("POST", "/api/v1/insurance/bookings", p); }
       },
       payments: {
         createIntent: function (p) { return call("POST", "/api/v1/payments/intents", p); }

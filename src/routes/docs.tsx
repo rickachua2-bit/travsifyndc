@@ -33,6 +33,7 @@ const SECTIONS: Section[] = [
   { id: "authentication", label: "Authentication", icon: KeyRound, group: "Start here" },
   { id: "wallet", label: "Wallet & funding", icon: WalletIcon, group: "Build" },
   { id: "markups", label: "Markups & pricing", icon: Sparkles, group: "Build" },
+  { id: "catalog", label: "Catalog (live inventory)", icon: Globe2, group: "Build" },
   { id: "flights", label: "Flights", icon: Plane, group: "Verticals" },
   { id: "hotels", label: "Hotels", icon: Building2, group: "Verticals" },
   { id: "tours", label: "Tours & activities", icon: MapPin, group: "Verticals" },
@@ -126,6 +127,7 @@ function DocsPage() {
           <Authentication />
           <WalletDocs />
           <Markups />
+          <Catalog />
           <Vertical id="flights" icon={Plane} title="Flights" desc="Live NDC + GDS inventory via Duffel. Real seat maps, real-time confirmation, instant tickets.">
             <EndpointBlock method="POST" path="/api/v1/flights/search" body={`{
   "origin": "LOS",
@@ -510,6 +512,68 @@ function Markups() {
     "currency": "USD"
   }
 }`} />
+    </section>
+  );
+}
+
+function Catalog() {
+  return (
+    <section className="space-y-4">
+      <H2 id="catalog" icon={Globe2}>Catalog (live inventory)</H2>
+      <P>
+        One endpoint to populate every dropdown on your frontend — countries, cities, destinations, providers — directly
+        from our live database. <strong>Don't copy this data into your own DB.</strong> Call it on page load (or cache it
+        for a few minutes) so your selectors always reflect what we currently have inventory for, including new corridors
+        we add.
+      </P>
+      <EndpointBlock
+        method="GET"
+        path="/api/v1/catalog"
+        body={`// Optional: filter to one vertical
+GET /api/v1/catalog?vertical=tours
+
+// Verticals: tours | visas | transfers | rentals | insurance`}
+        response={`{
+  "data": {
+    "tours": {
+      "total_items": 1339,
+      "countries": [
+        { "country": "United Arab Emirates", "cities": ["Abu Dhabi", "Dubai"] }
+      ]
+    },
+    "visas": {
+      "total_items": 412,
+      "destinations": [
+        {
+          "destination": "AE",
+          "destination_name": "United Arab Emirates",
+          "nationalities": ["NG", "US", "GB"],
+          "visa_types": ["tourist", "transit"]
+        }
+      ]
+    },
+    "transfers":  { "total_items": 0, "countries": [] },
+    "rentals":    { "total_items": 0, "countries": [] },
+    "insurance":  { "total_items": 12, "providers": ["SafetyWing"], "plans": [] }
+  },
+  "generated_at": "2026-04-28T10:00:00.000Z"
+}`}
+      />
+      <Callout tone="info" title="Use it from the SDK">
+        <Code lang="js" code={`const t = Travsify.init("tsk_sandbox_...");
+
+// Populate a country dropdown for tours
+const { tours } = (await t.catalog("tours")).data;
+const countries = tours.countries.map(c => c.country);
+
+// Or fetch every vertical at once
+const all = await t.catalog();`} />
+      </Callout>
+      <Callout tone="success" title="Why this matters">
+        We keep adding countries and destinations to our backend every week. As long as you read from
+        <code className="mx-1 rounded bg-surface px-1.5 py-0.5 text-xs">/api/v1/catalog</code>, your users see the new
+        inventory the moment we publish it — no redeploy, no DB migration, no code change on your side.
+      </Callout>
     </section>
   );
 }
