@@ -75,7 +75,7 @@ export async function searchVisas(input: VisaSearchInput): Promise<{ options: Vi
   if (dbVisas && dbVisas.length > 0) {
     return {
       options: dbVisas.map((v) => ({
-        id: v.original_id,
+        id: v.original_id || `visa_${v.id}`,
         name: `${v.destination_country || v.country || destinationName} ${v.visa_type || "E-Visa"}`,
         visa_type: (v.visa_type || "evisa").toLowerCase(),
         duration_days: 30,
