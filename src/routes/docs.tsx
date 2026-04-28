@@ -127,6 +127,7 @@ function DocsPage() {
           <Authentication />
           <WalletDocs />
           <Markups />
+          <Catalog />
           <Vertical id="flights" icon={Plane} title="Flights" desc="Live NDC + GDS inventory via Duffel. Real seat maps, real-time confirmation, instant tickets.">
             <EndpointBlock method="POST" path="/api/v1/flights/search" body={`{
   "origin": "LOS",
