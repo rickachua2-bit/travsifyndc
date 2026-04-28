@@ -65,6 +65,7 @@ import { Route as ApiV1TransfersBookingsRouteImport } from './routes/api/v1/tran
 import { Route as ApiV1ToursSearchRouteImport } from './routes/api/v1/tours.search'
 import { Route as ApiV1ToursLocationsRouteImport } from './routes/api/v1/tours.locations'
 import { Route as ApiV1ToursBookingsRouteImport } from './routes/api/v1/tours.bookings'
+import { Route as ApiV1RentalsSearchRouteImport } from './routes/api/v1/rentals.search'
 import { Route as ApiV1PaymentsIntentsRouteImport } from './routes/api/v1/payments.intents'
 import { Route as ApiV1InsuranceSearchRouteImport } from './routes/api/v1/insurance.search'
 import { Route as ApiV1InsuranceBookingsRouteImport } from './routes/api/v1/insurance.bookings'
@@ -386,6 +387,11 @@ const ApiV1ToursBookingsRoute = ApiV1ToursBookingsRouteImport.update({
   path: '/api/v1/tours/bookings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1RentalsSearchRoute = ApiV1RentalsSearchRouteImport.update({
+  id: '/api/v1/rentals/search',
+  path: '/api/v1/rentals/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1PaymentsIntentsRoute = ApiV1PaymentsIntentsRouteImport.update({
   id: '/api/v1/payments/intents',
   path: '/api/v1/payments/intents',
@@ -554,6 +560,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/insurance/bookings': typeof ApiV1InsuranceBookingsRoute
   '/api/v1/insurance/search': typeof ApiV1InsuranceSearchRoute
   '/api/v1/payments/intents': typeof ApiV1PaymentsIntentsRoute
+  '/api/v1/rentals/search': typeof ApiV1RentalsSearchRoute
   '/api/v1/tours/bookings': typeof ApiV1ToursBookingsRoute
   '/api/v1/tours/locations': typeof ApiV1ToursLocationsRoute
   '/api/v1/tours/search': typeof ApiV1ToursSearchRoute
@@ -630,6 +637,7 @@ export interface FileRoutesByTo {
   '/api/v1/insurance/bookings': typeof ApiV1InsuranceBookingsRoute
   '/api/v1/insurance/search': typeof ApiV1InsuranceSearchRoute
   '/api/v1/payments/intents': typeof ApiV1PaymentsIntentsRoute
+  '/api/v1/rentals/search': typeof ApiV1RentalsSearchRoute
   '/api/v1/tours/bookings': typeof ApiV1ToursBookingsRoute
   '/api/v1/tours/locations': typeof ApiV1ToursLocationsRoute
   '/api/v1/tours/search': typeof ApiV1ToursSearchRoute
@@ -709,6 +717,7 @@ export interface FileRoutesById {
   '/api/v1/insurance/bookings': typeof ApiV1InsuranceBookingsRoute
   '/api/v1/insurance/search': typeof ApiV1InsuranceSearchRoute
   '/api/v1/payments/intents': typeof ApiV1PaymentsIntentsRoute
+  '/api/v1/rentals/search': typeof ApiV1RentalsSearchRoute
   '/api/v1/tours/bookings': typeof ApiV1ToursBookingsRoute
   '/api/v1/tours/locations': typeof ApiV1ToursLocationsRoute
   '/api/v1/tours/search': typeof ApiV1ToursSearchRoute
@@ -788,6 +797,7 @@ export interface FileRouteTypes {
     | '/api/v1/insurance/bookings'
     | '/api/v1/insurance/search'
     | '/api/v1/payments/intents'
+    | '/api/v1/rentals/search'
     | '/api/v1/tours/bookings'
     | '/api/v1/tours/locations'
     | '/api/v1/tours/search'
@@ -864,6 +874,7 @@ export interface FileRouteTypes {
     | '/api/v1/insurance/bookings'
     | '/api/v1/insurance/search'
     | '/api/v1/payments/intents'
+    | '/api/v1/rentals/search'
     | '/api/v1/tours/bookings'
     | '/api/v1/tours/locations'
     | '/api/v1/tours/search'
@@ -942,6 +953,7 @@ export interface FileRouteTypes {
     | '/api/v1/insurance/bookings'
     | '/api/v1/insurance/search'
     | '/api/v1/payments/intents'
+    | '/api/v1/rentals/search'
     | '/api/v1/tours/bookings'
     | '/api/v1/tours/locations'
     | '/api/v1/tours/search'
@@ -987,6 +999,7 @@ export interface RootRouteChildren {
   ApiV1InsuranceBookingsRoute: typeof ApiV1InsuranceBookingsRoute
   ApiV1InsuranceSearchRoute: typeof ApiV1InsuranceSearchRoute
   ApiV1PaymentsIntentsRoute: typeof ApiV1PaymentsIntentsRoute
+  ApiV1RentalsSearchRoute: typeof ApiV1RentalsSearchRoute
   ApiV1ToursBookingsRoute: typeof ApiV1ToursBookingsRoute
   ApiV1ToursLocationsRoute: typeof ApiV1ToursLocationsRoute
   ApiV1ToursSearchRoute: typeof ApiV1ToursSearchRoute
@@ -1396,6 +1409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1ToursBookingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/rentals/search': {
+      id: '/api/v1/rentals/search'
+      path: '/api/v1/rentals/search'
+      fullPath: '/api/v1/rentals/search'
+      preLoaderRoute: typeof ApiV1RentalsSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/payments/intents': {
       id: '/api/v1/payments/intents'
       path: '/api/v1/payments/intents'
@@ -1693,6 +1713,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1InsuranceBookingsRoute: ApiV1InsuranceBookingsRoute,
   ApiV1InsuranceSearchRoute: ApiV1InsuranceSearchRoute,
   ApiV1PaymentsIntentsRoute: ApiV1PaymentsIntentsRoute,
+  ApiV1RentalsSearchRoute: ApiV1RentalsSearchRoute,
   ApiV1ToursBookingsRoute: ApiV1ToursBookingsRoute,
   ApiV1ToursLocationsRoute: ApiV1ToursLocationsRoute,
   ApiV1ToursSearchRoute: ApiV1ToursSearchRoute,
