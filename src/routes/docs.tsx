@@ -304,7 +304,7 @@ type LangTab = { id: string; label: string; code: string };
 
 function OneLiner() {
   const KEY = "tsk_sandbox_your_key_here";
-  const URL = "https://api.travsify.com/api/v1/flights/search";
+  const URL = "https://travsify.com/api/v1/flights/search";
   const PAYLOAD = `{"origin":"LOS","destination":"DXB","departure_date":"2026-06-01","adults":1}`;
 
   const tabs: LangTab[] = [
@@ -320,7 +320,7 @@ function OneLiner() {
     { id: "swift", label: "Swift", code: `var r=URLRequest(url:URL(string:"${URL}")!); r.httpMethod="POST"; r.setValue("Bearer ${KEY}",forHTTPHeaderField:"Authorization"); r.httpBody=#"${PAYLOAD}"#.data(using:.utf8); URLSession.shared.dataTask(with:r){d,_,_ in print(String(data:d!,encoding:.utf8)!)}.resume()` },
     { id: "kotlin", label: "Kotlin", code: `OkHttpClient().newCall(Request.Builder().url("${URL}").header("Authorization","Bearer ${KEY}").post("${PAYLOAD}".toRequestBody("application/json".toMediaType())).build()).execute().body?.string()` },
     { id: "rust", label: "Rust", code: `reqwest::Client::new().post("${URL}").bearer_auth("${KEY}").json(&serde_json::json!(${PAYLOAD})).send().await?.text().await?;` },
-    { id: "html", label: "HTML <script>", code: `<script src="https://api.travsify.com/sdk.js"></script><script>Travsify.init("${KEY}").flights.search(${PAYLOAD}).then(console.log)</script>` },
+    { id: "html", label: "HTML <script>", code: `<script src="https://travsify.com/sdk.js"></script><script>Travsify.init("${KEY}").flights.search(${PAYLOAD}).then(console.log)</script>` },
   ];
   const [active, setActive] = useState("curl");
   const current = tabs.find((t) => t.id === active) ?? tabs[0];
@@ -382,7 +382,7 @@ function Quickstart() {
           that starts with <code className="rounded bg-surface px-1.5 py-0.5 text-xs">tsk_sandbox_</code>.
         </Step>
         <Step n={3} title="Make your first call">
-          <Code lang="bash" code={`curl -X POST https://api.travsify.com/api/v1/flights/search \\
+          <Code lang="bash" code={`curl -X POST https://travsify.com/api/v1/flights/search \\
   -H "Authorization: Bearer tsk_sandbox_your_key_here" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -439,7 +439,7 @@ function Authentication() {
         <KeyTile name="Sandbox key" prefix="tsk_sandbox_" desc="Free. Issued at signup. Identical responses to live, no real money moves." />
         <KeyTile name="Live key" prefix="tsk_live_" desc="Production traffic. Issued the moment your KYB is approved." />
       </div>
-      <Code lang="bash" code={`curl https://api.travsify.com/api/v1/health \\
+      <Code lang="bash" code={`curl https://travsify.com/api/v1/health \\
   -H "Authorization: Bearer tsk_sandbox_your_key_here"`} />
       <Callout tone="warn" title="Keep keys server-side">
         Never ship live keys in browser bundles or mobile apps. If a key ever leaks, revoke it from
