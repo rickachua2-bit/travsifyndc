@@ -349,16 +349,16 @@ export async function getOrScrapeInsurance(input: InsuranceScrapeInput): Promise
       plan_name: pkg.name,
       coverage_type: "nomad",
       duration_days: days,
-      price: Number(pkg.daily_rate) * days * tCount,
-      currency: "USD" as const,
-      per_traveler: Number(pkg.daily_rate) * days,
+      price: Number(pkg.price_amount) * tCount,
+      currency: (pkg.price_currency || "USD") as "USD",
+      per_traveler: Number(pkg.price_amount),
       coverage_summary: {
         medical_max: idx === 0 ? 100000 : idx === 1 ? 250000 : 1000000,
         deductible: 250,
         covid_covered: true,
         adventure_sports: idx === 2,
       },
-      benefits: [pkg.description || "Comprehensive travel coverage"],
+      benefits: [pkg.coverage_details || "Comprehensive travel coverage"],
       _internal_underwriter: pkg.provider || "synced",
     }));
   }
