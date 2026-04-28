@@ -9,12 +9,12 @@ services:
       - key: NODE_VERSION
         value: 20
       - key: SUPABASE_URL
-        value: "your-supabase-url"
+        value: "https://dprdpztanrxnwvgsowoz.supabase.co"
       - key: SUPABASE_PUBLISHABLE_KEY
-        value: "your-supabase-key"
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwcmRwenRhbnJ4bnd2Z3Nvd296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMzA2NDYsImV4cCI6MjA5MjYwNjY0Nn0.nbzKcXu5ZRIGezRbjttmPID1uSy7wYN5FjCJGbOXGkg"
       - key: VITE_SUPABASE_URL
-        value: "your-supabase-url"
+        value: "https://dprdpztanrxnwvgsowoz.supabase.co"
       - key: VITE_SUPABASE_PUBLISHABLE_KEY
-        value: "your-supabase-key"
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwcmRwenRhbnJ4bnd2Z3Nvd296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMzA2NDYsImV4cCI6MjA5MjYwNjY0Nn0.nbzKcXu5ZRIGezRbjttmPID1uSy7wYN5FjCJGbOXGkg"
       - key: VITE_SUPABASE_PROJECT_ID
-        value: "your-project-id"
+        value: "dprdpztanrxnwvgsowoz"
