@@ -5,6 +5,7 @@ import { Loader2, Mail, Lock, Eye, EyeOff, Shield, ArrowRight } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Logo } from "@/components/landing/Logo";
+import { adminVerifyAccess } from "@/server/admin.functions";
 
 const schema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
@@ -25,15 +26,6 @@ export const Route = createFileRoute("/admin-login")({
   }),
 });
 
-async function userIsAdmin(userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  return !!data;
-}
 
 function getSafeAdminRedirect(redirect?: string) {
   if (redirect?.startsWith("/admin") && !redirect.startsWith("/admin-login")) {
@@ -64,23 +56,46 @@ function AdminLoginPage() {
       setErrors(fieldErrs);
       return;
     }
+
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
-    if (error || !data.user) {
-      setLoading(false);
-      toast.error(error?.message || "Sign in failed");
-      return;
-    }
-    const ok = await userIsAdmin(data.user.id);
-    if (!ok) {
+    try {
+      console.log("[admin-login] Initiating clean login for:", email);
+      
+      // 1. Force clear any existing session
       await supabase.auth.signOut();
+
+      // 2. Authenticate with Supabase
+      const { data, error: authError } = await supabase.auth.signInWithPassword(parsed.data);
+      
+      if (authError || !data.user) {
+        console.error("[admin-login] Auth failed:", authError);
+        setLoading(false);
+        toast.error(authError?.message || "Invalid credentials. Please check your email and password.");
+        return;
+      }
+
+      console.log("[admin-login] Supabase auth OK, verifying admin status on server...");
+      
+      // 3. Verify admin role on the server (bypasses client-side RLS)
+      const { isAdmin } = await adminVerifyAccess();
+      
+      if (!isAdmin) {
+        console.error("[admin-login] Authorization failed: Not an admin");
+        await supabase.auth.signOut();
+        setLoading(false);
+        toast.error("This account is not authorized for administrative access.");
+        return;
+      }
+
       setLoading(false);
-      toast.error("This account is not authorized for admin access.");
-      return;
+      toast.success("Identity verified. Welcome to the console.");
+      console.log("[admin-login] Proceeding to dashboard...");
+      navigate({ to: getSafeAdminRedirect(search.redirect), replace: true });
+    } catch (err) {
+      console.error("[admin-login] Critical login error:", err);
+      setLoading(false);
+      toast.error("A system error occurred during login. Check the console for details.");
     }
-    setLoading(false);
-    toast.success("Welcome, admin");
-    navigate({ to: getSafeAdminRedirect(search.redirect), replace: true });
   }
 
   return (

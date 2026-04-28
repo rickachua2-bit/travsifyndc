@@ -10,6 +10,23 @@ async function assertAdmin(userId: string) {
   if (!data) throw new Error("Admins only");
 }
 
+/** 
+ * Public-ish server function to verify if an authenticated user has admin rights.
+ * Used during the /admin-login flow to bypass potential client-side RLS propagation delays.
+ */
+export const adminVerifyAccess = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const { data } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    return { isAdmin: !!data };
+  });
+
+
 export const listManualBookings = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .inputValidator((d: { status?: string }) => d)
