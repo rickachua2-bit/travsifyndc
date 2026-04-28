@@ -3,12 +3,13 @@ import { z } from "zod";
 import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
 import { searchInsurance } from "@/server/providers/safetywing";
 import { composePrice } from "@/server/bookings";
+import { aliasFields, formatZodIssues, normalizeCountry, normalizeTravelers } from "@/server/api-helpers";
 
 const Schema = z.object({
-  nationality: z.string().length(2),
-  destination: z.string().length(2),
-  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  nationality: z.string().length(2, "must be a 2-letter ISO country code (e.g. 'NG')"),
+  destination: z.string().length(2, "must be a 2-letter ISO country code (e.g. 'GB')"),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"),
   travelers: z.array(z.object({ age: z.number().int().min(0).max(120) })).min(1).max(10),
   coverage_type: z.enum(["nomad", "trip", "remote_health"]).optional(),
 });
