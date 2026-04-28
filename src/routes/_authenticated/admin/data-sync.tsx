@@ -7,8 +7,10 @@ import {
   Car, 
   FileBadge, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  Plus
 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/data-sync")({
   component: DataSyncPage,
@@ -50,15 +52,43 @@ const verticals = [
 function DataSyncPage() {
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
   const [lastSynced, setLastSynced] = useState<Record<string, Date | null>>({});
+  const [customCity, setCustomCity] = useState("");
 
-  const handleSync = async (id: string) => {
+  const handleSync = async (id: string, cities?: string[]) => {
     setSyncing((prev) => ({ ...prev, [id]: true }));
     
-    // Simulate a sync process for now. This will be replaced with a real API call to the backend sync engine.
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    
-    setLastSynced((prev) => ({ ...prev, [id]: new Date() }));
-    setSyncing((prev) => ({ ...prev, [id]: false }));
+    try {
+      if (id === "tours") {
+        const response = await fetch("/api/v1/admin/sync/tours", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cities })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          toast.success(`${verticals.find(v => v.id === id)?.title} synced successfully!`);
+          setLastSynced((prev) => ({ ...prev, [id]: new Date() }));
+        } else {
+          toast.error(`Sync failed: ${data.message}`);
+        }
+      } else {
+        // Placeholder for other verticals
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        toast.info(`${verticals.find(v => v.id === id)?.title} sync logic coming soon.`);
+        setLastSynced((prev) => ({ ...prev, [id]: new Date() }));
+      }
+    } catch (error) {
+      toast.error("An error occurred during synchronization.");
+    } finally {
+      setSyncing((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const handleAddCitySync = () => {
+    if (!customCity.trim()) return;
+    handleSync("tours", [customCity]);
+    setCustomCity("");
   };
 
   const handleSyncAll = async () => {
@@ -117,9 +147,30 @@ function DataSyncPage() {
                     </span>
                   )}
                 </div>
+                
                 <p className="mt-4 text-sm text-muted-foreground">
                   {vertical.description}
                 </p>
+
+                {vertical.id === "tours" && (
+                  <div className="mt-4 flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="Enter city (e.g. Dubai)"
+                      value={customCity}
+                      onChange={(e) => setCustomCity(e.target.value)}
+                      className="flex-1 rounded-md border border-border bg-background px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                    <button 
+                      onClick={handleAddCitySync}
+                      disabled={isSyncing || !customCity}
+                      className="flex items-center gap-1 rounded-md bg-accent/10 px-3 py-1 text-xs font-bold text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add & Sync
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 flex items-center justify-between border-t border-border pt-4">

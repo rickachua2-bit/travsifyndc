@@ -45,6 +45,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Logo } from "@/components/landing/Logo";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,

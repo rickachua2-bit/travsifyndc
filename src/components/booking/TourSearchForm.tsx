@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Calendar, Loader2, Search, Users, Plus, Minus } from "lucide-react";
-import { LocationInput } from "@/components/booking/LocationInput";
+import { AggregatedLocationInput } from "@/components/booking/AggregatedLocationInput";
 import { FieldLabel } from "@/components/booking/SearchForm";
 
 export type TourSearchPayload = {
@@ -72,7 +72,12 @@ export function TourSearchForm({
       style={{ boxShadow: "var(--shadow-soft)" }}
     >
       <div className="sm:col-span-5">
-        <LocationInput label="Destination" value={destination} onChange={setDestination} placeholder="Where are you going? (city or airport)" />
+        <AggregatedLocationInput 
+          label="Destination" 
+          value={destination} 
+          onChange={setDestination} 
+          placeholder="Select an available city..." 
+        />
       </div>
 
       <div className="sm:col-span-2">

@@ -58,50 +58,49 @@ export type TourOffer = {
   booking_url: string; // for ops fulfillment
 };
 
-export async function searchTours(input: TourSearchInput): Promise<{ tours: TourOffer[] }> {
-  const currency = input.currency || "USD";
-  // Step 1: resolve query string → numeric location_id (GYG requires this for /tours/)
-  let location: { location_id: number; name: string; country?: string } | undefined;
-  try {
-    const locRes = await call<{ data?: { locations?: Array<{ location_id: number; name: string; country?: string }> } }>(
-      `/locations/?q=${encodeURIComponent(input.query)}&currency=${currency}&limit=1`,
-    );
-    location = locRes.data?.locations?.[0];
-  } catch (err) {
-    // Auth/permission errors (errorCode 15) → return empty so UI degrades gracefully.
-    console.warn("GYG locations lookup failed, returning empty result:", (err as Error).message);
-    return { tours: [] };
-  }
-  if (!location) return { tours: [] };
+import { createClient } from "@supabase/supabase-js";
+import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
 
-  // Step 2: fetch tours for that location
-  const path = `/tours/?location_ids=${location.location_id}` +
-    (input.date_from ? `&date_from=${input.date_from}` : "") +
-    (input.date_to ? `&date_to=${input.date_to}` : "") +
-    `&currency=${input.currency || "USD"}&limit=20`;
-  let tours: Array<Record<string, unknown>> = [];
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export async function searchTours(input: TourSearchInput): Promise<{ tours: TourOffer[] }> {
+  console.log(`Searching internal database for tours matching: ${input.query}...`);
+  
   try {
-    const res = await call<{ data?: { tours?: Array<Record<string, unknown>> } }>(path);
-    tours = res.data?.tours || [];
+    const { data, error } = await supabase
+      .from("tours")
+      .select("*")
+      .or(`title.ilike.%${input.query}%,location.ilike.%${input.query}%`)
+      .limit(20);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      console.log("No matching tours found in internal database.");
+      return { tours: [] };
+    }
+
+    return {
+      tours: data.map((t) => ({
+        id: t.original_id,
+        title: t.title,
+        abstract: t.description || "",
+        duration: "Flexible",
+        price: Number(t.price_amount),
+        currency: t.price_currency,
+        rating: 4.5, // Mock rating since we might not scrape reviews for every tour
+        review_count: 10,
+        photo: t.image_url,
+        city: t.location,
+        booking_url: t.affiliate_url,
+      })),
+    };
   } catch (err) {
-    console.warn("GYG tours lookup failed, returning empty result:", (err as Error).message);
+    console.error("Internal tour search failed:", err);
     return { tours: [] };
   }
-  return {
-    tours: tours.map((t) => ({
-      id: String(t.tour_id),
-      title: String(t.title),
-      abstract: String(t.abstract || ""),
-      duration: String(t.duration || ""),
-      price: Number((t.price as Record<string, unknown> | undefined)?.amount ?? 0),
-      currency: String((t.price as Record<string, unknown> | undefined)?.currency ?? input.currency ?? "USD"),
-      rating: Number(t.overall_rating || 0),
-      review_count: Number(t.number_of_ratings || 0),
-      photo: ((t.photos as Array<Record<string, unknown>> | undefined)?.[0]?.url as string) || null,
-      city: String((t.location as Record<string, unknown> | undefined)?.city ?? location.name ?? ""),
-      booking_url: `https://www.getyourguide.com/-t${t.tour_id}/?partner_id=${partnerId()}`,
-    })),
-  };
 }
 
 /** GYG affiliate doesn't support direct booking — we capture the request and ops fulfills via the booking_url. */

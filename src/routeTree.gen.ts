@@ -50,6 +50,7 @@ import { Route as AuthenticatedAdminProviderHealthRouteImport } from './routes/_
 import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
 import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
 import { Route as AuthenticatedAdminLedgerRouteImport } from './routes/_authenticated/admin/ledger'
+import { Route as AuthenticatedAdminDataSyncRouteImport } from './routes/_authenticated/admin/data-sync'
 import { Route as AuthenticatedAdminContactSubmissionsRouteImport } from './routes/_authenticated/admin/contact-submissions'
 import { Route as AuthenticatedAdminCachesRouteImport } from './routes/_authenticated/admin/caches'
 import { Route as AuthenticatedAdminBookingsRouteImport } from './routes/_authenticated/admin/bookings'
@@ -61,6 +62,7 @@ import { Route as ApiV1VisasBookingsRouteImport } from './routes/api/v1/visas.bo
 import { Route as ApiV1TransfersSearchRouteImport } from './routes/api/v1/transfers.search'
 import { Route as ApiV1TransfersBookingsRouteImport } from './routes/api/v1/transfers.bookings'
 import { Route as ApiV1ToursSearchRouteImport } from './routes/api/v1/tours.search'
+import { Route as ApiV1ToursLocationsRouteImport } from './routes/api/v1/tours.locations'
 import { Route as ApiV1ToursBookingsRouteImport } from './routes/api/v1/tours.bookings'
 import { Route as ApiV1PaymentsIntentsRouteImport } from './routes/api/v1/payments.intents'
 import { Route as ApiV1InsuranceSearchRouteImport } from './routes/api/v1/insurance.search'
@@ -76,6 +78,7 @@ import { Route as AuthenticatedAdminVisaQueueIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminSupportIdRouteImport } from './routes/_authenticated/admin/support.$id'
 import { Route as AuthenticatedAdminApplicationsIdRouteImport } from './routes/_authenticated/admin/applications.$id'
 import { Route as ApiV1FlightsSearchSearchIdRouteImport } from './routes/api/v1/flights.search.$searchId'
+import { Route as ApiV1AdminSyncToursRouteImport } from './routes/api/v1/admin.sync.tours'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -294,6 +297,12 @@ const AuthenticatedAdminLedgerRoute =
     path: '/ledger',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminDataSyncRoute =
+  AuthenticatedAdminDataSyncRouteImport.update({
+    id: '/data-sync',
+    path: '/data-sync',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminContactSubmissionsRoute =
   AuthenticatedAdminContactSubmissionsRouteImport.update({
     id: '/contact-submissions',
@@ -353,6 +362,11 @@ const ApiV1TransfersBookingsRoute = ApiV1TransfersBookingsRouteImport.update({
 const ApiV1ToursSearchRoute = ApiV1ToursSearchRouteImport.update({
   id: '/api/v1/tours/search',
   path: '/api/v1/tours/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1ToursLocationsRoute = ApiV1ToursLocationsRouteImport.update({
+  id: '/api/v1/tours/locations',
+  path: '/api/v1/tours/locations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1ToursBookingsRoute = ApiV1ToursBookingsRouteImport.update({
@@ -435,6 +449,11 @@ const ApiV1FlightsSearchSearchIdRoute =
     path: '/$searchId',
     getParentRoute: () => ApiV1FlightsSearchRoute,
   } as any)
+const ApiV1AdminSyncToursRoute = ApiV1AdminSyncToursRouteImport.update({
+  id: '/api/v1/admin/sync/tours',
+  path: '/api/v1/admin/sync/tours',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -466,6 +485,7 @@ export interface FileRoutesByFullPath {
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/caches': typeof AuthenticatedAdminCachesRoute
   '/admin/contact-submissions': typeof AuthenticatedAdminContactSubmissionsRoute
+  '/admin/data-sync': typeof AuthenticatedAdminDataSyncRoute
   '/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
@@ -497,11 +517,13 @@ export interface FileRoutesByFullPath {
   '/api/v1/insurance/search': typeof ApiV1InsuranceSearchRoute
   '/api/v1/payments/intents': typeof ApiV1PaymentsIntentsRoute
   '/api/v1/tours/bookings': typeof ApiV1ToursBookingsRoute
+  '/api/v1/tours/locations': typeof ApiV1ToursLocationsRoute
   '/api/v1/tours/search': typeof ApiV1ToursSearchRoute
   '/api/v1/transfers/bookings': typeof ApiV1TransfersBookingsRoute
   '/api/v1/transfers/search': typeof ApiV1TransfersSearchRoute
   '/api/v1/visas/bookings': typeof ApiV1VisasBookingsRoute
   '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
+  '/api/v1/admin/sync/tours': typeof ApiV1AdminSyncToursRoute
   '/api/v1/flights/search/$searchId': typeof ApiV1FlightsSearchSearchIdRoute
 }
 export interface FileRoutesByTo {
@@ -533,6 +555,7 @@ export interface FileRoutesByTo {
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/caches': typeof AuthenticatedAdminCachesRoute
   '/admin/contact-submissions': typeof AuthenticatedAdminContactSubmissionsRoute
+  '/admin/data-sync': typeof AuthenticatedAdminDataSyncRoute
   '/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/admin/processing': typeof AuthenticatedAdminProcessingRoute
@@ -564,11 +587,13 @@ export interface FileRoutesByTo {
   '/api/v1/insurance/search': typeof ApiV1InsuranceSearchRoute
   '/api/v1/payments/intents': typeof ApiV1PaymentsIntentsRoute
   '/api/v1/tours/bookings': typeof ApiV1ToursBookingsRoute
+  '/api/v1/tours/locations': typeof ApiV1ToursLocationsRoute
   '/api/v1/tours/search': typeof ApiV1ToursSearchRoute
   '/api/v1/transfers/bookings': typeof ApiV1TransfersBookingsRoute
   '/api/v1/transfers/search': typeof ApiV1TransfersSearchRoute
   '/api/v1/visas/bookings': typeof ApiV1VisasBookingsRoute
   '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
+  '/api/v1/admin/sync/tours': typeof ApiV1AdminSyncToursRoute
   '/api/v1/flights/search/$searchId': typeof ApiV1FlightsSearchSearchIdRoute
 }
 export interface FileRoutesById {
@@ -603,6 +628,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/_authenticated/admin/caches': typeof AuthenticatedAdminCachesRoute
   '/_authenticated/admin/contact-submissions': typeof AuthenticatedAdminContactSubmissionsRoute
+  '/_authenticated/admin/data-sync': typeof AuthenticatedAdminDataSyncRoute
   '/_authenticated/admin/ledger': typeof AuthenticatedAdminLedgerRoute
   '/_authenticated/admin/markups': typeof AuthenticatedAdminMarkupsRoute
   '/_authenticated/admin/processing': typeof AuthenticatedAdminProcessingRoute
@@ -634,11 +660,13 @@ export interface FileRoutesById {
   '/api/v1/insurance/search': typeof ApiV1InsuranceSearchRoute
   '/api/v1/payments/intents': typeof ApiV1PaymentsIntentsRoute
   '/api/v1/tours/bookings': typeof ApiV1ToursBookingsRoute
+  '/api/v1/tours/locations': typeof ApiV1ToursLocationsRoute
   '/api/v1/tours/search': typeof ApiV1ToursSearchRoute
   '/api/v1/transfers/bookings': typeof ApiV1TransfersBookingsRoute
   '/api/v1/transfers/search': typeof ApiV1TransfersSearchRoute
   '/api/v1/visas/bookings': typeof ApiV1VisasBookingsRoute
   '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
+  '/api/v1/admin/sync/tours': typeof ApiV1AdminSyncToursRoute
   '/api/v1/flights/search/$searchId': typeof ApiV1FlightsSearchSearchIdRoute
 }
 export interface FileRouteTypes {
@@ -673,6 +701,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/caches'
     | '/admin/contact-submissions'
+    | '/admin/data-sync'
     | '/admin/ledger'
     | '/admin/markups'
     | '/admin/processing'
@@ -704,11 +733,13 @@ export interface FileRouteTypes {
     | '/api/v1/insurance/search'
     | '/api/v1/payments/intents'
     | '/api/v1/tours/bookings'
+    | '/api/v1/tours/locations'
     | '/api/v1/tours/search'
     | '/api/v1/transfers/bookings'
     | '/api/v1/transfers/search'
     | '/api/v1/visas/bookings'
     | '/api/v1/visas/search'
+    | '/api/v1/admin/sync/tours'
     | '/api/v1/flights/search/$searchId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -740,6 +771,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/caches'
     | '/admin/contact-submissions'
+    | '/admin/data-sync'
     | '/admin/ledger'
     | '/admin/markups'
     | '/admin/processing'
@@ -771,11 +803,13 @@ export interface FileRouteTypes {
     | '/api/v1/insurance/search'
     | '/api/v1/payments/intents'
     | '/api/v1/tours/bookings'
+    | '/api/v1/tours/locations'
     | '/api/v1/tours/search'
     | '/api/v1/transfers/bookings'
     | '/api/v1/transfers/search'
     | '/api/v1/visas/bookings'
     | '/api/v1/visas/search'
+    | '/api/v1/admin/sync/tours'
     | '/api/v1/flights/search/$searchId'
   id:
     | '__root__'
@@ -809,6 +843,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/bookings'
     | '/_authenticated/admin/caches'
     | '/_authenticated/admin/contact-submissions'
+    | '/_authenticated/admin/data-sync'
     | '/_authenticated/admin/ledger'
     | '/_authenticated/admin/markups'
     | '/_authenticated/admin/processing'
@@ -840,11 +875,13 @@ export interface FileRouteTypes {
     | '/api/v1/insurance/search'
     | '/api/v1/payments/intents'
     | '/api/v1/tours/bookings'
+    | '/api/v1/tours/locations'
     | '/api/v1/tours/search'
     | '/api/v1/transfers/bookings'
     | '/api/v1/transfers/search'
     | '/api/v1/visas/bookings'
     | '/api/v1/visas/search'
+    | '/api/v1/admin/sync/tours'
     | '/api/v1/flights/search/$searchId'
   fileRoutesById: FileRoutesById
 }
@@ -878,11 +915,13 @@ export interface RootRouteChildren {
   ApiV1InsuranceSearchRoute: typeof ApiV1InsuranceSearchRoute
   ApiV1PaymentsIntentsRoute: typeof ApiV1PaymentsIntentsRoute
   ApiV1ToursBookingsRoute: typeof ApiV1ToursBookingsRoute
+  ApiV1ToursLocationsRoute: typeof ApiV1ToursLocationsRoute
   ApiV1ToursSearchRoute: typeof ApiV1ToursSearchRoute
   ApiV1TransfersBookingsRoute: typeof ApiV1TransfersBookingsRoute
   ApiV1TransfersSearchRoute: typeof ApiV1TransfersSearchRoute
   ApiV1VisasBookingsRoute: typeof ApiV1VisasBookingsRoute
   ApiV1VisasSearchRoute: typeof ApiV1VisasSearchRoute
+  ApiV1AdminSyncToursRoute: typeof ApiV1AdminSyncToursRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1174,6 +1213,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminLedgerRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/data-sync': {
+      id: '/_authenticated/admin/data-sync'
+      path: '/data-sync'
+      fullPath: '/admin/data-sync'
+      preLoaderRoute: typeof AuthenticatedAdminDataSyncRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/contact-submissions': {
       id: '/_authenticated/admin/contact-submissions'
       path: '/contact-submissions'
@@ -1249,6 +1295,13 @@ declare module '@tanstack/react-router' {
       path: '/api/v1/tours/search'
       fullPath: '/api/v1/tours/search'
       preLoaderRoute: typeof ApiV1ToursSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/tours/locations': {
+      id: '/api/v1/tours/locations'
+      path: '/api/v1/tours/locations'
+      fullPath: '/api/v1/tours/locations'
+      preLoaderRoute: typeof ApiV1ToursLocationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/tours/bookings': {
@@ -1356,6 +1409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1FlightsSearchSearchIdRouteImport
       parentRoute: typeof ApiV1FlightsSearchRoute
     }
+    '/api/v1/admin/sync/tours': {
+      id: '/api/v1/admin/sync/tours'
+      path: '/api/v1/admin/sync/tours'
+      fullPath: '/api/v1/admin/sync/tours'
+      preLoaderRoute: typeof ApiV1AdminSyncToursRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1394,6 +1454,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminBookingsRoute: typeof AuthenticatedAdminBookingsRoute
   AuthenticatedAdminCachesRoute: typeof AuthenticatedAdminCachesRoute
   AuthenticatedAdminContactSubmissionsRoute: typeof AuthenticatedAdminContactSubmissionsRoute
+  AuthenticatedAdminDataSyncRoute: typeof AuthenticatedAdminDataSyncRoute
   AuthenticatedAdminLedgerRoute: typeof AuthenticatedAdminLedgerRoute
   AuthenticatedAdminMarkupsRoute: typeof AuthenticatedAdminMarkupsRoute
   AuthenticatedAdminProcessingRoute: typeof AuthenticatedAdminProcessingRoute
@@ -1418,6 +1479,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCachesRoute: AuthenticatedAdminCachesRoute,
   AuthenticatedAdminContactSubmissionsRoute:
     AuthenticatedAdminContactSubmissionsRoute,
+  AuthenticatedAdminDataSyncRoute: AuthenticatedAdminDataSyncRoute,
   AuthenticatedAdminLedgerRoute: AuthenticatedAdminLedgerRoute,
   AuthenticatedAdminMarkupsRoute: AuthenticatedAdminMarkupsRoute,
   AuthenticatedAdminProcessingRoute: AuthenticatedAdminProcessingRoute,
@@ -1510,11 +1572,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1InsuranceSearchRoute: ApiV1InsuranceSearchRoute,
   ApiV1PaymentsIntentsRoute: ApiV1PaymentsIntentsRoute,
   ApiV1ToursBookingsRoute: ApiV1ToursBookingsRoute,
+  ApiV1ToursLocationsRoute: ApiV1ToursLocationsRoute,
   ApiV1ToursSearchRoute: ApiV1ToursSearchRoute,
   ApiV1TransfersBookingsRoute: ApiV1TransfersBookingsRoute,
   ApiV1TransfersSearchRoute: ApiV1TransfersSearchRoute,
   ApiV1VisasBookingsRoute: ApiV1VisasBookingsRoute,
   ApiV1VisasSearchRoute: ApiV1VisasSearchRoute,
+  ApiV1AdminSyncToursRoute: ApiV1AdminSyncToursRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
