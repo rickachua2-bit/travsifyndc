@@ -225,11 +225,22 @@ export function HotelsFlow({ mode = "guest" }: FlowProps) {
           nights={searchMeta.nights}
           rooms={searchMeta.rooms}
           format={format}
-          onSelect={(h) => setPicked(h)}
+          onSelect={(h) => { setPicked(h); setShowForm(false); }}
         />
       )}
 
-      {picked && searchMeta && (
+      {picked && !showForm && searchMeta && (
+        <ProductDetailView
+          vertical="hotels"
+          item={picked}
+          searchMeta={searchMeta}
+          format={format}
+          onConfirm={() => setShowForm(true)}
+          onBack={() => setPicked(null)}
+        />
+      )}
+
+      {picked && showForm && searchMeta && (
         <form
           onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
           className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
