@@ -11,11 +11,15 @@ services:
       - key: SUPABASE_URL
         value: "https://dprdpztanrxnwvgsowoz.supabase.co"
       - key: SUPABASE_PUBLISHABLE_KEY
-        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwcmRwenRhbnJ4bnd2Z3Nvd296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMzA2NDYsImV4cCI6MjA5MjYwNjY0Nn0.nbzKcXu5ZRIGezRbjttmPID1uSy7wYN5FjCJGbOXGkg"
+        value: "sb_publishable_zA0SI1W8r0WEKUrNZGuQBg_MmIv5Ruc"
+      - key: SUPABASE_ANON_KEY
+        value: "sb_publishable_zA0SI1W8r0WEKUrNZGuQBg_MmIv5Ruc"
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
       - key: VITE_SUPABASE_URL
         value: "https://dprdpztanrxnwvgsowoz.supabase.co"
       - key: VITE_SUPABASE_PUBLISHABLE_KEY
-        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwcmRwenRhbnJ4bnd2Z3Nvd296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMzA2NDYsImV4cCI6MjA5MjYwNjY0Nn0.nbzKcXu5ZRIGezRbjttmPID1uSy7wYN5FjCJGbOXGkg"
+        value: "sb_publishable_zA0SI1W8r0WEKUrNZGuQBg_MmIv5Ruc"
       - key: VITE_SUPABASE_PROJECT_ID
         value: "dprdpztanrxnwvgsowoz"
       - key: FIRECRAWL_API_KEY
