@@ -3,12 +3,13 @@ import { z } from "zod";
 import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
 import { searchInsurance } from "@/server/providers/safetywing";
 import { composePrice } from "@/server/bookings";
+import { aliasFields, formatZodIssues, normalizeCountry, normalizeTravelers } from "@/server/api-helpers";
 
 const Schema = z.object({
-  nationality: z.string().length(2),
-  destination: z.string().length(2),
-  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  nationality: z.string().length(2, "must be a 2-letter ISO country code (e.g. 'NG')"),
+  destination: z.string().length(2, "must be a 2-letter ISO country code (e.g. 'GB')"),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"),
   travelers: z.array(z.object({ age: z.number().int().min(0).max(120) })).min(1).max(10),
   coverage_type: z.enum(["nomad", "trip", "remote_health"]).optional(),
 });
@@ -21,8 +22,24 @@ export const Route = createFileRoute("/api/v1/insurance/search")({
         withGateway(request, { endpoint: "/v1/insurance/search", vertical: "insurance", provider: "safetywing" }, async (key) => {
           let body: unknown;
           try { body = await request.json(); } catch { return errorResponse("invalid_json", "Body must be valid JSON.", 400); }
-          const parsed = Schema.safeParse(body);
-          if (!parsed.success) return errorResponse("validation_error", parsed.error.issues[0].message, 400);
+          const aliased = aliasFields(body, {
+            from_country: "nationality",
+            to_country: "destination",
+            country_from: "nationality",
+            country_to: "destination",
+            from: "start_date",
+            to: "end_date",
+            depart_date: "start_date",
+            return_date: "end_date",
+          });
+          aliased.nationality = normalizeCountry(aliased.nationality);
+          aliased.destination = normalizeCountry(aliased.destination);
+          aliased.travelers = normalizeTravelers(aliased.travelers);
+          const parsed = Schema.safeParse(aliased);
+          if (!parsed.success) {
+            const { message, details } = formatZodIssues(parsed.error);
+            return jsonResponse({ error: { code: "validation_error", message, details } }, 400);
+          }
 
           let quotes: Awaited<ReturnType<typeof searchInsurance>>["quotes"] = [];
           try {

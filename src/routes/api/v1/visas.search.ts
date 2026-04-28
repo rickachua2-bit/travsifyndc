@@ -3,10 +3,11 @@ import { z } from "zod";
 import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
 import { searchVisas } from "@/server/providers/sherpa";
 import { composePrice } from "@/server/bookings";
+import { aliasFields, formatZodIssues, normalizeCountry, normalizeVisaPurpose } from "@/server/api-helpers";
 
 const Schema = z.object({
-  nationality: z.string().length(2),
-  destination: z.string().length(2),
+  nationality: z.string().length(2, "must be a 2-letter ISO country code (e.g. 'NG')"),
+  destination: z.string().length(2, "must be a 2-letter ISO country code (e.g. 'AE')"),
   purpose: z.enum(["tourism", "business", "transit"]).optional(),
 });
 
@@ -18,8 +19,23 @@ export const Route = createFileRoute("/api/v1/visas/search")({
         withGateway(request, { endpoint: "/v1/visas/search", vertical: "visas", provider: "sherpa" }, async (key) => {
           let body: unknown;
           try { body = await request.json(); } catch { return errorResponse("invalid_json", "Body must be valid JSON.", 400); }
-          const parsed = Schema.safeParse(body);
-          if (!parsed.success) return errorResponse("validation_error", parsed.error.issues[0].message, 400);
+          // Accept common aliases & forgiving inputs (country names, "Tourist", etc.).
+          const aliased = aliasFields(body, {
+            from: "nationality",
+            to: "destination",
+            country_from: "nationality",
+            country_to: "destination",
+            destination_country: "destination",
+            nationality_country: "nationality",
+          });
+          aliased.nationality = normalizeCountry(aliased.nationality);
+          aliased.destination = normalizeCountry(aliased.destination);
+          if (aliased.purpose !== undefined) aliased.purpose = normalizeVisaPurpose(aliased.purpose);
+          const parsed = Schema.safeParse(aliased);
+          if (!parsed.success) {
+            const { message, details } = formatZodIssues(parsed.error);
+            return jsonResponse({ error: { code: "validation_error", message, details } }, 400);
+          }
 
           let options: Awaited<ReturnType<typeof searchVisas>>["options"] = [];
           try {
