@@ -1,11 +1,23 @@
 const stats = ["500+ Airlines", "1M+ Hotels", "Thousands of routes"];
 
+// Deterministic PRNG (mulberry32) so SSR and client output match
+function seeded(seed: number) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = seed;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 export function GlobalCoverage() {
-  // dotted world map approximation
+  // dotted world map approximation (deterministic to avoid hydration mismatch)
+  const rand = seeded(1337);
   const dots: { x: number; y: number; hot?: boolean }[] = [];
   for (let i = 0; i < 600; i++) {
-    const x = Math.random() * 600;
-    const y = Math.random() * 280;
+    const x = rand() * 600;
+    const y = rand() * 280;
     // approximate continent shapes by skipping ocean cells
     const inLand =
       (x > 80 && x < 220 && y > 40 && y < 200) || // Americas
