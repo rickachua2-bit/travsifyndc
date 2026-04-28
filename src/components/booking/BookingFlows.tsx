@@ -1026,11 +1026,22 @@ export function InsuranceFlow({ mode = "guest" }: FlowProps) {
           travelersCount={totalTravelers}
           destinationLabel={searchMeta.destination_name}
           format={format}
-          onSelect={(q) => setPicked(q)}
+          onSelect={(q) => { setPicked(q); setShowForm(false); }}
         />
       )}
 
-      {picked && searchMeta && (
+      {picked && !showForm && searchMeta && (
+        <ProductDetailView
+          vertical="insurance"
+          item={{ ...picked, name: picked.plan_name, price_amount: picked.price, image_url: (picked as unknown as { image_url?: string }).image_url, benefits: (picked as unknown as { benefits?: string[] }).benefits ?? [], description: (picked as unknown as { description?: string }).description, metadata: { specs: { duration_days: picked.duration_days, coverage_type: picked.coverage_type, travelers: totalTravelers } } }}
+          searchMeta={searchMeta}
+          format={format}
+          onConfirm={() => setShowForm(true)}
+          onBack={() => setPicked(null)}
+        />
+      )}
+
+      {picked && showForm && searchMeta && (
         <form
           onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
           className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
