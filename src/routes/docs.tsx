@@ -577,6 +577,8 @@ const all = await t.catalog();`} />
     </section>
   );
 }
+
+function Vertical({ id, icon, title, desc, children }: {
   id: string; icon: typeof BookOpen; title: string; desc: string; children: React.ReactNode;
 }) {
   return (
