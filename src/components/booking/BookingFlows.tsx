@@ -740,11 +740,22 @@ export function TransfersFlow({ mode = "guest" }: FlowProps) {
           routeLabel={routeLabel}
           passengers={searchMeta.num_passengers}
           format={format}
-          onSelect={(q) => setPicked(q)}
+          onSelect={(q) => { setPicked(q); setShowForm(false); }}
         />
       )}
 
-      {picked && searchMeta && (
+      {picked && !showForm && searchMeta && (
+        <ProductDetailView
+          vertical="transfers"
+          item={{ ...picked, vehicle_name: picked.vehicle_description, image_url: (picked as unknown as { image_url?: string }).image_url, metadata: { specs: { passengers: searchMeta.num_passengers, vehicle_class: picked.vehicle_class, provider: picked.provider_name } } }}
+          searchMeta={searchMeta}
+          format={format}
+          onConfirm={() => setShowForm(true)}
+          onBack={() => setPicked(null)}
+        />
+      )}
+
+      {picked && showForm && searchMeta && (
         <form
           onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
           className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
