@@ -77,28 +77,38 @@ export async function searchInsurance(input: InsuranceSearchInput): Promise<{ qu
 
   if (dbPackages && dbPackages.length > 0) {
     return {
-      quotes: dbPackages.map((pkg) => ({
-        id: pkg.original_id,
-        plan_name: pkg.name,
-        coverage_type: input.coverage_type || "nomad",
-        provider: "safetywing",
-        duration_days: days,
-        price: (pkg.daily_rate * days) * input.travelers.length,
-        currency: "USD",
-        per_traveler: pkg.daily_rate * days,
-        coverage_summary: {
-          medical_max: 250000,
-          deductible: 250,
-          covid_covered: true,
-          adventure_sports: false,
-        },
-        benefits: [
-          pkg.description || "Comprehensive nomad insurance coverage",
-          "Hospital & ambulance",
-          "Emergency dental",
-          "Trip interruption",
-        ],
-      })),
+      quotes: dbPackages.map((pkg) => {
+        // DB stores monthly price in `price_amount` — convert to total for trip.
+        const monthly = Number(pkg.price_amount) || 0;
+        const dailyRate = monthly / 30;
+        const perTravelerTotal = Number((dailyRate * days).toFixed(2));
+        const total = Number((perTravelerTotal * input.travelers.length).toFixed(2));
+        const benefits = Array.isArray(pkg.benefits) && pkg.benefits.length > 0
+          ? pkg.benefits
+          : [
+              pkg.description || "Comprehensive nomad insurance coverage",
+              "Hospital & ambulance",
+              "Emergency dental",
+              "Trip interruption",
+            ];
+        return {
+          id: pkg.original_id,
+          plan_name: pkg.name,
+          coverage_type: input.coverage_type || "nomad",
+          provider: "safetywing" as const,
+          duration_days: days,
+          price: total,
+          currency: pkg.price_currency || "USD",
+          per_traveler: perTravelerTotal,
+          coverage_summary: {
+            medical_max: 250000,
+            deductible: 250,
+            covid_covered: true,
+            adventure_sports: false,
+          },
+          benefits,
+        };
+      }),
     };
   }
 
