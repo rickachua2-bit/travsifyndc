@@ -20,7 +20,7 @@ import { VisaResults, type VisaProduct } from "@/components/booking/VisaResults"
 import { TransferSearchForm, type TransferSearchPayload } from "@/components/booking/TransferSearchForm";
 import { TransferResults, type TransferQuote } from "@/components/booking/TransferResults";
 import { CarRentalSearchForm, type CarRentalSearchPayload } from "@/components/booking/CarRentalSearchForm";
-import { CarRentalResults, type CarRentalQuote } from "@/components/booking/CarRentalResults";
+import { CarRentalResults, carPhoto, type CarRentalQuote } from "@/components/booking/CarRentalResults";
 import { InsuranceSearchForm, type InsuranceSearchPayload } from "@/components/booking/InsuranceSearchForm";
 import { InsuranceResults, type InsuranceQuote } from "@/components/booking/InsuranceResults";
 import { findCityByCode } from "@/data/cities";
@@ -856,7 +856,7 @@ export function CarRentalsFlow({ mode = "guest" }: FlowProps) {
       {picked && !showForm && searchMeta && (
         <ProductDetailView 
           vertical="rentals"
-          item={{ ...picked, vehicle_name: picked.car_description, image_url: picked.photo }}
+          item={{ ...picked, vehicle_name: picked.car_description, image_url: carPhoto(picked.example_model, picked.car_class), metadata: { specs: { seats: picked.passengers, bags: picked.bags, transmission: picked.transmission, air_conditioning: picked.air_conditioning } } }}
           searchMeta={searchMeta}
           format={format}
           onConfirm={() => setShowForm(true)}

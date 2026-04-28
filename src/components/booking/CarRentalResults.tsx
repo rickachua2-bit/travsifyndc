@@ -85,7 +85,7 @@ const CLASS_FALLBACK_PHOTO: Record<CarRentalQuote["car_class"], string> = {
   minivan:  "https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=400&h=260&fit=crop",
 };
 
-function carPhoto(model: string, cls: CarRentalQuote["car_class"]): string {
+export function carPhoto(model: string, cls: CarRentalQuote["car_class"]): string {
   for (const m of MODEL_PHOTOS) if (m.match.test(model)) return m.url;
   return CLASS_FALLBACK_PHOTO[cls];
 }
