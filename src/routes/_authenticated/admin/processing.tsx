@@ -49,6 +49,11 @@ function affiliatePortalUrl(b: Booking): { url: string; label: string } | null {
     const url = `https://safetywing.com/nomad-insurance/?referenceID=travsify`;
     return { url, label: "SafetyWing portal" };
   }
+  if (b.vertical === "car_rentals") {
+    // Rentalcars provides the broadest global inventory for manual ops fulfillment.
+    const url = `https://www.rentalcars.com/?affiliateCode=travsify`;
+    return { url, label: "Rentalcars portal" };
+  }
   return null;
 }
 
@@ -91,7 +96,7 @@ function ProcessingQueue() {
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Operations</div>
           <h1 className="mt-1 font-display text-3xl font-extrabold text-primary">Manual fulfillment queue</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Affiliate bookings (Transfers, Tours, Visas, Insurance) waiting for ops to fulfill on the supplier portal.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Affiliate bookings (Transfers, Tours, Visas, Insurance, Car Rentals) waiting for ops to fulfill on the supplier portal.</p>
         </div>
         <div className="flex gap-2">
           {(["processing", "confirmed", "cancelled"] as const).map((s) => (
