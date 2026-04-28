@@ -239,8 +239,8 @@ export function ProductDetailView({ vertical, item, searchMeta, format, onConfir
             totalLabel={`${nights} night${nights > 1 ? "s" : ""} × ${rooms} room${rooms > 1 ? "s" : ""}`}
             totalText={format(unit * nights * rooms, item.currency)}
             rows={[
-              { label: "Check-in", value: searchMeta?.check_in || "—" },
-              { label: "Check-out", value: searchMeta?.check_out || "—" },
+              { label: "Check-in", value: searchMeta?.checkin || searchMeta?.check_in || "—" },
+              { label: "Check-out", value: searchMeta?.checkout || searchMeta?.check_out || "—" },
             ]}
             ctaLabel="Continue to booking" onConfirm={onConfirm}
           />
