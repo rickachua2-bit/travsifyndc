@@ -261,7 +261,7 @@ export function HotelsFlow({ mode = "guest" }: FlowProps) {
           <Field label="Email (voucher destination)"><input name="email" type="email" required className={inputCls} /></Field>
           <Field label="Phone"><input name="phone" required placeholder="+234 800 000 0000" className={inputCls} /></Field>
           <div className="col-span-full flex gap-2">
-            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
+            <button type="button" onClick={() => setShowForm(false)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to overview</button>
             <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
           </div>
         </form>
