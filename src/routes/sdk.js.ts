@@ -51,6 +51,12 @@ const SDK_SOURCE = `/* Travsify Unified API SDK v${SDK_VERSION} */
     return {
       apiKey: apiKey,
       health: function () { return call("GET", "/api/v1/health"); },
+      // Catalog: every country/destination/location we have inventory for.
+      // Use this to populate frontend dropdowns without running a search first.
+      catalog: function (vertical) {
+        var qs = vertical ? "?vertical=" + encodeURIComponent(vertical) : "";
+        return call("GET", "/api/v1/catalog" + qs);
+      },
       flights: {
         // Backward-compatible: returns final flight results, not just the queued job.
         search: function (p, opts) {
