@@ -53,7 +53,12 @@ export const Route = createFileRoute("/api/v1/insurance/search")({
             return { ...q, base_price: q.price, price: price.total, price_breakdown: price };
           }));
 
-          return jsonResponse({ data: { policies: priced } });
+          return jsonResponse({
+            data: { policies: priced },
+            ...(priced.length === 0
+              ? { warning: { code: "no_inventory", message: "No insurance inventory matches this request yet.", fallback: true } }
+              : {}),
+          });
         }),
     },
   },
