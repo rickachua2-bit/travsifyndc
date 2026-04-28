@@ -143,6 +143,7 @@ export function HotelsFlow({ mode = "guest" }: FlowProps) {
   const [destLabel, setDestLabel] = useState("");
   const [searchMeta, setSearchMeta] = useState<{ nights: number; rooms: number; adults: number; children: number; checkin: string; checkout: string } | null>(null);
   const [picked, setPicked] = useState<Hotel | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
 
