@@ -122,6 +122,21 @@ function ApiKeysPage() {
           <Link to="/docs" className="hidden rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground hover:border-accent hover:text-accent sm:inline-flex">Read the docs</Link>
         </div>
 
+        {(sandbox && !sandbox.startsWith("tsk_")) || (live && !live.startsWith("tsk_")) ? (
+          <div className="mt-6 rounded-2xl border border-destructive/50 bg-destructive/5 p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+              <div>
+                <div className="font-display text-sm font-bold text-destructive">Legacy API keys detected</div>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  One or more of your keys use an outdated format. Legacy keys were disabled on April 28, 2026. 
+                  Please **Rotate** your keys below to restore API access.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {justRevealed && (
           <div className="mt-6 rounded-2xl border-2 border-accent bg-accent/5 p-4">
             <div className="flex items-start gap-3">

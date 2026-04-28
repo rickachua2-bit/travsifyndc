@@ -102,6 +102,8 @@ function AdminApiKeys() {
                   <Td>
                     {k.revoked_at ? (
                       <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold uppercase text-destructive">Revoked</span>
+                    ) : !k.key_prefix.startsWith("tsk_") ? (
+                      <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-bold uppercase text-warning">Legacy</span>
                     ) : (
                       <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold uppercase text-success">Active</span>
                     )}

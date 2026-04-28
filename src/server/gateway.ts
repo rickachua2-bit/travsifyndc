@@ -43,8 +43,17 @@ export function errorResponse(code: string, message: string, status: number) {
 /** Extracts and validates the bearer key. Returns the resolved key row or an error response. */
 export async function authenticate(request: Request): Promise<AuthedKey | Response> {
   const auth = request.headers.get("authorization") || "";
+  // New standard: tsk_[env]_[40+ hex chars]
   const m = auth.match(/^Bearer\s+(tsk_(?:live|sandbox)_[a-f0-9]{40,64})$/i);
-  if (!m) return errorResponse("unauthorized", "Missing or malformed Bearer token. Use 'Authorization: Bearer tsk_live_…'.", 401);
+  
+  if (!m) {
+    // Check if it's a legacy key (just random hex/string without tsk_ prefix)
+    const legacyMatch = auth.match(/^Bearer\s+([a-zA-Z0-9]{32,})$/i);
+    if (legacyMatch) {
+      return errorResponse("legacy_key", "This API key uses a legacy format that is no longer supported. Please regenerate your key in the partner dashboard.", 403);
+    }
+    return errorResponse("unauthorized", "Missing or malformed Bearer token. Use 'Authorization: Bearer tsk_live_…'.", 401);
+  }
 
   const key = m[1];
   const expectedEnv = key.startsWith("tsk_live_") ? "live" : "sandbox";
