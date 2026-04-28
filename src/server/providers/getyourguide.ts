@@ -56,6 +56,8 @@ export type TourOffer = {
   photo: string | null;
   city: string;
   booking_url: string; // for ops fulfillment
+  highlights?: string[];
+  inclusions?: string[];
 };
 
 import { createClient } from "@supabase/supabase-js";
@@ -90,14 +92,16 @@ export async function searchTours(input: TourSearchInput): Promise<{ tours: Tour
         id: t.original_id,
         title: t.title,
         abstract: t.description || "",
-        duration: "Flexible",
+        duration: t.duration || "Flexible",
         price: Number(t.price_amount),
-        currency: t.price_currency,
+        currency: t.price_currency || "USD",
         rating: 4.5,
         review_count: 10,
         photo: t.image_url,
         city: t.location,
         booking_url: t.affiliate_url,
+        highlights: Array.isArray(t.highlights) ? t.highlights : [],
+        inclusions: Array.isArray(t.inclusions) ? t.inclusions : [],
       })),
     };
   } catch (err) {

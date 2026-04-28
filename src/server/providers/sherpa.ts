@@ -45,33 +45,52 @@ export type VisaOption = {
 
 import { createClient } from "@supabase/supabase-js";
 import { ensureDataExists } from "@/server/sync-engines";
+import { COUNTRIES } from "@/data/countries";
 
 const supabaseUrl = process.env.SUPABASE_URL || "";
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export async function searchVisas(input: VisaSearchInput): Promise<{ options: VisaOption[] }> {
-  // auto-fetch if no visa data for this destination
-  ensureDataExists("visas", input.destination);
+/** Resolve an ISO-2 code OR a country name to the full country name stored in DB. */
+function resolveCountryName(input: string): string {
+  const trimmed = input.trim();
+  if (trimmed.length === 2) {
+    const hit = COUNTRIES.find((c) => c.code.toUpperCase() === trimmed.toUpperCase());
+    if (hit) return hit.name;
+  }
+  return trimmed;
+}
 
-  // Check Supabase for pre-scraped visa data
-  const { data: dbVisas, error } = await supabase
+export async function searchVisas(input: VisaSearchInput): Promise<{ options: VisaOption[] }> {
+  const destinationName = resolveCountryName(input.destination);
+  // auto-fetch if no visa data for this destination (using full name to match DB)
+  ensureDataExists("visas", destinationName);
+
+  // Check Supabase for pre-scraped visa data — try full name AND ISO-2 just in case.
+  const { data: dbVisas } = await supabase
     .from("evisas")
     .select("*")
-    .or(`destination.ilike.%${input.destination}%,country.ilike.%${input.destination}%`)
+    .or(
+      `country.ilike.%${destinationName}%,destination_country.ilike.%${destinationName}%,destination.ilike.%${input.destination}%`,
+    )
     .limit(5);
 
   if (dbVisas && dbVisas.length > 0) {
     return {
       options: dbVisas.map((v) => ({
         id: v.original_id,
-        name: `${v.destination} E-Visa`,
-        visa_type: "evisa",
+        name: `${v.destination_country || v.country || destinationName} ${v.visa_type || "E-Visa"}`,
+        visa_type: (v.visa_type || "evisa").toLowerCase(),
         duration_days: 30,
-        processing_time: v.processing_time || "3-7 business days",
-        price: v.price_amount,
-        currency: "USD",
-        requirements: [v.requirement_summary || "Valid passport, digital photo, travel itinerary"],
+        processing_time: v.processing_time_days
+          ? `${v.processing_time_days} business days`
+          : "3-7 business days",
+        price: Number(v.price_amount) || 0,
+        currency: v.price_currency || "USD",
+        requirements:
+          Array.isArray(v.full_requirements) && v.full_requirements.length > 0
+            ? v.full_requirements
+            : [v.requirement_summary || "Valid passport, digital photo, travel itinerary"],
       })),
     };
   }

@@ -12,7 +12,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { AuthedKey } from "@/server/gateway";
 import { genBookingRef } from "@/server/gateway";
 
-export type Vertical = "flights" | "hotels" | "transfers" | "tours" | "visas" | "insurance";
+export type Vertical = "flights" | "hotels" | "transfers" | "tours" | "visas" | "insurance" | "car_rentals";
 
 export type PriceBreakdown = {
   provider_base: number;
