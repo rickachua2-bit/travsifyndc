@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
-    "start": "node node_modules/srvx/bin/srvx.mjs serve --entry ./dist/server/server.js --static ./dist/client --prod",
+    "start": "node server.js",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
@@ -54,6 +54,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
+    "express": "^5.2.1",
     "framer-motion": "^12.38.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.575.0",
