@@ -3,6 +3,9 @@
 // ops submits to Sherpa portal manually after wallet payment.
 // Docs: https://developers.joinsherpa.com/
 import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { ensureDataExists } from "@/server/sync-engines";
+import { COUNTRIES } from "@/data/countries";
 
 const BASE = "https://requirements-api.joinsherpa.com/v2";
 
@@ -43,14 +46,6 @@ export type VisaOption = {
   requirements: string[];
 };
 
-import { createClient } from "@supabase/supabase-js";
-import { ensureDataExists } from "@/server/sync-engines";
-import { COUNTRIES } from "@/data/countries";
-
-const supabaseUrl = process.env.SUPABASE_URL || "";
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 /** Resolve an ISO-2 code OR a country name to the full country name stored in DB. */
 function resolveCountryName(input: string): string {
   const trimmed = input.trim();
@@ -67,7 +62,7 @@ export async function searchVisas(input: VisaSearchInput): Promise<{ options: Vi
   ensureDataExists("visas", destinationName);
 
   // Check Supabase for pre-scraped visa data — try full name AND ISO-2 just in case.
-  const { data: dbVisas } = await supabase
+  const { data: dbVisas, error } = await supabaseAdmin
     .from("evisas")
     .select("*")
     .or(
@@ -75,10 +70,12 @@ export async function searchVisas(input: VisaSearchInput): Promise<{ options: Vi
     )
     .limit(5);
 
+  if (error) throw new Error(`Visa inventory lookup failed: ${error.message}`);
+
   if (dbVisas && dbVisas.length > 0) {
     return {
       options: dbVisas.map((v) => ({
-        id: v.original_id,
+        id: v.original_id || `visa_${v.id}`,
         name: `${v.destination_country || v.country || destinationName} ${v.visa_type || "E-Visa"}`,
         visa_type: (v.visa_type || "evisa").toLowerCase(),
         duration_days: 30,

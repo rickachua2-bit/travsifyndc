@@ -1,21 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const SDK_VERSION = "1.1.1";
+const SDK_VERSION = "1.1.2";
 
 const SDK_SOURCE = `/* Travsify Unified API SDK v${SDK_VERSION} */
 (function (global) {
   var BASE = "%BASE%";
   function client(apiKey) {
     if (!apiKey || typeof apiKey !== "string") throw new Error("Travsify: API key required");
+    function unavailable(path, message) {
+      return { fallback: true, error: { code: "search_unavailable", message: message || "Search is temporarily unavailable. Please retry shortly." }, data: path.indexOf("visas") > -1 ? { visas: [] } : {} };
+    }
     function call(method, path, body) {
       return fetch(BASE + path, {
         method: method,
         headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
         body: body ? JSON.stringify(body) : undefined
       }).then(function (r) { return r.json().then(function (j) {
+        if ((r.status === 403 || r.status >= 500) && path.indexOf("/search") > -1) return unavailable(path, (j && j.error && j.error.message) || ("HTTP " + r.status));
         if (!r.ok) { var e = new Error((j && j.error && j.error.message) || ("HTTP " + r.status)); e.code = j && j.error && j.error.code; e.status = r.status; throw e; }
-        return j.data;
-      }); });
+        return j.warning ? { data: j.data, warning: j.warning, fallback: !!j.warning.fallback } : j.data;
+      }); }).catch(function (e) {
+        if (path.indexOf("/search") > -1) return unavailable(path, e && e.message);
+        throw e;
+      });
     }
     function sleep(ms) { return new Promise(function (res) { setTimeout(res, ms); }); }
     // Polls /flights/search/:id until status is 'succeeded' or 'failed'.
@@ -61,6 +68,10 @@ const SDK_SOURCE = `/* Travsify Unified API SDK v${SDK_VERSION} */
       hotels: {
         search: function (p) { return call("POST", "/api/v1/hotels/search", p); },
         book:   function (p) { return call("POST", "/api/v1/hotels/bookings", p); }
+      },
+      visas: {
+        search: function (p) { return call("POST", "/api/v1/visas/search", p); },
+        book:   function (p) { return call("POST", "/api/v1/visas/bookings", p); }
       },
       payments: {
         createIntent: function (p) { return call("POST", "/api/v1/payments/intents", p); }
