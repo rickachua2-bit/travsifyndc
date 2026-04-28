@@ -143,6 +143,7 @@ export function HotelsFlow({ mode = "guest" }: FlowProps) {
   const [destLabel, setDestLabel] = useState("");
   const [searchMeta, setSearchMeta] = useState<{ nights: number; rooms: number; adults: number; children: number; checkin: string; checkout: string } | null>(null);
   const [picked, setPicked] = useState<Hotel | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
 
@@ -224,11 +225,22 @@ export function HotelsFlow({ mode = "guest" }: FlowProps) {
           nights={searchMeta.nights}
           rooms={searchMeta.rooms}
           format={format}
-          onSelect={(h) => setPicked(h)}
+          onSelect={(h) => { setPicked(h); setShowForm(false); }}
         />
       )}
 
-      {picked && searchMeta && (
+      {picked && !showForm && searchMeta && (
+        <ProductDetailView
+          vertical="hotels"
+          item={picked}
+          searchMeta={searchMeta}
+          format={format}
+          onConfirm={() => setShowForm(true)}
+          onBack={() => setPicked(null)}
+        />
+      )}
+
+      {picked && showForm && searchMeta && (
         <form
           onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
           className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
@@ -249,7 +261,7 @@ export function HotelsFlow({ mode = "guest" }: FlowProps) {
           <Field label="Email (voucher destination)"><input name="email" type="email" required className={inputCls} /></Field>
           <Field label="Phone"><input name="phone" required placeholder="+234 800 000 0000" className={inputCls} /></Field>
           <div className="col-span-full flex gap-2">
-            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
+            <button type="button" onClick={() => setShowForm(false)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to overview</button>
             <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
           </div>
         </form>
@@ -651,6 +663,7 @@ export function TransfersFlow({ mode = "guest" }: FlowProps) {
   const [quotes, setQuotes] = useState<TransferQuote[]>([]);
   const [searchMeta, setSearchMeta] = useState<TransferSearchPayload | null>(null);
   const [picked, setPicked] = useState<TransferQuote | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
 
@@ -727,11 +740,22 @@ export function TransfersFlow({ mode = "guest" }: FlowProps) {
           routeLabel={routeLabel}
           passengers={searchMeta.num_passengers}
           format={format}
-          onSelect={(q) => setPicked(q)}
+          onSelect={(q) => { setPicked(q); setShowForm(false); }}
         />
       )}
 
-      {picked && searchMeta && (
+      {picked && !showForm && searchMeta && (
+        <ProductDetailView
+          vertical="transfers"
+          item={{ ...picked, vehicle_name: picked.vehicle_description, image_url: (picked as unknown as { image_url?: string }).image_url, metadata: { specs: { passengers: searchMeta.num_passengers, vehicle_class: picked.vehicle_class, provider: picked.provider_name } } }}
+          searchMeta={searchMeta}
+          format={format}
+          onConfirm={() => setShowForm(true)}
+          onBack={() => setPicked(null)}
+        />
+      )}
+
+      {picked && showForm && searchMeta && (
         <form
           onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
           className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
@@ -757,7 +781,7 @@ export function TransfersFlow({ mode = "guest" }: FlowProps) {
             <strong className="text-foreground">Heads up:</strong> Transfer reservations are confirmed within a few hours by our ops team. You'll receive driver details and a contact number by email before pickup.
           </div>
           <div className="col-span-full flex gap-2">
-            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
+            <button type="button" onClick={() => setShowForm(false)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to overview</button>
             <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
           </div>
         </form>
@@ -903,6 +927,7 @@ export function InsuranceFlow({ mode = "guest" }: FlowProps) {
   const [quotes, setQuotes] = useState<InsuranceQuote[]>([]);
   const [searchMeta, setSearchMeta] = useState<InsuranceSearchPayload | null>(null);
   const [picked, setPicked] = useState<InsuranceQuote | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
 
@@ -1001,11 +1026,22 @@ export function InsuranceFlow({ mode = "guest" }: FlowProps) {
           travelersCount={totalTravelers}
           destinationLabel={searchMeta.destination_name}
           format={format}
-          onSelect={(q) => setPicked(q)}
+          onSelect={(q) => { setPicked(q); setShowForm(false); }}
         />
       )}
 
-      {picked && searchMeta && (
+      {picked && !showForm && searchMeta && (
+        <ProductDetailView
+          vertical="insurance"
+          item={{ ...picked, name: picked.plan_name, price_amount: picked.price, image_url: (picked as unknown as { image_url?: string }).image_url, benefits: (picked as unknown as { benefits?: string[] }).benefits ?? [], description: (picked as unknown as { description?: string }).description, metadata: { specs: { duration_days: picked.duration_days, coverage_type: picked.coverage_type, travelers: totalTravelers } } }}
+          searchMeta={searchMeta}
+          format={format}
+          onConfirm={() => setShowForm(true)}
+          onBack={() => setPicked(null)}
+        />
+      )}
+
+      {picked && showForm && searchMeta && (
         <form
           onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
           className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
@@ -1049,7 +1085,7 @@ export function InsuranceFlow({ mode = "guest" }: FlowProps) {
             <strong className="text-foreground">Heads up:</strong> Your policy is bound by our ops team within a few hours of payment. The policy PDF and member ID will be emailed to you. Coverage starts on {picked.duration_days > 0 ? searchMeta.start_date : "your selected start date"}.
           </div>
           <div className="col-span-full flex gap-2">
-            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to plans</button>
+            <button type="button" onClick={() => setShowForm(false)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to overview</button>
             <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
           </div>
         </form>
