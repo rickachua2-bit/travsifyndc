@@ -79,6 +79,22 @@ const SDK_SOURCE = `/* Travsify Unified API SDK v${SDK_VERSION} */
         search: function (p) { return call("POST", "/api/v1/visas/search", p); },
         book:   function (p) { return call("POST", "/api/v1/visas/bookings", p); }
       },
+      tours: {
+        search: function (p) { return call("POST", "/api/v1/tours/search", p); },
+        book:   function (p) { return call("POST", "/api/v1/tours/bookings", p); }
+      },
+      transfers: {
+        search: function (p) { return call("POST", "/api/v1/transfers/search", p); },
+        book:   function (p) { return call("POST", "/api/v1/transfers/bookings", p); }
+      },
+      rentals: {
+        search: function (p) { return call("POST", "/api/v1/rentals/search", p); },
+        book:   function (p) { return call("POST", "/api/v1/rentals/bookings", p); }
+      },
+      insurance: {
+        search: function (p) { return call("POST", "/api/v1/insurance/search", p); },
+        book:   function (p) { return call("POST", "/api/v1/insurance/bookings", p); }
+      },
       payments: {
         createIntent: function (p) { return call("POST", "/api/v1/payments/intents", p); }
       },
