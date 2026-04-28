@@ -8,7 +8,8 @@ import {
   FileBadge, 
   CheckCircle2, 
   AlertCircle,
-  Plus
+  Plus,
+  Globe
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -60,6 +61,26 @@ function DataSyncPage() {
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
   const [lastSynced, setLastSynced] = useState<Record<string, Date | null>>({});
   const [customCountry, setCustomCountry] = useState("");
+  const [seeding, setSeeding] = useState(false);
+  const [seedStarted, setSeedStarted] = useState(false);
+
+  const handleSeedGlobal = async () => {
+    setSeeding(true);
+    try {
+      const res = await fetch("/api/v1/admin/sync/seed", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Global warm-up started for ${data.countries.length} countries!`);
+        setSeedStarted(true);
+      } else {
+        toast.error(`Seed failed: ${data.message}`);
+      }
+    } catch {
+      toast.error("Failed to start global seed.");
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const handleSync = async (id: string, countries?: string[]) => {
     setSyncing((prev) => ({ ...prev, [id]: true }));
@@ -146,6 +167,33 @@ function DataSyncPage() {
           >
             <Plus className="h-4 w-4" />
             Fetch Country Data
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-500/20 rounded-xl p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/20">
+              <Globe className="h-6 w-6 text-indigo-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold">Seed Top 50 Countries</h2>
+              <p className="text-sm text-muted-foreground">One-click populate tours, transfers, rentals &amp; visas for the 50 highest-traffic destinations worldwide.</p>
+            </div>
+          </div>
+          <button
+            onClick={handleSeedGlobal}
+            disabled={seeding || seedStarted}
+            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-indigo-500 transition-all disabled:opacity-50 whitespace-nowrap"
+          >
+            {seeding ? (
+              <><RefreshCw className="h-4 w-4 animate-spin" /> Starting...</>
+            ) : seedStarted ? (
+              <><CheckCircle2 className="h-4 w-4" /> Warm-up Running</>
+            ) : (
+              <><Globe className="h-4 w-4" /> Launch Global Warm-up</>
+            )}
           </button>
         </div>
       </div>

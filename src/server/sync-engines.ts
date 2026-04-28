@@ -292,10 +292,9 @@ export async function syncRentals(countries: string[]) {
   return results;
 }
 
-/** 
- * Auto-fetch helper: Triggers a sync in the background if no data exists.
- * This satisfies the "auto fetch automatically" requirement.
- */
+// Simple in-memory lock to prevent duplicate syncs in the same process
+const activeSyncs = new Set<string>();
+
 export async function ensureDataExists(vertical: string, country: string) {
   const tableMap: Record<string, string> = {
     tours: "tours",
@@ -307,17 +306,33 @@ export async function ensureDataExists(vertical: string, country: string) {
   const table = tableMap[vertical];
   if (!table) return;
 
+  const syncKey = `${vertical}:${country.toLowerCase()}`;
+  if (activeSyncs.has(syncKey)) return;
+
+  // Check if we have data
   const { count } = await supabase
     .from(table)
     .select("*", { count: "exact", head: true })
     .eq("country", country);
 
   if (!count || count === 0) {
-    console.log(`Auto-fetching ${vertical} for ${country}...`);
-    // Fire and forget (background sync)
-    if (vertical === "tours") syncTours([country]);
-    if (vertical === "transfers") syncTransfers([country]);
-    if (vertical === "visas") syncVisas([country]);
-    if (vertical === "rentals") syncRentals([country]);
+    console.log(`[Auto-Fetch] No data for ${syncKey}. Starting background sync...`);
+    
+    activeSyncs.add(syncKey);
+
+    // NON-BLOCKING: We do NOT await these. We let them run in the background.
+    (async () => {
+      try {
+        if (vertical === "tours") await syncTours([country]);
+        if (vertical === "transfers") await syncTransfers([country]);
+        if (vertical === "visas") await syncVisas([country]);
+        if (vertical === "rentals") await syncRentals([country]);
+        console.log(`[Auto-Fetch] Successfully populated ${syncKey}`);
+      } catch (err) {
+        console.error(`[Auto-Fetch] Failed for ${syncKey}:`, err);
+      } finally {
+        activeSyncs.delete(syncKey);
+      }
+    })();
   }
 }

@@ -81,6 +81,7 @@ import { Route as ApiV1FlightsSearchSearchIdRouteImport } from './routes/api/v1/
 import { Route as ApiV1AdminSyncVisasRouteImport } from './routes/api/v1/admin.sync.visas'
 import { Route as ApiV1AdminSyncTransfersRouteImport } from './routes/api/v1/admin.sync.transfers'
 import { Route as ApiV1AdminSyncToursRouteImport } from './routes/api/v1/admin.sync.tours'
+import { Route as ApiV1AdminSyncSeedRouteImport } from './routes/api/v1/admin.sync.seed'
 import { Route as ApiV1AdminSyncRentalsRouteImport } from './routes/api/v1/admin.sync.rentals'
 import { Route as ApiV1AdminSyncInsuranceRouteImport } from './routes/api/v1/admin.sync.insurance'
 
@@ -468,6 +469,11 @@ const ApiV1AdminSyncToursRoute = ApiV1AdminSyncToursRouteImport.update({
   path: '/api/v1/admin/sync/tours',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1AdminSyncSeedRoute = ApiV1AdminSyncSeedRouteImport.update({
+  id: '/api/v1/admin/sync/seed',
+  path: '/api/v1/admin/sync/seed',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1AdminSyncRentalsRoute = ApiV1AdminSyncRentalsRouteImport.update({
   id: '/api/v1/admin/sync/rentals',
   path: '/api/v1/admin/sync/rentals',
@@ -549,6 +555,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
   '/api/v1/admin/sync/insurance': typeof ApiV1AdminSyncInsuranceRoute
   '/api/v1/admin/sync/rentals': typeof ApiV1AdminSyncRentalsRoute
+  '/api/v1/admin/sync/seed': typeof ApiV1AdminSyncSeedRoute
   '/api/v1/admin/sync/tours': typeof ApiV1AdminSyncToursRoute
   '/api/v1/admin/sync/transfers': typeof ApiV1AdminSyncTransfersRoute
   '/api/v1/admin/sync/visas': typeof ApiV1AdminSyncVisasRoute
@@ -623,6 +630,7 @@ export interface FileRoutesByTo {
   '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
   '/api/v1/admin/sync/insurance': typeof ApiV1AdminSyncInsuranceRoute
   '/api/v1/admin/sync/rentals': typeof ApiV1AdminSyncRentalsRoute
+  '/api/v1/admin/sync/seed': typeof ApiV1AdminSyncSeedRoute
   '/api/v1/admin/sync/tours': typeof ApiV1AdminSyncToursRoute
   '/api/v1/admin/sync/transfers': typeof ApiV1AdminSyncTransfersRoute
   '/api/v1/admin/sync/visas': typeof ApiV1AdminSyncVisasRoute
@@ -700,6 +708,7 @@ export interface FileRoutesById {
   '/api/v1/visas/search': typeof ApiV1VisasSearchRoute
   '/api/v1/admin/sync/insurance': typeof ApiV1AdminSyncInsuranceRoute
   '/api/v1/admin/sync/rentals': typeof ApiV1AdminSyncRentalsRoute
+  '/api/v1/admin/sync/seed': typeof ApiV1AdminSyncSeedRoute
   '/api/v1/admin/sync/tours': typeof ApiV1AdminSyncToursRoute
   '/api/v1/admin/sync/transfers': typeof ApiV1AdminSyncTransfersRoute
   '/api/v1/admin/sync/visas': typeof ApiV1AdminSyncVisasRoute
@@ -777,6 +786,7 @@ export interface FileRouteTypes {
     | '/api/v1/visas/search'
     | '/api/v1/admin/sync/insurance'
     | '/api/v1/admin/sync/rentals'
+    | '/api/v1/admin/sync/seed'
     | '/api/v1/admin/sync/tours'
     | '/api/v1/admin/sync/transfers'
     | '/api/v1/admin/sync/visas'
@@ -851,6 +861,7 @@ export interface FileRouteTypes {
     | '/api/v1/visas/search'
     | '/api/v1/admin/sync/insurance'
     | '/api/v1/admin/sync/rentals'
+    | '/api/v1/admin/sync/seed'
     | '/api/v1/admin/sync/tours'
     | '/api/v1/admin/sync/transfers'
     | '/api/v1/admin/sync/visas'
@@ -927,6 +938,7 @@ export interface FileRouteTypes {
     | '/api/v1/visas/search'
     | '/api/v1/admin/sync/insurance'
     | '/api/v1/admin/sync/rentals'
+    | '/api/v1/admin/sync/seed'
     | '/api/v1/admin/sync/tours'
     | '/api/v1/admin/sync/transfers'
     | '/api/v1/admin/sync/visas'
@@ -971,6 +983,7 @@ export interface RootRouteChildren {
   ApiV1VisasSearchRoute: typeof ApiV1VisasSearchRoute
   ApiV1AdminSyncInsuranceRoute: typeof ApiV1AdminSyncInsuranceRoute
   ApiV1AdminSyncRentalsRoute: typeof ApiV1AdminSyncRentalsRoute
+  ApiV1AdminSyncSeedRoute: typeof ApiV1AdminSyncSeedRoute
   ApiV1AdminSyncToursRoute: typeof ApiV1AdminSyncToursRoute
   ApiV1AdminSyncTransfersRoute: typeof ApiV1AdminSyncTransfersRoute
   ApiV1AdminSyncVisasRoute: typeof ApiV1AdminSyncVisasRoute
@@ -1482,6 +1495,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1AdminSyncToursRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/admin/sync/seed': {
+      id: '/api/v1/admin/sync/seed'
+      path: '/api/v1/admin/sync/seed'
+      fullPath: '/api/v1/admin/sync/seed'
+      preLoaderRoute: typeof ApiV1AdminSyncSeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/admin/sync/rentals': {
       id: '/api/v1/admin/sync/rentals'
       path: '/api/v1/admin/sync/rentals'
@@ -1660,6 +1680,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1VisasSearchRoute: ApiV1VisasSearchRoute,
   ApiV1AdminSyncInsuranceRoute: ApiV1AdminSyncInsuranceRoute,
   ApiV1AdminSyncRentalsRoute: ApiV1AdminSyncRentalsRoute,
+  ApiV1AdminSyncSeedRoute: ApiV1AdminSyncSeedRoute,
   ApiV1AdminSyncToursRoute: ApiV1AdminSyncToursRoute,
   ApiV1AdminSyncTransfersRoute: ApiV1AdminSyncTransfersRoute,
   ApiV1AdminSyncVisasRoute: ApiV1AdminSyncVisasRoute,
