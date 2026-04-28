@@ -33,6 +33,7 @@ const SECTIONS: Section[] = [
   { id: "authentication", label: "Authentication", icon: KeyRound, group: "Start here" },
   { id: "wallet", label: "Wallet & funding", icon: WalletIcon, group: "Build" },
   { id: "markups", label: "Markups & pricing", icon: Sparkles, group: "Build" },
+  { id: "catalog", label: "Catalog (live inventory)", icon: Globe2, group: "Build" },
   { id: "flights", label: "Flights", icon: Plane, group: "Verticals" },
   { id: "hotels", label: "Hotels", icon: Building2, group: "Verticals" },
   { id: "tours", label: "Tours & activities", icon: MapPin, group: "Verticals" },
