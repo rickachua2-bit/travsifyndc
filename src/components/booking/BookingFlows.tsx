@@ -927,6 +927,7 @@ export function InsuranceFlow({ mode = "guest" }: FlowProps) {
   const [quotes, setQuotes] = useState<InsuranceQuote[]>([]);
   const [searchMeta, setSearchMeta] = useState<InsuranceSearchPayload | null>(null);
   const [picked, setPicked] = useState<InsuranceQuote | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
 
