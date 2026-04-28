@@ -28,6 +28,7 @@ import { GuestCheckout, ConfirmationScreen, type CheckoutInput } from "@/compone
 import { WalletCheckout } from "@/components/booking/WalletCheckout";
 import { publicSearchFlights, publicSearchHotels, publicSearchTours, publicSearchTransfers, publicSearchInsurance, publicSearchCarRentals } from "@/server/booking-engine";
 import { publicSearchVisaProducts } from "@/server/visa-products.functions";
+import { ProductDetailView } from "./ProductDetailView";
 
 export type CheckoutMode = "guest" | "wallet";
 type FlowProps = { mode?: CheckoutMode };
@@ -264,6 +265,7 @@ export function ToursFlow({ mode = "guest" }: FlowProps) {
   const [destLabel, setDestLabel] = useState("");
   const [searchMeta, setSearchMeta] = useState<{ adults: number; children: number; date_from: string; date_to: string } | null>(null);
   const [picked, setPicked] = useState<Tour | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
 
@@ -339,11 +341,22 @@ export function ToursFlow({ mode = "guest" }: FlowProps) {
           destinationLabel={destLabel}
           travelers={totalTravelers}
           format={format}
-          onSelect={(t) => setPicked(t)}
+          onSelect={(t) => { setPicked(t); setShowForm(false); }}
         />
       )}
 
-      {picked && searchMeta && (
+      {picked && !showForm && searchMeta && (
+        <ProductDetailView 
+          vertical="tours"
+          item={picked}
+          searchMeta={searchMeta}
+          format={format}
+          onConfirm={() => setShowForm(true)}
+          onBack={() => setPicked(null)}
+        />
+      )}
+
+      {picked && showForm && searchMeta && (
         <form
           onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
           className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
@@ -370,7 +383,7 @@ export function ToursFlow({ mode = "guest" }: FlowProps) {
             <strong className="text-foreground">Heads up:</strong> Tours are confirmed within a few hours after payment. Your voucher will be emailed to you once the operator confirms availability.
           </div>
           <div className="col-span-full flex gap-2">
-            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
+            <button type="button" onClick={() => setShowForm(false)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to overview</button>
             <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
           </div>
         </form>
@@ -385,6 +398,7 @@ export function VisasFlow({ mode = "guest" }: FlowProps) {
   const [products, setProducts] = useState<VisaProduct[]>([]);
   const [searchMeta, setSearchMeta] = useState<VisaSearchPayload | null>(null);
   const [picked, setPicked] = useState<VisaProduct | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
   // How many people are applying together. Each traveler pays the full visa
@@ -535,11 +549,22 @@ export function VisasFlow({ mode = "guest" }: FlowProps) {
           nationalityLabel={searchMeta.nationality_name}
           destinationLabel={searchMeta.destination_name}
           format={format}
-          onSelect={(p) => setPicked(p)}
+          onSelect={(p) => { setPicked(p); setShowForm(false); }}
         />
       )}
 
-      {picked && (
+      {picked && !showForm && (
+        <ProductDetailView 
+          vertical="visas"
+          item={{ ...picked, title: `${picked.destination_name} ${picked.visa_type} eVisa`, description: `Complete visa application for ${picked.nationality_name} citizens traveling to ${picked.destination_name}. Includes processing fees and professional review.` }}
+          searchMeta={searchMeta}
+          format={format}
+          onConfirm={() => setShowForm(true)}
+          onBack={() => setPicked(null)}
+        />
+      )}
+
+      {picked && showForm && (
         <form
           onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
           className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
@@ -611,7 +636,7 @@ export function VisasFlow({ mode = "guest" }: FlowProps) {
             <strong className="text-foreground">Heads up:</strong> Visa applications are reviewed and submitted to the issuing authority by our ops team within 24 hours. Your eVisa PDF will be emailed to you in {picked.processing_days_min}–{picked.processing_days_max} business days. We'll request additional documents (photo, supporting letters) by email if needed.
           </div>
           <div className="col-span-full flex gap-2">
-            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
+            <button type="button" onClick={() => setShowForm(false)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to overview</button>
             <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
           </div>
         </form>
@@ -747,6 +772,7 @@ export function CarRentalsFlow({ mode = "guest" }: FlowProps) {
   const [quotes, setQuotes] = useState<CarRentalQuote[]>([]);
   const [searchMeta, setSearchMeta] = useState<CarRentalSearchPayload | null>(null);
   const [picked, setPicked] = useState<CarRentalQuote | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
 
@@ -823,11 +849,22 @@ export function CarRentalsFlow({ mode = "guest" }: FlowProps) {
           quotes={quotes}
           routeLabel={routeLabel}
           format={format}
-          onSelect={(q) => setPicked(q)}
+          onSelect={(q) => { setPicked(q); setShowForm(false); }}
         />
       )}
 
-      {picked && searchMeta && (
+      {picked && !showForm && searchMeta && (
+        <ProductDetailView 
+          vertical="rentals"
+          item={{ ...picked, vehicle_name: picked.car_description, image_url: picked.photo }}
+          searchMeta={searchMeta}
+          format={format}
+          onConfirm={() => setShowForm(true)}
+          onBack={() => setPicked(null)}
+        />
+      )}
+
+      {picked && showForm && searchMeta && (
         <form
           onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }}
           className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2"
@@ -851,7 +888,7 @@ export function CarRentalsFlow({ mode = "guest" }: FlowProps) {
             <strong className="text-foreground">Heads up:</strong> Car rental reservations are confirmed within a few hours by our ops team. You'll receive the pickup voucher and rental terms by email before your pickup date.
           </div>
           <div className="col-span-full flex gap-2">
-            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to results</button>
+            <button type="button" onClick={() => setShowForm(false)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back to overview</button>
             <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
           </div>
         </form>

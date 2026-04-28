@@ -43,17 +43,20 @@ export async function syncTours(countries: string[]) {
                       description: { type: "string" },
                       price: { type: "number" },
                       currency: { type: "string" },
-                      image: { type: "string" },
+                      image: { type: "string", description: "URL of the highest resolution cover image available" },
                       id: { type: "string" },
                       url: { type: "string" },
-                      location: { type: "string" }
+                      location: { type: "string" },
+                      highlights: { type: "array", items: { type: "string" }, description: "Key features or highlights of the tour" },
+                      inclusions: { type: "array", items: { type: "string" }, description: "What is included in the price" },
+                      duration_text: { type: "string" }
                     },
                     required: ["title", "price", "url"]
                   }
                 }
               }
             },
-            prompt: "Extract all available tour packages. Aim for at least 15 items if present on the page."
+            prompt: "Extract all available tour packages. Find the HIGHEST QUALITY image for each. Capture the full description, key highlights, and inclusions (what travelers get) for every item. Aim for 20+ items if present."
           }
         })
       });
@@ -64,11 +67,13 @@ export async function syncTours(countries: string[]) {
       }
       const extracted = data.data.extract.tours || [];
       for (const tour of extracted) {
-        // Deterministic ID if original ID is missing
         const tourId = tour.id || Buffer.from(tour.title + tour.url).toString("base64").slice(0, 16);
         await supabase.from("tours").upsert({
           title: tour.title,
           description: tour.description || "",
+          highlights: tour.highlights || [],
+          inclusions: tour.inclusions || [],
+          duration: tour.duration_text || "",
           price_amount: tour.price,
           price_currency: tour.currency || "USD",
           image_url: tour.image || "",
@@ -106,19 +111,21 @@ export async function syncTransfers(countries: string[]) {
                     type: "object",
                     properties: {
                       vehicle_type: { type: "string" },
+                      description: { type: "string" },
                       price: { type: "number" },
                       currency: { type: "string" },
                       provider: { type: "string" },
-                      image: { type: "string" },
+                      image: { type: "string", description: "URL of the vehicle image" },
                       id: { type: "string" },
-                      location: { type: "string" }
+                      location: { type: "string" },
+                      amenities: { type: "array", items: { type: "string" } }
                     },
                     required: ["vehicle_type", "price"]
                   }
                 }
               }
             },
-            prompt: "Extract all available car transfer options, including vehicle type and pricing."
+            prompt: "Extract car transfer options. Include details about the vehicle, amenities (like WiFi, water), and high-quality vehicle photos."
           }
         })
       });
@@ -132,6 +139,8 @@ export async function syncTransfers(countries: string[]) {
         const transferId = item.id || Buffer.from(item.vehicle_type + item.price).toString("base64").slice(0, 16);
         await supabase.from("car_transfers").upsert({
           vehicle_type: item.vehicle_type,
+          description: item.description || "",
+          amenities: item.amenities || [],
           price_amount: item.price,
           price_currency: item.currency || "USD",
           location: item.location || country,
@@ -270,15 +279,24 @@ export async function syncRentals(countries: string[]) {
                       price: { type: "number" },
                       currency: { type: "string" },
                       provider: { type: "string" },
-                      image: { type: "string" },
-                      id: { type: "string" }
+                      image: { type: "string", description: "High-res car photo" },
+                      id: { type: "string" },
+                      specifications: {
+                        type: "object",
+                        properties: {
+                          seats: { type: "number" },
+                          bags: { type: "number" },
+                          transmission: { type: "string" },
+                          air_conditioning: { type: "boolean" }
+                        }
+                      }
                     },
                     required: ["vehicle_name", "price"]
                   }
                 }
               }
             },
-            prompt: "Extract all car rental listings. Get at least 15-20 vehicles if available."
+            prompt: "Extract all car rental listings. Include full vehicle specs (seats, luggage capacity, manual/auto) and high-quality car images."
           }
         })
       });
@@ -299,6 +317,7 @@ export async function syncRentals(countries: string[]) {
           original_id: `rc-${rentalId}`,
           image_url: item.image || "",
           provider: item.provider || "RentalCars",
+          metadata: { specs: item.specifications || {} },
           affiliate_url: `https://www.rentalcars.com/en/search-results/?locationName=${encodeURIComponent(country)}`
         }, { onConflict: "original_id" });
       }
@@ -387,58 +406,77 @@ export async function backfillInventory() {
         
         if (v.vertical === "tours") {
           await supabase.from("tours").upsert({
-            title: `Premium ${country} City Tour - Option ${i+1}`,
-            description: `Explore the best of ${country} with our expert local guides. Includes transport and entry fees.`,
-            price_amount: 45 + (i * 10),
+            title: `Elite ${country} Discovery Experience - #${i+1}`,
+            description: `Immerse yourself in the vibrant culture and hidden gems of ${country}. This curated experience includes private transport, luxury refreshments, and priority access to all venues.`,
+            highlights: ["Private local guide", "All-inclusive refreshments", "VIP entry skip-the-line"],
+            inclusions: ["Roundtrip transport", "Professional guide", "Gourmet lunch", "Entry tickets"],
+            price_amount: 89 + (i * 15),
             price_currency: "USD",
             location: country,
             country: country,
+            image_url: `https://images.unsplash.com/photo-150${200000 + i}?auto=format&fit=crop&w=800&q=80`,
             original_id: seedId,
             affiliate_url: "https://www.getyourguide.com",
-            provider: "GetYourGuide (Seeded)"
+            provider: "GetYourGuide (Premium Seed)"
           });
         } else if (v.vertical === "transfers") {
           await supabase.from("car_transfers").upsert({
-            vehicle_type: i % 2 === 0 ? "Executive Sedan" : "Private Minivan",
-            price_amount: 35 + (i * 5),
+            vehicle_type: i % 2 === 0 ? "Luxury Executive Sedan" : "Premium VIP Minivan",
+            description: "Door-to-door private transfer with meet-and-greet service. Late-model vehicles with high-speed WiFi and refreshments.",
+            amenities: ["WiFi", "Bottled Water", "Air Conditioning", "Leather Interior"],
+            price_amount: 45 + (i * 8),
             price_currency: "USD",
             location: country,
             country: country,
+            image_url: `https://images.unsplash.com/photo-154${900000 + i}?auto=format&fit=crop&w=800&q=80`,
             original_id: seedId,
-            provider: "Mozio (Seeded)",
+            provider: "Mozio (Elite Seed)",
             affiliate_url: "https://www.mozio.com"
           });
         } else if (v.vertical === "rentals") {
           await supabase.from("car_rentals").upsert({
-            vehicle_name: ["Toyota Corolla", "BMW 3 Series", "Mercedes C-Class", "Range Rover", "Tesla Model 3"][i % 5],
-            price_amount: 55 + (i * 12),
+            vehicle_name: ["Toyota Camry Hybrid", "BMW 5 Series", "Mercedes-Benz E-Class", "Range Rover Sport", "Audi Q7"][i % 5],
+            price_amount: 65 + (i * 18),
             price_currency: "USD",
             location: country,
             country: country,
+            image_url: `https://images.unsplash.com/photo-150${300000 + i}?auto=format&fit=crop&w=800&q=80`,
             original_id: seedId,
-            provider: "RentalCars (Seeded)",
+            provider: "RentalCars (Premium Seed)",
+            metadata: { 
+              specs: { 
+                seats: i % 2 === 0 ? 5 : 7, 
+                bags: i % 3 === 0 ? 3 : 2, 
+                transmission: "Automatic", 
+                air_conditioning: true 
+              } 
+            },
             affiliate_url: "https://www.rentalcars.com"
           });
         } else if (v.vertical === "insurance") {
           await supabase.from("insurance_packages").upsert({
-            name: `Global Nomad Protect ${i+1}`,
-            daily_rate: 1.5 + (i * 0.2),
-            weekly_rate: 10 + (i * 1.5),
-            description: `Comprehensive travel and medical insurance for nomads visiting ${country} and beyond.`,
+            name: `Travsify Global Shield - Plan ${i+1}`,
+            daily_rate: 2.5 + (i * 0.5),
+            weekly_rate: 15 + (i * 2.5),
+            description: `Comprehensive global coverage for modern travelers. Includes $100k medical, trip cancellation, and lost baggage protection for your stay in ${country}.`,
             original_id: seedId,
-            provider: "SafetyWing (Seeded)",
+            provider: "SafetyWing (Premium Seed)",
             affiliate_url: "https://safetywing.com"
           });
         } else if (v.vertical === "visas") {
           await supabase.from("evisas").upsert({
             destination: country,
             country: country,
-            requirement_summary: "Online application required. 3-5 days processing time.",
-            price_amount: 50 + (i * 5),
-            processing_time: "3-5 business days",
+            requirement_summary: `Electronic travel authorization for ${country}. Online processing with professional documentation review.`,
+            price_amount: 50 + (i * 10),
+            processing_time: "3-5 Business Days",
             original_id: seedId,
-            provider: "Sherpa (Seeded)",
-            affiliate_url: "https://apply.joinsherpa.com"
+            provider: "Sherpa (Elite Seed)",
+            metadata: {
+              full_requirements: ["Passport (6 months validity)", "Digital Photo", "Proof of funds", "Return Ticket"],
+              validity: "90 Days"
+            },
+            affiliate_url: `https://apply.joinsherpa.com`
           });
         }
       }
