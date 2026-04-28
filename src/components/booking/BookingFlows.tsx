@@ -663,6 +663,7 @@ export function TransfersFlow({ mode = "guest" }: FlowProps) {
   const [quotes, setQuotes] = useState<TransferQuote[]>([]);
   const [searchMeta, setSearchMeta] = useState<TransferSearchPayload | null>(null);
   const [picked, setPicked] = useState<TransferQuote | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [checkout, setCheckoutInput] = useState<CheckoutInput | null>(null);
   const [done, setDone] = useState<{ reference: string; amount: number; currency: string } | null>(null);
 
