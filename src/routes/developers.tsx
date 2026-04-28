@@ -71,7 +71,7 @@ function DevelopersPage() {
           </div>
           <div className="mt-10 overflow-hidden rounded-2xl bg-primary p-6" style={{ boxShadow: "var(--shadow-elevated)" }}>
             <div className="text-[11px] font-bold uppercase tracking-wider text-white/60">Drop-in script</div>
-            <pre className="mt-3 overflow-x-auto font-mono text-xs leading-relaxed text-white">{`<script src="https://api.travsify.com/sdk.js"></script>
+            <pre className="mt-3 overflow-x-auto font-mono text-xs leading-relaxed text-white">{`<script src="https://travsify.com/sdk.js"></script>
 <script>
   Travsify.init("tsk_sandbox_your_key")
     .flights.search({ origin: "LOS", destination: "DXB", departure_date: "2026-06-01", adults: 1 })

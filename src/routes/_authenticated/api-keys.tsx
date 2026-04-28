@@ -261,7 +261,7 @@ function ApiKeysPage() {
           <h2 className="font-display text-base font-bold text-primary">Authentication header</h2>
           <p className="text-xs text-muted-foreground">All REST calls expect a bearer token.</p>
           <pre className="mt-4 overflow-x-auto rounded-lg bg-primary p-4 font-mono text-xs leading-relaxed text-white">
-{`curl https://${typeof window !== "undefined" ? window.location.host : "api.travsify.com"}/api/v1/health \\
+{`curl https://${typeof window !== "undefined" ? window.location.host : "travsify.com"}/api/v1/health \\
   -H "Authorization: Bearer ${approved && live ? live : sandbox || "tsk_sandbox_…"}"`}
           </pre>
         </section>
