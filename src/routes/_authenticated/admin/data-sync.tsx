@@ -58,25 +58,25 @@ function DataSyncPage() {
     setSyncing((prev) => ({ ...prev, [id]: true }));
     
     try {
-      if (id === "tours") {
-        const response = await fetch("/api/v1/admin/sync/tours", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cities })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-          toast.success(`${verticals.find(v => v.id === id)?.title} synced successfully!`);
-          setLastSynced((prev) => ({ ...prev, [id]: new Date() }));
-        } else {
-          toast.error(`Sync failed: ${data.message}`);
-        }
-      } else {
-        // Placeholder for other verticals
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        toast.info(`${verticals.find(v => v.id === id)?.title} sync logic coming soon.`);
+      const endpointMap: Record<string, string> = {
+        tours: "/api/v1/admin/sync/tours",
+        transfers: "/api/v1/admin/sync/transfers",
+        insurance: "/api/v1/admin/sync/insurance",
+        evisas: "/api/v1/admin/sync/visas"
+      };
+
+      const response = await fetch(endpointMap[id], {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(id === "tours" ? { cities } : (id === "transfers" ? { airports: cities } : (id === "evisas" ? { countries: cities } : {})))
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        toast.success(`${verticals.find(v => v.id === id)?.title} synced successfully!`);
         setLastSynced((prev) => ({ ...prev, [id]: new Date() }));
+      } else {
+        toast.error(`Sync failed: ${data.message}`);
       }
     } catch (error) {
       toast.error("An error occurred during synchronization.");

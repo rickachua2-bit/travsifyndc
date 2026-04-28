@@ -55,30 +55,35 @@ export type TransferQuote = {
   cancellation_policy: string;
 };
 
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 export async function searchTransfers(input: TransferSearchInput): Promise<{ quotes: TransferQuote[] }> {
-  const search = await call<{ search_id: string }>("/searches", {
-    method: "POST",
-    body: JSON.stringify({
-      start_address: input.pickup_address,
-      end_address: input.dropoff_address,
-      mode: "one_way",
-      pickup_datetime: input.pickup_datetime,
-      num_passengers: input.num_passengers,
-      currency: input.currency || "USD",
-      campaign: affiliateId(),
-    }),
-  });
-  const results = await call<{ results: Array<Record<string, unknown>> }>(`/searches/${search.search_id}/poll`);
+  // Query Supabase for pre-scraped transfer data
+  const { data, error } = await supabase
+    .from("car_transfers")
+    .select("*")
+    .eq("location", input.pickup_address) // In a real app, we might do fuzzy matching or check if pickup is an airport
+    .limit(10);
+
+  if (error || !data || data.length === 0) {
+    console.warn("No pre-scraped transfers found, falling back to empty results.");
+    return { quotes: [] };
+  }
+
   return {
-    quotes: (results.results || []).map((r) => ({
-      id: r.result_id as string,
-      vehicle_class: r.vehicle_class as string,
-      vehicle_description: (r.vehicle_description as string) || (r.vehicle_class as string),
-      provider_name: r.provider_name as string,
-      total_price: Number(r.total_price),
-      currency: r.currency as string,
-      duration_minutes: Number(r.estimated_duration_minutes || 0),
-      cancellation_policy: (r.cancellation_policy as string) || "Free cancellation up to 4h before pickup",
+    quotes: data.map((r) => ({
+      id: r.original_id,
+      vehicle_class: r.vehicle_type,
+      vehicle_description: r.vehicle_type,
+      provider_name: r.provider,
+      total_price: r.price_amount,
+      currency: r.price_currency,
+      duration_minutes: 45, // Estimated
+      cancellation_policy: "Free cancellation up to 4h before pickup",
     })),
   };
 }

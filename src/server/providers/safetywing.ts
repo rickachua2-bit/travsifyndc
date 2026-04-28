@@ -59,50 +59,48 @@ function daysBetween(a: string, b: string): number {
   return Math.max(1, Math.round(ms / 86400000));
 }
 
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 export async function searchInsurance(input: InsuranceSearchInput): Promise<{ quotes: InsuranceQuote[] }> {
-  // SafetyWing's public quote API is minimal; we model the canonical Nomad Insurance pricing
-  // ($45.08 / 4 weeks for ages <40, $80.64 / 4 weeks for 40-49, scaling up) with a live call
-  // attempt that falls back to deterministic pricing so the endpoint is always usable.
   const days = daysBetween(input.start_date, input.end_date);
   const weeks = Math.ceil(days / 7);
 
-  let liveQuotes: InsuranceQuote[] | null = null;
-  try {
-    const res = await call<{ data?: { quotes?: Array<Record<string, unknown>> } }>(
-      `/quotes?destination=${input.destination}&nationality=${input.nationality}` +
-      `&start_date=${input.start_date}&end_date=${input.end_date}` +
-      `&ages=${input.travelers.map((t) => t.age).join(",")}`
-    );
-    const items = res.data?.quotes || [];
-    if (items.length) {
-      liveQuotes = items.map((q) => ({
-        id: String(q.id),
-        plan_name: String(q.plan_name || "SafetyWing Nomad Insurance"),
-        coverage_type: String(q.coverage_type || input.coverage_type || "nomad"),
-        provider: "safetywing" as const,
+  // Check Supabase for pre-scraped insurance products
+  const { data: dbPackages, error } = await supabase
+    .from("insurance_packages")
+    .select("*")
+    .limit(10);
+
+  if (dbPackages && dbPackages.length > 0) {
+    return {
+      quotes: dbPackages.map((pkg) => ({
+        id: pkg.original_id,
+        plan_name: pkg.name,
+        coverage_type: input.coverage_type || "nomad",
+        provider: "safetywing",
         duration_days: days,
-        price: Number(q.price || 0),
-        currency: String(q.currency || "USD"),
-        per_traveler: Number(q.per_traveler || (Number(q.price || 0) / input.travelers.length)),
+        price: (pkg.daily_rate * days) * input.travelers.length,
+        currency: "USD",
+        per_traveler: pkg.daily_rate * days,
         coverage_summary: {
-          medical_max: Number((q.coverage as Record<string, unknown> | undefined)?.medical_max ?? 250000),
-          deductible: Number((q.coverage as Record<string, unknown> | undefined)?.deductible ?? 250),
-          covid_covered: Boolean((q.coverage as Record<string, unknown> | undefined)?.covid_covered ?? true),
-          adventure_sports: Boolean((q.coverage as Record<string, unknown> | undefined)?.adventure_sports ?? false),
+          medical_max: 250000,
+          deductible: 250,
+          covid_covered: true,
+          adventure_sports: false,
         },
-        benefits: Array.isArray(q.benefits) ? (q.benefits as string[]).map(String) : [
+        benefits: [
+          pkg.description || "Comprehensive nomad insurance coverage",
           "Hospital & ambulance",
           "Emergency dental",
           "Trip interruption",
-          "Lost luggage",
         ],
-      }));
-    }
-  } catch {
-    // Affiliate API may not expose quoting in all regions — fall through to model.
+      })),
+    };
   }
-
-  if (liveQuotes) return { quotes: liveQuotes };
 
   // Deterministic fallback grounded in published Nomad Insurance rates.
   const ratePerWeek = (age: number): number => {

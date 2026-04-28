@@ -43,27 +43,37 @@ export type VisaOption = {
   requirements: string[];
 };
 
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 export async function searchVisas(input: VisaSearchInput): Promise<{ options: VisaOption[] }> {
-  const path = `/entry-requirements?nationality=${input.nationality}&destination=${input.destination}` +
-    (input.purpose ? `&purpose=${input.purpose}` : "");
-  const res = await call<{ data?: Array<Record<string, unknown>> }>(path);
-  const items = (res.data || []).filter((d) => (d.type as string) === "VISA");
-  return {
-    options: items.map((d) => {
-      const attr = (d.attributes as Record<string, unknown>) || {};
-      const cost = (attr.cost as Record<string, unknown>) || {};
-      return {
-        id: String(d.id),
-        name: String(attr.title || "Visa"),
-        visa_type: String(attr.category || "evisa"),
-        duration_days: Number(attr.duration || 30),
-        processing_time: String(attr.processingTime || "3-7 business days"),
-        price: Number(cost.amount || 0),
-        currency: String(cost.currency || "USD"),
-        requirements: ((attr.documents as Array<Record<string, unknown>> | undefined) || []).map((r) => String(r.title || r.name)),
-      };
-    }),
-  };
+  // Check Supabase for pre-scraped visa data
+  const { data: dbVisas, error } = await supabase
+    .from("evisas")
+    .select("*")
+    .eq("destination", input.destination) // Destination mapping
+    .limit(5);
+
+  if (dbVisas && dbVisas.length > 0) {
+    return {
+      options: dbVisas.map((v) => ({
+        id: v.original_id,
+        name: `${v.destination} E-Visa`,
+        visa_type: "evisa",
+        duration_days: 30,
+        processing_time: v.processing_time || "3-7 business days",
+        price: v.price_amount,
+        currency: "USD",
+        requirements: [v.requirement_summary || "Valid passport, digital photo, travel itinerary"],
+      })),
+    };
+  }
+
+  // Fallback to minimal search if DB is empty for this corridor
+  return { options: [] };
 }
 
 /** Sherpa affiliate flow: capture intent. Ops submits the actual application portal-side. */
