@@ -323,6 +323,7 @@ export type Database = {
           id: string
           image_url: string | null
           location: string
+          metadata: Json
           original_id: string | null
           price_amount: number
           price_currency: string
@@ -336,6 +337,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           location: string
+          metadata?: Json
           original_id?: string | null
           price_amount: number
           price_currency?: string
@@ -349,6 +351,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           location?: string
+          metadata?: Json
           original_id?: string | null
           price_amount?: number
           price_currency?: string
@@ -360,8 +363,10 @@ export type Database = {
       car_transfers: {
         Row: {
           affiliate_url: string
+          amenities: string[]
           country: string | null
           created_at: string | null
+          description: string | null
           dropoff_location: string
           id: string
           image_url: string | null
@@ -376,8 +381,10 @@ export type Database = {
         }
         Insert: {
           affiliate_url: string
+          amenities?: string[]
           country?: string | null
           created_at?: string | null
+          description?: string | null
           dropoff_location: string
           id?: string
           image_url?: string | null
@@ -392,8 +399,10 @@ export type Database = {
         }
         Update: {
           affiliate_url?: string
+          amenities?: string[]
           country?: string | null
           created_at?: string | null
+          description?: string | null
           dropoff_location?: string
           id?: string
           image_url?: string | null
@@ -447,6 +456,7 @@ export type Database = {
           country: string | null
           created_at: string | null
           destination_country: string
+          full_requirements: string[]
           id: string
           last_synced_at: string | null
           nationality: string | null
@@ -455,6 +465,8 @@ export type Database = {
           price_currency: string | null
           processing_time_days: number | null
           provider: string
+          requirement_summary: string | null
+          validity: string | null
           visa_type: string
         }
         Insert: {
@@ -462,6 +474,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           destination_country: string
+          full_requirements?: string[]
           id?: string
           last_synced_at?: string | null
           nationality?: string | null
@@ -470,6 +483,8 @@ export type Database = {
           price_currency?: string | null
           processing_time_days?: number | null
           provider: string
+          requirement_summary?: string | null
+          validity?: string | null
           visa_type: string
         }
         Update: {
@@ -477,6 +492,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           destination_country?: string
+          full_requirements?: string[]
           id?: string
           last_synced_at?: string | null
           nationality?: string | null
@@ -485,6 +501,8 @@ export type Database = {
           price_currency?: string | null
           processing_time_days?: number | null
           provider?: string
+          requirement_summary?: string | null
+          validity?: string | null
           visa_type?: string
         }
         Relationships: []
@@ -582,9 +600,12 @@ export type Database = {
       insurance_packages: {
         Row: {
           affiliate_url: string
+          benefits: string[]
           coverage_details: string | null
           created_at: string | null
+          description: string | null
           id: string
+          image_url: string | null
           last_synced_at: string | null
           name: string
           original_id: string | null
@@ -594,9 +615,12 @@ export type Database = {
         }
         Insert: {
           affiliate_url: string
+          benefits?: string[]
           coverage_details?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
+          image_url?: string | null
           last_synced_at?: string | null
           name: string
           original_id?: string | null
@@ -606,9 +630,12 @@ export type Database = {
         }
         Update: {
           affiliate_url?: string
+          benefits?: string[]
           coverage_details?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
+          image_url?: string | null
           last_synced_at?: string | null
           name?: string
           original_id?: string | null
@@ -1080,8 +1107,11 @@ export type Database = {
           country: string | null
           created_at: string | null
           description: string | null
+          duration: string | null
+          highlights: string[]
           id: string
           image_url: string | null
+          inclusions: string[]
           last_synced_at: string | null
           location: string
           original_id: string | null
@@ -1095,8 +1125,11 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           description?: string | null
+          duration?: string | null
+          highlights?: string[]
           id?: string
           image_url?: string | null
+          inclusions?: string[]
           last_synced_at?: string | null
           location: string
           original_id?: string | null
@@ -1110,8 +1143,11 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           description?: string | null
+          duration?: string | null
+          highlights?: string[]
           id?: string
           image_url?: string | null
+          inclusions?: string[]
           last_synced_at?: string | null
           location?: string
           original_id?: string | null
