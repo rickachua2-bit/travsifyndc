@@ -9,19 +9,12 @@ export const Route = createFileRoute("/api/v1/admin/sync/tours")({
       POST: async ({ request }) => {
         try {
           const body = await request.json().catch(() => ({}));
-          const cities = body.cities || [
-            "Lagos, Nigeria",
-            "London, UK",
-            "Paris, France",
-            "Dubai, UAE",
-            "New York, USA",
-            "Nairobi, Kenya",
-            "Cape Town, South Africa",
-            "Accra, Ghana"
+          const countries = body.countries || [
+            "United Arab Emirates", "United Kingdom", "United States", "Nigeria", "Kenya"
           ];
 
-          console.log(`Starting sync for ${cities.length} cities...`);
-          const results = await syncTours(cities);
+          console.log(`Starting sync for ${countries.length} countries...`);
+          const results = await syncTours(countries);
 
           return new Response(JSON.stringify({
             success: true,

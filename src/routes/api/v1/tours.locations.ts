@@ -14,17 +14,18 @@ export const Route = createFileRoute("/api/v1/tours/locations")({
         try {
           const { data, error } = await supabase
             .from("tours")
-            .select("location")
-            .order("location");
+            .select("country")
+            .not("country", "is", null)
+            .order("country");
 
           if (error) throw error;
 
-          const locations = data.map(item => item.location);
-          const uniqueLocations = Array.from(new Set(locations));
+          const countries = data.map(item => item.country);
+          const uniqueCountries = Array.from(new Set(countries));
 
           return new Response(JSON.stringify({
             success: true,
-            locations: uniqueLocations
+            locations: uniqueCountries
           }), {
             status: 200,
             headers: { ...API_CORS_HEADERS, "Content-Type": "application/json" }

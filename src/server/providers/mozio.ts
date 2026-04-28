@@ -56,17 +56,20 @@ export type TransferQuote = {
 };
 
 import { createClient } from "@supabase/supabase-js";
+import { ensureDataExists } from "@/server/sync-engines";
 
 const supabaseUrl = process.env.SUPABASE_URL || "";
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function searchTransfers(input: TransferSearchInput): Promise<{ quotes: TransferQuote[] }> {
-  // Query Supabase for pre-scraped transfer data
+  // detect and auto-fetch if no data for this pickup address (which we treat as a country-level search for aggregators)
+  ensureDataExists("transfers", input.pickup_address);
+
   const { data, error } = await supabase
     .from("car_transfers")
     .select("*")
-    .eq("location", input.pickup_address) // In a real app, we might do fuzzy matching or check if pickup is an airport
+    .or(`location.ilike.%${input.pickup_address}%,country.ilike.%${input.pickup_address}%`)
     .limit(10);
 
   if (error || !data || data.length === 0) {

@@ -59,7 +59,7 @@ export type TourOffer = {
 };
 
 import { createClient } from "@supabase/supabase-js";
-import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
+import { ensureDataExists } from "@/server/sync-engines";
 
 const supabaseUrl = process.env.SUPABASE_URL || "";
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
@@ -68,11 +68,14 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 export async function searchTours(input: TourSearchInput): Promise<{ tours: TourOffer[] }> {
   console.log(`Searching internal database for tours matching: ${input.query}...`);
   
+  // satisfy "auto fetch automatically" by triggering background sync if DB is cold
+  ensureDataExists("tours", input.query);
+
   try {
     const { data, error } = await supabase
       .from("tours")
       .select("*")
-      .or(`title.ilike.%${input.query}%,location.ilike.%${input.query}%`)
+      .or(`title.ilike.%${input.query}%,location.ilike.%${input.query}%,country.ilike.%${input.query}%`)
       .limit(20);
 
     if (error) throw error;
@@ -90,7 +93,7 @@ export async function searchTours(input: TourSearchInput): Promise<{ tours: Tour
         duration: "Flexible",
         price: Number(t.price_amount),
         currency: t.price_currency,
-        rating: 4.5, // Mock rating since we might not scrape reviews for every tour
+        rating: 4.5,
         review_count: 10,
         photo: t.image_url,
         city: t.location,

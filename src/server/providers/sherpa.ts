@@ -44,17 +44,21 @@ export type VisaOption = {
 };
 
 import { createClient } from "@supabase/supabase-js";
+import { ensureDataExists } from "@/server/sync-engines";
 
 const supabaseUrl = process.env.SUPABASE_URL || "";
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function searchVisas(input: VisaSearchInput): Promise<{ options: VisaOption[] }> {
+  // auto-fetch if no visa data for this destination
+  ensureDataExists("visas", input.destination);
+
   // Check Supabase for pre-scraped visa data
   const { data: dbVisas, error } = await supabase
     .from("evisas")
     .select("*")
-    .eq("destination", input.destination) // Destination mapping
+    .or(`destination.ilike.%${input.destination}%,country.ilike.%${input.destination}%`)
     .limit(5);
 
   if (dbVisas && dbVisas.length > 0) {

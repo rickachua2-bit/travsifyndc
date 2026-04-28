@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/admin/data-sync")({
   component: DataSyncPage,
 });
 
-type Vertical = "tours" | "insurance" | "transfers" | "evisas";
+type Vertical = "tours" | "insurance" | "transfers" | "evisas" | "rentals";
 
 const verticals = [
   {
@@ -24,43 +24,51 @@ const verticals = [
     title: "Tours & Experiences",
     provider: "GetYourGuide",
     icon: Map,
-    description: "Syncs the latest tour packages, pricing, and availability.",
+    description: "Syncs the latest tour packages and top-rated experiences by country.",
   },
   {
     id: "insurance" as Vertical,
     title: "Travel Insurance",
     provider: "SafetyWing",
     icon: ShieldCheck,
-    description: "Syncs current coverage policies and premium amounts.",
+    description: "Syncs current nomad insurance policies and global premium amounts.",
   },
   {
     id: "transfers" as Vertical,
     title: "Car Transfers",
     provider: "Mozio",
     icon: Car,
-    description: "Updates available routes, vehicle types, and base fares.",
+    description: "Updates available airport transfers and private routes by country.",
+  },
+  {
+    id: "rentals" as Vertical,
+    title: "Car Rentals",
+    provider: "RentalCars",
+    icon: Car,
+    description: "Fetches self-drive rental inventory and pricing across entire nations.",
   },
   {
     id: "evisas" as Vertical,
     title: "eVisas",
     provider: "Sherpa",
     icon: FileBadge,
-    description: "Fetches latest visa requirements, processing times, and fees.",
+    description: "Fetches latest visa requirements and processing fees for destinations.",
   },
 ];
 
 function DataSyncPage() {
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
   const [lastSynced, setLastSynced] = useState<Record<string, Date | null>>({});
-  const [customCity, setCustomCity] = useState("");
+  const [customCountry, setCustomCountry] = useState("");
 
-  const handleSync = async (id: string, cities?: string[]) => {
+  const handleSync = async (id: string, countries?: string[]) => {
     setSyncing((prev) => ({ ...prev, [id]: true }));
     
     try {
       const endpointMap: Record<string, string> = {
         tours: "/api/v1/admin/sync/tours",
         transfers: "/api/v1/admin/sync/transfers",
+        rentals: "/api/v1/admin/sync/rentals",
         insurance: "/api/v1/admin/sync/insurance",
         evisas: "/api/v1/admin/sync/visas"
       };
@@ -68,7 +76,7 @@ function DataSyncPage() {
       const response = await fetch(endpointMap[id], {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(id === "tours" ? { cities } : (id === "transfers" ? { airports: cities } : (id === "evisas" ? { countries: cities } : {})))
+        body: JSON.stringify({ countries: countries || [] })
       });
       
       const data = await response.json();
@@ -85,10 +93,13 @@ function DataSyncPage() {
     }
   };
 
-  const handleAddCitySync = () => {
-    if (!customCity.trim()) return;
-    handleSync("tours", [customCity]);
-    setCustomCity("");
+  const handleAddCountrySync = () => {
+    if (!customCountry.trim()) return;
+    handleSync("tours", [customCountry]);
+    handleSync("transfers", [customCountry]);
+    handleSync("rentals", [customCountry]);
+    handleSync("evisas", [customCountry]);
+    setCustomCountry("");
   };
 
   const handleSyncAll = async () => {
@@ -104,8 +115,8 @@ function DataSyncPage() {
             Data Synchronization
           </h1>
           <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
-            Manually trigger data crawls to fetch the latest pricing and availability from your affiliate providers. 
-            This keeps your database fresh and ensures accurate bookings.
+            Manually trigger data crawls to fetch the latest pricing and availability. 
+            The system also auto-fetches missing data when users search.
           </p>
         </div>
         <button
@@ -117,7 +128,29 @@ function DataSyncPage() {
         </button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold mb-2">Auto-Fetch a New Country</h2>
+        <p className="text-sm text-muted-foreground mb-6">Enter a country name to automatically fetch tours, transfers, rentals, and visa info.</p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <input 
+            type="text" 
+            placeholder="Enter country (e.g. Nigeria)"
+            value={customCountry}
+            onChange={(e) => setCustomCountry(e.target.value)}
+            className="flex-1 rounded-lg border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
+          />
+          <button 
+            onClick={handleAddCountrySync}
+            disabled={Object.values(syncing).some(Boolean) || !customCountry}
+            className="flex items-center justify-center gap-2 rounded-lg bg-accent px-6 py-2 text-sm font-bold text-white hover:bg-accent/90 transition-all disabled:opacity-50"
+          >
+            <Plus className="h-4 w-4" />
+            Fetch Country Data
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {verticals.map((vertical) => {
           const isSyncing = syncing[vertical.id];
           const syncDate = lastSynced[vertical.id];
@@ -138,56 +171,36 @@ function DataSyncPage() {
                   {syncDate ? (
                     <span className="flex items-center gap-1.5 rounded-full bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-500">
                       <CheckCircle2 className="h-3.5 w-3.5" />
-                      Up to date
+                      Ready
                     </span>
                   ) : (
                     <span className="flex items-center gap-1.5 rounded-full bg-yellow-500/10 px-2.5 py-1 text-xs font-medium text-yellow-500">
                       <AlertCircle className="h-3.5 w-3.5" />
-                      Pending sync
+                      No Data
                     </span>
                   )}
                 </div>
                 
-                <p className="mt-4 text-sm text-muted-foreground">
+                <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
                   {vertical.description}
                 </p>
-
-                {vertical.id === "tours" && (
-                  <div className="mt-4 flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Enter city (e.g. Dubai)"
-                      value={customCity}
-                      onChange={(e) => setCustomCity(e.target.value)}
-                      className="flex-1 rounded-md border border-border bg-background px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                    <button 
-                      onClick={handleAddCitySync}
-                      disabled={isSyncing || !customCity}
-                      className="flex items-center gap-1 rounded-md bg-accent/10 px-3 py-1 text-xs font-bold text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
-                    >
-                      <Plus className="h-3 w-3" />
-                      Add & Sync
-                    </button>
-                  </div>
-                )}
               </div>
 
               <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
                 <div className="text-xs text-muted-foreground">
                   {syncDate ? (
-                    <span>Last synced: {syncDate.toLocaleTimeString()}</span>
+                    <span>Updated: {syncDate.toLocaleTimeString()}</span>
                   ) : (
-                    <span>No recent sync</span>
+                    <span>Not synced</span>
                   )}
                 </div>
                 <button
                   onClick={() => handleSync(vertical.id)}
                   disabled={isSyncing}
-                  className="flex items-center gap-2 rounded-md bg-secondary/50 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 rounded-md bg-secondary/50 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
                 >
                   <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
-                  {isSyncing ? "Syncing..." : "Sync Now"}
+                  {isSyncing ? "Syncing..." : "Sync"}
                 </button>
               </div>
             </div>
