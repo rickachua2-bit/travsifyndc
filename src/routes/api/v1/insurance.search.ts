@@ -24,14 +24,24 @@ export const Route = createFileRoute("/api/v1/insurance/search")({
           const parsed = Schema.safeParse(body);
           if (!parsed.success) return errorResponse("validation_error", parsed.error.issues[0].message, 400);
 
-          const { quotes } = await searchInsurance({
-            nationality: parsed.data.nationality.toUpperCase(),
-            destination: parsed.data.destination.toUpperCase(),
-            start_date: parsed.data.start_date,
-            end_date: parsed.data.end_date,
-            travelers: parsed.data.travelers,
-            coverage_type: parsed.data.coverage_type,
-          });
+          let quotes: Awaited<ReturnType<typeof searchInsurance>>["quotes"] = [];
+          try {
+            const result = await searchInsurance({
+              nationality: parsed.data.nationality.toUpperCase(),
+              destination: parsed.data.destination.toUpperCase(),
+              start_date: parsed.data.start_date,
+              end_date: parsed.data.end_date,
+              travelers: parsed.data.travelers,
+              coverage_type: parsed.data.coverage_type,
+            });
+            quotes = result.quotes;
+          } catch (e) {
+            console.warn("Insurance search unavailable:", (e as Error).message);
+            return jsonResponse({
+              data: { policies: [] },
+              warning: { code: "search_unavailable", message: "Insurance search is temporarily unavailable. Please retry shortly.", fallback: true },
+            });
+          }
 
           const priced = await Promise.all(quotes.map(async (q) => {
             const price = await composePrice({
@@ -43,7 +53,12 @@ export const Route = createFileRoute("/api/v1/insurance/search")({
             return { ...q, base_price: q.price, price: price.total, price_breakdown: price };
           }));
 
-          return jsonResponse({ data: { policies: priced } });
+          return jsonResponse({
+            data: { policies: priced },
+            ...(priced.length === 0
+              ? { warning: { code: "no_inventory", message: "No insurance inventory matches this request yet.", fallback: true } }
+              : {}),
+          });
         }),
     },
   },

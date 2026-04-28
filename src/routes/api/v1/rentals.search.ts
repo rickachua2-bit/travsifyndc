@@ -32,7 +32,17 @@ export const Route = createFileRoute("/api/v1/rentals/search")({
             const parsed = Schema.safeParse(body);
             if (!parsed.success) return errorResponse("validation_error", parsed.error.issues[0].message, 400);
 
-            const { rentals } = await searchRentals(parsed.data);
+            let rentals: Awaited<ReturnType<typeof searchRentals>>["rentals"] = [];
+            try {
+              const result = await searchRentals(parsed.data);
+              rentals = result.rentals;
+            } catch (e) {
+              console.warn("Rentals search unavailable:", (e as Error).message);
+              return jsonResponse({
+                data: { rentals: [] },
+                warning: { code: "search_unavailable", message: "Car rentals search is temporarily unavailable. Please retry shortly.", fallback: true },
+              });
+            }
 
             const priced = await Promise.all(
               rentals.map(async (r) => {
@@ -53,7 +63,12 @@ export const Route = createFileRoute("/api/v1/rentals/search")({
               }),
             );
 
-            return jsonResponse({ data: { rentals: priced } });
+            return jsonResponse({
+              data: { rentals: priced },
+              ...(priced.length === 0
+                ? { warning: { code: "no_inventory", message: "No car-rental inventory cached for this location yet — a background warm-up has been triggered.", fallback: true } }
+                : {}),
+            });
           },
         ),
     },

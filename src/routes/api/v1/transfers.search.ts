@@ -23,7 +23,17 @@ export const Route = createFileRoute("/api/v1/transfers/search")({
           const parsed = Schema.safeParse(body);
           if (!parsed.success) return errorResponse("validation_error", parsed.error.issues[0].message, 400);
 
-          const { quotes } = await searchTransfers(parsed.data);
+          let quotes: Awaited<ReturnType<typeof searchTransfers>>["quotes"] = [];
+          try {
+            const result = await searchTransfers(parsed.data);
+            quotes = result.quotes;
+          } catch (e) {
+            console.warn("Transfers search unavailable:", (e as Error).message);
+            return jsonResponse({
+              data: { transfers: [] },
+              warning: { code: "search_unavailable", message: "Transfers search is temporarily unavailable. Please retry shortly.", fallback: true },
+            });
+          }
 
           // Apply markup so what the partner sees is the final customer price.
           const priced = await Promise.all(quotes.map(async (q) => {
@@ -36,7 +46,12 @@ export const Route = createFileRoute("/api/v1/transfers/search")({
             return { ...q, base_price: q.total_price, total_price: price.total, price_breakdown: price };
           }));
 
-          return jsonResponse({ data: { transfers: priced } });
+          return jsonResponse({
+            data: { transfers: priced },
+            ...(priced.length === 0
+              ? { warning: { code: "no_inventory", message: "No transfer inventory matches this route yet.", fallback: true } }
+              : {}),
+          });
         }),
     },
   },
