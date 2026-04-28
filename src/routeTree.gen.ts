@@ -37,6 +37,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as VisaTrackReferenceRouteImport } from './routes/visa.track.$reference'
 import { Route as ApiV1PayoutsRouteImport } from './routes/api/v1/payouts'
 import { Route as ApiV1HealthRouteImport } from './routes/api/v1/health'
+import { Route as ApiV1CatalogRouteImport } from './routes/api/v1/catalog'
 import { Route as ApiPublicDemoSearchRouteImport } from './routes/api/public/demo-search'
 import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin/withdrawals'
 import { Route as AuthenticatedAdminWalletsRouteImport } from './routes/_authenticated/admin/wallets'
@@ -226,6 +227,11 @@ const ApiV1PayoutsRoute = ApiV1PayoutsRouteImport.update({
 const ApiV1HealthRoute = ApiV1HealthRouteImport.update({
   id: '/api/v1/health',
   path: '/api/v1/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1CatalogRoute = ApiV1CatalogRouteImport.update({
+  id: '/api/v1/catalog',
+  path: '/api/v1/catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicDemoSearchRoute = ApiPublicDemoSearchRouteImport.update({
@@ -543,6 +549,7 @@ export interface FileRoutesByFullPath {
   '/admin/wallets': typeof AuthenticatedAdminWalletsRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
+  '/api/v1/catalog': typeof ApiV1CatalogRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
   '/visa/track/$reference': typeof VisaTrackReferenceRoute
@@ -620,6 +627,7 @@ export interface FileRoutesByTo {
   '/admin/wallets': typeof AuthenticatedAdminWalletsRoute
   '/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
+  '/api/v1/catalog': typeof ApiV1CatalogRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
   '/visa/track/$reference': typeof VisaTrackReferenceRoute
@@ -700,6 +708,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/wallets': typeof AuthenticatedAdminWalletsRoute
   '/_authenticated/admin/withdrawals': typeof AuthenticatedAdminWithdrawalsRoute
   '/api/public/demo-search': typeof ApiPublicDemoSearchRoute
+  '/api/v1/catalog': typeof ApiV1CatalogRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/payouts': typeof ApiV1PayoutsRoute
   '/visa/track/$reference': typeof VisaTrackReferenceRoute
@@ -780,6 +789,7 @@ export interface FileRouteTypes {
     | '/admin/wallets'
     | '/admin/withdrawals'
     | '/api/public/demo-search'
+    | '/api/v1/catalog'
     | '/api/v1/health'
     | '/api/v1/payouts'
     | '/visa/track/$reference'
@@ -857,6 +867,7 @@ export interface FileRouteTypes {
     | '/admin/wallets'
     | '/admin/withdrawals'
     | '/api/public/demo-search'
+    | '/api/v1/catalog'
     | '/api/v1/health'
     | '/api/v1/payouts'
     | '/visa/track/$reference'
@@ -936,6 +947,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/wallets'
     | '/_authenticated/admin/withdrawals'
     | '/api/public/demo-search'
+    | '/api/v1/catalog'
     | '/api/v1/health'
     | '/api/v1/payouts'
     | '/visa/track/$reference'
@@ -986,6 +998,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SdkJsRoute: typeof SdkJsRoute
   ApiPublicDemoSearchRoute: typeof ApiPublicDemoSearchRoute
+  ApiV1CatalogRoute: typeof ApiV1CatalogRoute
   ApiV1HealthRoute: typeof ApiV1HealthRoute
   ApiV1PayoutsRoute: typeof ApiV1PayoutsRoute
   VisaTrackReferenceRoute: typeof VisaTrackReferenceRoute
@@ -1211,6 +1224,13 @@ declare module '@tanstack/react-router' {
       path: '/api/v1/health'
       fullPath: '/api/v1/health'
       preLoaderRoute: typeof ApiV1HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/catalog': {
+      id: '/api/v1/catalog'
+      path: '/api/v1/catalog'
+      fullPath: '/api/v1/catalog'
+      preLoaderRoute: typeof ApiV1CatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/demo-search': {
@@ -1699,6 +1719,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SdkJsRoute: SdkJsRoute,
   ApiPublicDemoSearchRoute: ApiPublicDemoSearchRoute,
+  ApiV1CatalogRoute: ApiV1CatalogRoute,
   ApiV1HealthRoute: ApiV1HealthRoute,
   ApiV1PayoutsRoute: ApiV1PayoutsRoute,
   VisaTrackReferenceRoute: VisaTrackReferenceRoute,
