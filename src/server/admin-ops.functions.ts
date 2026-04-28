@@ -726,3 +726,39 @@ export const adminListInventory = createServerFn({ method: "POST" })
     
     return { rows: rows ?? [] };
   });
+
+export const purgeLegacyApiKeys = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const { userId } = context as unknown as { userId: string };
+    await assertAdmin(userId);
+
+    const now = new Date().toISOString();
+
+    // 1. Revoke in api_keys table
+    const { data: keysToRevoke, error: fetchErr } = await supabaseAdmin
+      .from("api_keys")
+      .select("id, user_id, environment, key_prefix")
+      .is("revoked_at", null);
+    
+    if (fetchErr) throw new Error(fetchErr.message);
+
+    const legacyKeys = (keysToRevoke ?? []).filter(k => !k.key_prefix.startsWith("tsk_"));
+    
+    if (legacyKeys.length > 0) {
+      const { error: revokeErr } = await supabaseAdmin
+        .from("api_keys")
+        .update({ revoked_at: now })
+        .in("id", legacyKeys.map(k => k.id));
+      
+      if (revokeErr) throw new Error(revokeErr.message);
+
+      // 2. Clear from profiles
+      for (const k of legacyKeys) {
+        const field = k.environment === "live" ? "live_api_key" : "sandbox_api_key";
+        await supabaseAdmin.from("profiles").update({ [field]: null }).eq("id", k.user_id);
+      }
+    }
+
+    return { count: legacyKeys.length };
+  });

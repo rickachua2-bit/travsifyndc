@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, Search, KeyRound, Ban, Settings2 } from "lucide-react";
 import { toast } from "sonner";
-import { adminListApiKeys, adminRevokeApiKey, adminUpdateApiKeyRateLimit } from "@/server/admin-ops.functions";
+import { adminListApiKeys, adminRevokeApiKey, adminUpdateApiKeyRateLimit, purgeLegacyApiKeys } from "@/server/admin-ops.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/api-keys")({
   component: AdminApiKeys,
@@ -71,6 +71,19 @@ function AdminApiKeys() {
           <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && refresh()} placeholder="Key prefix, partner, name…" className="w-full rounded-md border border-border bg-white py-2 pl-9 pr-3 text-sm" />
         </div>
         <button onClick={refresh} className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90">Search</button>
+        <button 
+          onClick={async () => {
+            if (!confirm("This will revoke ALL keys without the 'tsk_' prefix and clear them from partner profiles. Continue?")) return;
+            try {
+              const res = await purgeLegacyApiKeys();
+              toast.success(`Purged ${res.count} legacy keys`);
+              refresh();
+            } catch (e) { toast.error((e as Error).message); }
+          }} 
+          className="rounded-md border border-destructive/30 px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10"
+        >
+          Purge Legacy Keys
+        </button>
       </div>
 
       <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-white" style={{ boxShadow: "var(--shadow-soft)" }}>
