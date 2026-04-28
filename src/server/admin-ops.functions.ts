@@ -4,6 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth as authMiddleware } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Database } from "@/integrations/supabase/types";
 
 async function assertAdmin(userId: string) {
   const { data } = await supabaseAdmin
@@ -709,7 +710,7 @@ export const adminListInventory = createServerFn({ method: "POST" })
       visas: "evisas"
     };
     
-    const table = tableMap[data.vertical];
+    const table = tableMap[data.vertical] as keyof Database["public"]["Tables"];
     // Some tables might not have created_at, let's check or just default order.
     let q = supabaseAdmin.from(table).select("*").limit(data.limit);
     
@@ -755,8 +756,8 @@ export const purgeLegacyApiKeys = createServerFn({ method: "POST" })
 
       // 2. Clear from profiles
       for (const k of legacyKeys) {
-        const field = k.environment === "live" ? "live_api_key" : "sandbox_api_key";
-        await supabaseAdmin.from("profiles").update({ [field]: null }).eq("id", k.user_id);
+        const update = k.environment === "live" ? { live_api_key: null } : { sandbox_api_key: null };
+        await supabaseAdmin.from("profiles").update(update).eq("id", k.user_id);
       }
     }
 
