@@ -6,11 +6,12 @@ import { z } from "zod";
 import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
 import { searchRentals } from "@/server/providers/car-rentals";
 import { composePrice } from "@/server/bookings";
+import { aliasFields, formatZodIssues } from "@/server/api-helpers";
 
 const Schema = z.object({
-  location: z.string().min(2).max(120),
-  pickup_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  dropoff_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  location: z.string().min(2, "must be at least 2 characters (city or airport, e.g. 'Dubai')").max(120),
+  pickup_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"),
+  dropoff_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"),
   currency: z.string().length(3).optional(),
 });
 
@@ -29,8 +30,21 @@ export const Route = createFileRoute("/api/v1/rentals/search")({
             } catch {
               return errorResponse("invalid_json", "Body must be valid JSON.", 400);
             }
-            const parsed = Schema.safeParse(body);
-            if (!parsed.success) return errorResponse("validation_error", parsed.error.issues[0].message, 400);
+            const aliased = aliasFields(body, {
+              city: "location",
+              destination: "location",
+              pickup_location: "location",
+              pickup: "pickup_date",
+              dropoff: "dropoff_date",
+              return_date: "dropoff_date",
+              start_date: "pickup_date",
+              end_date: "dropoff_date",
+            });
+            const parsed = Schema.safeParse(aliased);
+            if (!parsed.success) {
+              const { message, details } = formatZodIssues(parsed.error);
+              return jsonResponse({ error: { code: "validation_error", message, details } }, 400);
+            }
 
             let rentals: Awaited<ReturnType<typeof searchRentals>>["rentals"] = [];
             try {
