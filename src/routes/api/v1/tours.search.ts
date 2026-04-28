@@ -3,11 +3,12 @@ import { z } from "zod";
 import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
 import { searchTours } from "@/server/providers/getyourguide";
 import { composePrice } from "@/server/bookings";
+import { aliasFields, formatZodIssues } from "@/server/api-helpers";
 
 const Schema = z.object({
-  query: z.string().min(2).max(100),
-  date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  query: z.string().min(2, "must be at least 2 characters (city or activity, e.g. 'Dubai desert safari')").max(100),
+  date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD").optional(),
+  date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD").optional(),
   currency: z.string().length(3).optional(),
 });
 
@@ -19,8 +20,21 @@ export const Route = createFileRoute("/api/v1/tours/search")({
         withGateway(request, { endpoint: "/v1/tours/search", vertical: "tours", provider: "getyourguide" }, async (key) => {
           let body: unknown;
           try { body = await request.json(); } catch { return errorResponse("invalid_json", "Body must be valid JSON.", 400); }
-          const parsed = Schema.safeParse(body);
-          if (!parsed.success) return errorResponse("validation_error", parsed.error.issues[0].message, 400);
+          // Accept common aliases: destination/city/keyword/q -> query; date -> date_from.
+          const aliased = aliasFields(body, {
+            destination: "query",
+            destination_name: "query",
+            city: "query",
+            keyword: "query",
+            q: "query",
+            search: "query",
+            date: "date_from",
+          });
+          const parsed = Schema.safeParse(aliased);
+          if (!parsed.success) {
+            const { message, details } = formatZodIssues(parsed.error);
+            return jsonResponse({ error: { code: "validation_error", message, details } }, 400);
+          }
 
           let tours: Awaited<ReturnType<typeof searchTours>>["tours"] = [];
           try {
