@@ -25,7 +25,16 @@ export const Route = createFileRoute("/api/v1/hotels/search")({
           const parsed = Schema.safeParse(body);
           if (!parsed.success) return errorResponse("validation_error", parsed.error.issues[0].message, 400);
 
-          const result = await searchHotelRates(parsed.data);
+          let result: Awaited<ReturnType<typeof searchHotelRates>>;
+          try {
+            result = await searchHotelRates(parsed.data);
+          } catch (e) {
+            console.warn("Hotels search unavailable:", (e as Error).message);
+            return jsonResponse({
+              data: { hotels: [] },
+              warning: { code: "search_unavailable", message: "Hotels search is temporarily unavailable. Please retry shortly.", fallback: true },
+            });
+          }
 
           // Two-tier markup applied per hotel
           const priced = await Promise.all(result.hotels.map(async (h) => {
@@ -39,7 +48,12 @@ export const Route = createFileRoute("/api/v1/hotels/search")({
             return { ...h, base_price: h.price, price: price.total, price_breakdown: price };
           }));
 
-          return jsonResponse({ data: { hotels: priced } });
+          return jsonResponse({
+            data: { hotels: priced },
+            ...(priced.length === 0
+              ? { warning: { code: "no_inventory", message: "No hotel rates available for this query.", fallback: true } }
+              : {}),
+          });
         }),
     },
   },
