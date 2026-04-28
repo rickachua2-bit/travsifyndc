@@ -27,8 +27,9 @@ import {
   HeartPulse,
   Database,
   History,
+  RefreshCw,
 } from "lucide-react";
-import { Logo } from "@/components/landing/Logo";
+
 import {
   Sidebar,
   SidebarContent,
@@ -91,6 +92,7 @@ const INBOX: NavItem[] = [
 ];
 
 const HEALTH: NavItem[] = [
+  { to: "/admin/data-sync", label: "Data synchronization", icon: RefreshCw },
   { to: "/admin/provider-health", label: "Provider health", icon: HeartPulse },
   { to: "/admin/caches", label: "Cache management", icon: Database },
   { to: "/admin/scrape-runs", label: "Scrape runs", icon: History },
