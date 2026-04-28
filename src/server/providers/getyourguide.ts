@@ -56,6 +56,8 @@ export type TourOffer = {
   photo: string | null;
   city: string;
   booking_url: string; // for ops fulfillment
+  highlights?: string[];
+  inclusions?: string[];
 };
 
 import { createClient } from "@supabase/supabase-js";
