@@ -22,7 +22,17 @@ export const Route = createFileRoute("/api/v1/tours/search")({
           const parsed = Schema.safeParse(body);
           if (!parsed.success) return errorResponse("validation_error", parsed.error.issues[0].message, 400);
 
-          const { tours } = await searchTours(parsed.data);
+          let tours: Awaited<ReturnType<typeof searchTours>>["tours"] = [];
+          try {
+            const result = await searchTours(parsed.data);
+            tours = result.tours;
+          } catch (e) {
+            console.warn("Tours search unavailable:", (e as Error).message);
+            return jsonResponse({
+              data: { tours: [] },
+              warning: { code: "search_unavailable", message: "Tours search is temporarily unavailable. Please retry shortly.", fallback: true },
+            });
+          }
           const priced = await Promise.all(tours.map(async (t) => {
             const price = await composePrice({
               partnerId: key.userId,
@@ -35,7 +45,12 @@ export const Route = createFileRoute("/api/v1/tours/search")({
             return { ...publicFields, base_price: t.price, price: price.total, price_breakdown: price };
           }));
 
-          return jsonResponse({ data: { tours: priced } });
+          return jsonResponse({
+            data: { tours: priced },
+            ...(priced.length === 0
+              ? { warning: { code: "no_inventory", message: "No tour inventory matches this query yet.", fallback: true } }
+              : {}),
+          });
         }),
     },
   },
