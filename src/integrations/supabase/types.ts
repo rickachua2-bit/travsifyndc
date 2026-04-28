@@ -315,6 +315,99 @@ export type Database = {
         }
         Relationships: []
       }
+      car_rentals: {
+        Row: {
+          affiliate_url: string | null
+          country: string
+          created_at: string | null
+          id: string
+          image_url: string | null
+          location: string
+          original_id: string | null
+          price_amount: number
+          price_currency: string
+          provider: string
+          vehicle_name: string
+        }
+        Insert: {
+          affiliate_url?: string | null
+          country: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          location: string
+          original_id?: string | null
+          price_amount: number
+          price_currency?: string
+          provider: string
+          vehicle_name: string
+        }
+        Update: {
+          affiliate_url?: string | null
+          country?: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string
+          original_id?: string | null
+          price_amount?: number
+          price_currency?: string
+          provider?: string
+          vehicle_name?: string
+        }
+        Relationships: []
+      }
+      car_transfers: {
+        Row: {
+          affiliate_url: string
+          country: string | null
+          created_at: string | null
+          dropoff_location: string
+          id: string
+          image_url: string | null
+          last_synced_at: string | null
+          original_id: string | null
+          passengers: number | null
+          pickup_location: string
+          price_amount: number
+          price_currency: string | null
+          provider: string
+          vehicle_type: string
+        }
+        Insert: {
+          affiliate_url: string
+          country?: string | null
+          created_at?: string | null
+          dropoff_location: string
+          id?: string
+          image_url?: string | null
+          last_synced_at?: string | null
+          original_id?: string | null
+          passengers?: number | null
+          pickup_location: string
+          price_amount: number
+          price_currency?: string | null
+          provider: string
+          vehicle_type: string
+        }
+        Update: {
+          affiliate_url?: string
+          country?: string | null
+          created_at?: string | null
+          dropoff_location?: string
+          id?: string
+          image_url?: string | null
+          last_synced_at?: string | null
+          original_id?: string | null
+          passengers?: number | null
+          pickup_location?: string
+          price_amount?: number
+          price_currency?: string | null
+          provider?: string
+          vehicle_type?: string
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           company: string | null
@@ -345,6 +438,54 @@ export type Database = {
           message?: string
           name?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      evisas: {
+        Row: {
+          affiliate_url: string
+          country: string | null
+          created_at: string | null
+          destination_country: string
+          id: string
+          last_synced_at: string | null
+          nationality: string | null
+          original_id: string | null
+          price_amount: number
+          price_currency: string | null
+          processing_time_days: number | null
+          provider: string
+          visa_type: string
+        }
+        Insert: {
+          affiliate_url: string
+          country?: string | null
+          created_at?: string | null
+          destination_country: string
+          id?: string
+          last_synced_at?: string | null
+          nationality?: string | null
+          original_id?: string | null
+          price_amount: number
+          price_currency?: string | null
+          processing_time_days?: number | null
+          provider: string
+          visa_type: string
+        }
+        Update: {
+          affiliate_url?: string
+          country?: string | null
+          created_at?: string | null
+          destination_country?: string
+          id?: string
+          last_synced_at?: string | null
+          nationality?: string | null
+          original_id?: string | null
+          price_amount?: number
+          price_currency?: string | null
+          processing_time_days?: number | null
+          provider?: string
+          visa_type?: string
         }
         Relationships: []
       }
@@ -435,6 +576,45 @@ export type Database = {
           status?: string
           suppliers_called?: string[]
           user_id?: string
+        }
+        Relationships: []
+      }
+      insurance_packages: {
+        Row: {
+          affiliate_url: string
+          coverage_details: string | null
+          created_at: string | null
+          id: string
+          last_synced_at: string | null
+          name: string
+          original_id: string | null
+          price_amount: number
+          price_currency: string | null
+          provider: string
+        }
+        Insert: {
+          affiliate_url: string
+          coverage_details?: string | null
+          created_at?: string | null
+          id?: string
+          last_synced_at?: string | null
+          name: string
+          original_id?: string | null
+          price_amount: number
+          price_currency?: string | null
+          provider: string
+        }
+        Update: {
+          affiliate_url?: string
+          coverage_details?: string | null
+          created_at?: string | null
+          id?: string
+          last_synced_at?: string | null
+          name?: string
+          original_id?: string | null
+          price_amount?: number
+          price_currency?: string | null
+          provider?: string
         }
         Relationships: []
       }
@@ -891,6 +1071,54 @@ export type Database = {
           last_scraped_at?: string
           tours?: Json
           travelers_bucket?: number
+        }
+        Relationships: []
+      }
+      tours: {
+        Row: {
+          affiliate_url: string
+          country: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          last_synced_at: string | null
+          location: string
+          original_id: string | null
+          price_amount: number
+          price_currency: string | null
+          provider: string
+          title: string
+        }
+        Insert: {
+          affiliate_url: string
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          last_synced_at?: string | null
+          location: string
+          original_id?: string | null
+          price_amount: number
+          price_currency?: string | null
+          provider: string
+          title: string
+        }
+        Update: {
+          affiliate_url?: string
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          last_synced_at?: string | null
+          location?: string
+          original_id?: string | null
+          price_amount?: number
+          price_currency?: string | null
+          provider?: string
+          title?: string
         }
         Relationships: []
       }
