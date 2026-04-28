@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const SDK_VERSION = "1.1.2";
+const SDK_VERSION = "1.2.0";
 
 const SDK_SOURCE = `/* Travsify Unified API SDK v${SDK_VERSION} */
 (function (global) {
