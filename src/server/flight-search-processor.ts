@@ -49,34 +49,57 @@ export async function processFlightSearchJob(jobId: string): Promise<ProcessorRe
     cabin: "economy" | "premium_economy" | "business" | "first";
   };
 
-  const [duffelRes, ndcRes] = await Promise.allSettled([
-    searchFlights(claimed.environment as "sandbox" | "live", input),
-    isNdcEnabled() ? ndcSearch(input) : Promise.resolve({ offers: [] as Array<Record<string, unknown>> }),
-  ]);
+  // ---- Provider strategy ---------------------------------------------------
+  // xml.agency (NDC) is the PRIMARY supplier. Duffel is a fallback that we
+  // only call if xml.agency returned zero usable offers OR errored. This
+  // matches the "xml.agency primary, Duffel fallback" production policy.
+  const suppliersCalled: string[] = [];
+  let ndcOffers: Array<Record<string, unknown>> = [];
+  let ndcError: Error | null = null;
 
-  const duffelOffers = duffelRes.status === "fulfilled" ? duffelRes.value.offers : [];
-  const ndcOffers = ndcRes.status === "fulfilled" ? (ndcRes.value as { offers: Array<Record<string, unknown>> }).offers : [];
-  const suppliersCalled = ["duffel", ...(isNdcEnabled() ? ["ndc"] : [])];
+  if (isNdcEnabled()) {
+    suppliersCalled.push("xmlagency");
+    try {
+      const r = await ndcSearch(input);
+      ndcOffers = (r as { offers: Array<Record<string, unknown>> }).offers || [];
+    } catch (e) {
+      ndcError = e as Error;
+      console.error("[process-flight-search] xml.agency failed", ndcError.message);
+    }
+  }
 
-  if (duffelRes.status === "rejected" && ndcOffers.length === 0) {
-    const reason = duffelRes.reason as Error;
+  let duffelOffers: Array<Record<string, unknown>> = [];
+  let duffelError: Error | null = null;
+  if (ndcOffers.length === 0) {
+    suppliersCalled.push("duffel");
+    try {
+      const r = await searchFlights(claimed.environment as "sandbox" | "live", input);
+      duffelOffers = r.offers as Array<Record<string, unknown>>;
+    } catch (e) {
+      duffelError = e as Error;
+      console.error("[process-flight-search] Duffel fallback failed", duffelError.message);
+    }
+  }
+
+  if (ndcOffers.length === 0 && duffelOffers.length === 0) {
+    const reason = ndcError || duffelError;
     const isTimeout = reason instanceof ProviderTimeoutError;
     await supabaseAdmin
       .from("flight_search_jobs")
       .update({
         status: "failed",
-        error_code: isTimeout ? "upstream_timeout" : "supplier_error",
-        error_message: reason?.message || "Supplier call failed",
+        error_code: isTimeout ? "upstream_timeout" : (reason ? "supplier_error" : "no_offers"),
+        error_message: reason?.message || "No offers returned by any supplier",
         suppliers_called: suppliersCalled,
         completed_at: new Date().toISOString(),
       })
       .eq("id", claimed.id);
-    return { status: "failed", reason: reason?.message || "supplier_error" };
+    return { status: "failed", reason: reason?.message || "no_offers" };
   }
 
   const allOffers = [
+    ...ndcOffers.map((o) => ({ ...o, source: "xmlagency" })),
     ...duffelOffers.map((o) => ({ ...o, source: "duffel" })),
-    ...ndcOffers.map((o) => ({ ...o, source: "ndc" })),
   ];
   const priced = await Promise.all(allOffers.map(async (o) => {
     const baseAmount = Number((o as Record<string, unknown>).total_amount);
