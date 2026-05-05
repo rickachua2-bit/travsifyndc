@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
 import { createOrder } from "@/server/providers/duffel";
+import { ndcPrebook, isNdcEnabled, type NdcOfferContext } from "@/server/providers/ndc";
 import {
   createBookingAndDebit,
   confirmBooking,
@@ -10,7 +11,14 @@ import {
 } from "@/server/bookings";
 
 const Schema = z.object({
-  offer_id: z.string().min(1).max(200),
+  offer_id: z.string().min(1).max(500),
+  // For xml.agency offers, partners pass back the `_ndc_context` they received
+  // in search results. We also accept it as a top-level field for clarity.
+  ndc_context: z.object({
+    offer_code: z.string().min(1).max(8000),
+    search_guid: z.string().max(100).optional(),
+    currency: z.string().length(3),
+  }).optional(),
   passengers: z.array(z.object({
     given_name: z.string().min(1).max(80),
     family_name: z.string().min(1).max(80),
@@ -29,7 +37,7 @@ export const Route = createFileRoute("/api/v1/flights/orders")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: API_CORS_HEADERS }),
       POST: async ({ request }) =>
-        withGateway(request, { endpoint: "/v1/flights/orders", vertical: "flights", provider: "duffel" }, async (key) => {
+        withGateway(request, { endpoint: "/v1/flights/orders", vertical: "flights", provider: "auto" }, async (key) => {
           let body: unknown;
           try { body = await request.json(); } catch { return errorResponse("invalid_json", "Body must be valid JSON.", 400); }
           const parsed = Schema.safeParse(body);
@@ -37,8 +45,71 @@ export const Route = createFileRoute("/api/v1/flights/orders")({
 
           const passenger = parsed.data.passengers[0];
           const baseAmount = Number(parsed.data.base_amount);
+          const isXmlAgency = parsed.data.offer_id.startsWith("xmlagency_") || !!parsed.data.ndc_context;
 
-          // 1. Compose price + debit wallet up-front
+          // ===== Path A: xml.agency (NDC SiteCity) ============================
+          // Manual fulfillment: prebook locks the price, debit wallet, leave
+          // booking in `processing` for ops to ticket via the xml.agency portal.
+          if (isXmlAgency) {
+            if (!isNdcEnabled()) {
+              return errorResponse("supplier_unavailable", "xml.agency supplier is not enabled.", 503);
+            }
+            if (!parsed.data.ndc_context) {
+              return errorResponse("validation_error", "ndc_context is required for xml.agency offers.", 400);
+            }
+            const ctx: NdcOfferContext = parsed.data.ndc_context;
+
+            // 1. Prebook to lock the price + verify availability BEFORE charging.
+            let prebook: { full_price: number; currency: string };
+            try {
+              prebook = await ndcPrebook(ctx);
+            } catch (e) {
+              return errorResponse("supplier_error", `Prebook failed: ${(e as Error).message}`, 502);
+            }
+            // Sanity: charge the user the base they were quoted (we keep our
+            // markup as margin); but if supplier price drifted upward, refuse.
+            if (prebook.full_price > 0 && prebook.full_price > baseAmount * 1.01) {
+              return errorResponse("price_changed",
+                `Supplier price moved from ${baseAmount} to ${prebook.full_price}. Re-search to get the latest price.`, 409);
+            }
+
+            try {
+              const created = await createBookingAndDebit({
+                key,
+                vertical: "flights",
+                provider: "xmlagency",
+                fulfillmentMode: "manual", // ops ticket via xml.agency portal
+                providerBase: baseAmount,
+                currency: parsed.data.currency,
+                customer: {
+                  name: `${passenger.given_name} ${passenger.family_name}`,
+                  email: passenger.email,
+                },
+                metadata: {
+                  ndc_offer_code: ctx.offer_code,
+                  ndc_search_guid: ctx.search_guid,
+                  prebook_full_price: prebook.full_price,
+                  passengers: parsed.data.passengers,
+                },
+              });
+              return jsonResponse({
+                data: {
+                  reference: created.reference,
+                  status: "processing",
+                  fulfillment: "manual",
+                  price: created.price,
+                  message: "Booking received. Ops will ticket via xml.agency and confirm within 30 minutes.",
+                },
+              }, 202);
+            } catch (e) {
+              if (e instanceof InsufficientFundsError) {
+                return errorResponse("insufficient_funds", e.message, 402);
+              }
+              throw e;
+            }
+          }
+
+          // ===== Path B: Duffel (auto-confirm) =================================
           let created;
           try {
             created = await createBookingAndDebit({
@@ -61,7 +132,6 @@ export const Route = createFileRoute("/api/v1/flights/orders")({
             throw e;
           }
 
-          // 2. Place the actual NDC order on Duffel using PROVIDER BASE (we keep markup as margin)
           try {
             const order = await createOrder(key.environment, {
               offer_id: parsed.data.offer_id,
@@ -80,7 +150,6 @@ export const Route = createFileRoute("/api/v1/flights/orders")({
               },
             }, 201);
           } catch (e) {
-            // 3. Supplier failed — refund wallet and mark booking failed.
             await failAndRefundBooking({
               bookingId: created.bookingId,
               reference: created.reference,
