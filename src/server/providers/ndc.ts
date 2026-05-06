@@ -1,15 +1,12 @@
 // xml.agency / SiteCity flights supplier — SOAP 1.2 over HTTP.
-// Docs: xml.agency Flight API v3.17 (AeroSearch, AeroPrebook).
+// Docs: xml.agency Flight API v3.17.
 //
-// We expose THREE operations to the rest of the system:
-//   - ndcSearch()    → AeroSearch     (returns normalized offers w/ embedded SOAP context)
-//   - ndcPrebook()   → AeroPrebook    (price lock; called at booking time)
-//
-// Reservation/Ticketing (AeroBook + AeroConfirmation) are not yet automated:
-// when a customer books an xml.agency offer we lock the price via prebook and
-// leave the booking in `processing` for ops to ticket via the xml.agency
-// portal (same manual-fulfillment loop used for affiliate verticals). This is
-// production-safe and matches the existing booking engine.
+// Full auto-ticketing pipeline:
+//   - ndcSearch()    → AeroSearch    (normalized offers + opaque _ndc_context)
+//   - ndcPrebook()   → AeroPrebook   (price lock just before debiting wallet)
+//   - ndcBook()      → AeroBook      (reservation with passenger data → returns BookId/BookGuid/PNR)
+//   - ndcConfirm()   → ConfirmBook   (issues tickets → returns ticket numbers)
+//   - ndcAnnulate()  → AnnulateBook  (VOID — used to refund on confirm failure)
 
 import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
 
