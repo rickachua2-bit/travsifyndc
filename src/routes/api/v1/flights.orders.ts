@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
 import { createOrder } from "@/server/providers/duffel";
-import { ndcPrebook, isNdcEnabled, type NdcOfferContext } from "@/server/providers/ndc";
+import {
+  ndcPrebook, ndcBook, ndcConfirm, ndcAnnulate,
+  isNdcEnabled, type NdcOfferContext, type NdcPassenger,
+} from "@/server/providers/ndc";
 import {
   createBookingAndDebit,
   confirmBooking,
