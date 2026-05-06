@@ -61,6 +61,9 @@ type NdcOfferContext = {
 const NS_COMMON = "http://schemas.datacontract.org/2004/07/SiteCity.Common";
 const NS_SEARCH = "http://schemas.datacontract.org/2004/07/SiteCity.Avia.Search";
 const NS_PREBOOK = "http://schemas.datacontract.org/2004/07/SiteCity.Avia.Prebook";
+const NS_BOOKING = "http://schemas.datacontract.org/2004/07/SiteCity.Avia.Booking";
+const NS_CONFIRM = "http://schemas.datacontract.org/2004/07/SiteCity.BookInfo.ConfirmBook";
+const NS_ANNULATE = "http://schemas.datacontract.org/2004/07/SiteCity.BookInfo.AnnulateBook";
 
 function xmlEscape(s: string | undefined | null): string {
   return String(s ?? "").replace(/[<>&'"]/g, (c) =>
