@@ -25,11 +25,17 @@ const Schema = z.object({
   passengers: z.array(z.object({
     given_name: z.string().min(1).max(80),
     family_name: z.string().min(1).max(80),
+    middle_name: z.string().max(80).optional(),
     born_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     gender: z.enum(["m", "f"]),
     title: z.enum(["mr", "ms", "mrs", "miss", "dr"]),
     email: z.string().email().max(255),
     phone_number: z.string().min(5).max(30),
+    // Required for xml.agency (NDC) ticketing; ignored for Duffel.
+    document_number: z.string().min(3).max(40).optional(),
+    document_expiry: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    nationality_iso3: z.string().length(3).optional(),
+    age_type: z.enum(["Adult", "Child", "Infant"]).optional(),
   })).min(1).max(9),
   base_amount: z.string().regex(/^\d+(\.\d{1,2})?$/),
   currency: z.string().length(3),
