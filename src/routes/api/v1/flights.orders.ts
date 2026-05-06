@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { withGateway, jsonResponse, errorResponse, API_CORS_HEADERS } from "@/server/gateway";
 import { createOrder } from "@/server/providers/duffel";
-import { ndcPrebook, isNdcEnabled, type NdcOfferContext } from "@/server/providers/ndc";
+import {
+  ndcPrebook, ndcBook, ndcConfirm, ndcAnnulate,
+  isNdcEnabled, type NdcOfferContext, type NdcPassenger,
+} from "@/server/providers/ndc";
 import {
   createBookingAndDebit,
   confirmBooking,
@@ -22,11 +25,17 @@ const Schema = z.object({
   passengers: z.array(z.object({
     given_name: z.string().min(1).max(80),
     family_name: z.string().min(1).max(80),
+    middle_name: z.string().max(80).optional(),
     born_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     gender: z.enum(["m", "f"]),
     title: z.enum(["mr", "ms", "mrs", "miss", "dr"]),
     email: z.string().email().max(255),
     phone_number: z.string().min(5).max(30),
+    // Required for xml.agency (NDC) ticketing; ignored for Duffel.
+    document_number: z.string().min(3).max(40).optional(),
+    document_expiry: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    nationality_iso3: z.string().length(3).optional(),
+    age_type: z.enum(["Adult", "Child", "Infant"]).optional(),
   })).min(1).max(9),
   base_amount: z.string().regex(/^\d+(\.\d{1,2})?$/),
   currency: z.string().length(3),
@@ -47,9 +56,10 @@ export const Route = createFileRoute("/api/v1/flights/orders")({
           const baseAmount = Number(parsed.data.base_amount);
           const isXmlAgency = parsed.data.offer_id.startsWith("xmlagency_") || !!parsed.data.ndc_context;
 
-          // ===== Path A: xml.agency (NDC SiteCity) ============================
-          // Manual fulfillment: prebook locks the price, debit wallet, leave
-          // booking in `processing` for ops to ticket via the xml.agency portal.
+          // ===== Path A: xml.agency (NDC SiteCity) — full auto-ticketing ======
+          // Flow: AeroPrebook → debit wallet → AeroBook → ConfirmBook.
+          // On any failure after debit, refund the wallet; on confirm failure
+          // after a successful AeroBook, also call AnnulateBook (VOID).
           if (isXmlAgency) {
             if (!isNdcEnabled()) {
               return errorResponse("supplier_unavailable", "xml.agency supplier is not enabled.", 503);
@@ -57,28 +67,34 @@ export const Route = createFileRoute("/api/v1/flights/orders")({
             if (!parsed.data.ndc_context) {
               return errorResponse("validation_error", "ndc_context is required for xml.agency offers.", 400);
             }
+            // AeroBook requires document number for every passenger.
+            const missingDocs = parsed.data.passengers.find((p) => !p.document_number);
+            if (missingDocs) {
+              return errorResponse("validation_error",
+                "passengers[].document_number is required for xml.agency flights.", 400);
+            }
             const ctx: NdcOfferContext = parsed.data.ndc_context;
 
-            // 1. Prebook to lock the price + verify availability BEFORE charging.
+            // 1) Prebook — price lock + availability check.
             let prebook: { full_price: number; currency: string };
             try {
               prebook = await ndcPrebook(ctx);
             } catch (e) {
               return errorResponse("supplier_error", `Prebook failed: ${(e as Error).message}`, 502);
             }
-            // Sanity: charge the user the base they were quoted (we keep our
-            // markup as margin); but if supplier price drifted upward, refuse.
             if (prebook.full_price > 0 && prebook.full_price > baseAmount * 1.01) {
               return errorResponse("price_changed",
                 `Supplier price moved from ${baseAmount} to ${prebook.full_price}. Re-search to get the latest price.`, 409);
             }
 
+            // 2) Debit wallet (creates booking row in pending state).
+            let created;
             try {
-              const created = await createBookingAndDebit({
+              created = await createBookingAndDebit({
                 key,
                 vertical: "flights",
                 provider: "xmlagency",
-                fulfillmentMode: "manual", // ops ticket via xml.agency portal
+                fulfillmentMode: "auto",
                 providerBase: baseAmount,
                 currency: parsed.data.currency,
                 customer: {
@@ -92,22 +108,91 @@ export const Route = createFileRoute("/api/v1/flights/orders")({
                   passengers: parsed.data.passengers,
                 },
               });
-              return jsonResponse({
-                data: {
-                  reference: created.reference,
-                  status: "processing",
-                  fulfillment: "manual",
-                  price: created.price,
-                  message: "Booking received. Ops will ticket via xml.agency and confirm within 30 minutes.",
-                },
-              }, 202);
             } catch (e) {
               if (e instanceof InsufficientFundsError) {
                 return errorResponse("insufficient_funds", e.message, 402);
               }
               throw e;
             }
+
+            // 3) AeroBook — create reservation with passenger data.
+            const ndcPaxList: NdcPassenger[] = parsed.data.passengers.map((p) => ({
+              given_name: p.given_name,
+              family_name: p.family_name,
+              middle_name: p.middle_name,
+              born_on: p.born_on,
+              gender: p.gender,
+              age_type: p.age_type || "Adult",
+              document_number: p.document_number!,
+              document_expiry: p.document_expiry,
+              nationality_iso3: p.nationality_iso3,
+            }));
+
+            let booked;
+            try {
+              booked = await ndcBook({
+                ctx,
+                client_reference: created.reference.slice(0, 40),
+                email: passenger.email,
+                phone: passenger.phone_number,
+                passengers: ndcPaxList,
+              });
+            } catch (e) {
+              await failAndRefundBooking({
+                bookingId: created.bookingId,
+                reference: created.reference,
+                userId: key.userId,
+                currency: parsed.data.currency,
+                amount: created.price.total,
+                reason: `AeroBook failed: ${(e as Error).message}`,
+              });
+              return errorResponse("supplier_error", `Booking failed at supplier: ${(e as Error).message}. Wallet refunded.`, 502);
+            }
+
+            // 4) ConfirmBook — issue tickets. On failure, VOID + refund.
+            try {
+              const confirmed = await ndcConfirm({
+                book_id: booked.book_id,
+                book_guid: booked.book_guid,
+                price: booked.full_price || baseAmount,
+                currency: booked.currency,
+              });
+              if (confirmed.status === "Cancelled") {
+                throw new Error("Ticketing was cancelled by supplier");
+              }
+              await confirmBooking(created.bookingId, booked.book_id, {
+                ndc_book_id: booked.book_id,
+                ndc_book_guid: booked.book_guid,
+                ndc_pnrs: booked.pnrs,
+                ndc_confirm_status: confirmed.status,
+                ndc_ticket_numbers: confirmed.ticket_numbers,
+                ndc_cancellable: confirmed.cancellable,
+                ndc_void_deadline_utc: confirmed.deadline_utc,
+              });
+              return jsonResponse({
+                data: {
+                  reference: created.reference,
+                  status: confirmed.status === "WaitToBooking" ? "processing" : "confirmed",
+                  price: created.price,
+                  pnrs: booked.pnrs,
+                  ticket_numbers: confirmed.ticket_numbers,
+                  ticketing_status: confirmed.status,
+                },
+              }, confirmed.status === "Booked" ? 201 : 202);
+            } catch (e) {
+              await ndcAnnulate({ book_id: booked.book_id, book_guid: booked.book_guid, currency: booked.currency });
+              await failAndRefundBooking({
+                bookingId: created.bookingId,
+                reference: created.reference,
+                userId: key.userId,
+                currency: parsed.data.currency,
+                amount: created.price.total,
+                reason: `ConfirmBook failed: ${(e as Error).message}`,
+              });
+              return errorResponse("supplier_error", `Ticketing failed: ${(e as Error).message}. Wallet refunded.`, 502);
+            }
           }
+
 
           // ===== Path B: Duffel (auto-confirm) =================================
           let created;

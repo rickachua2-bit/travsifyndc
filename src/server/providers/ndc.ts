@@ -1,15 +1,12 @@
 // xml.agency / SiteCity flights supplier — SOAP 1.2 over HTTP.
-// Docs: xml.agency Flight API v3.17 (AeroSearch, AeroPrebook).
+// Docs: xml.agency Flight API v3.17.
 //
-// We expose THREE operations to the rest of the system:
-//   - ndcSearch()    → AeroSearch     (returns normalized offers w/ embedded SOAP context)
-//   - ndcPrebook()   → AeroPrebook    (price lock; called at booking time)
-//
-// Reservation/Ticketing (AeroBook + AeroConfirmation) are not yet automated:
-// when a customer books an xml.agency offer we lock the price via prebook and
-// leave the booking in `processing` for ops to ticket via the xml.agency
-// portal (same manual-fulfillment loop used for affiliate verticals). This is
-// production-safe and matches the existing booking engine.
+// Full auto-ticketing pipeline:
+//   - ndcSearch()    → AeroSearch    (normalized offers + opaque _ndc_context)
+//   - ndcPrebook()   → AeroPrebook   (price lock just before debiting wallet)
+//   - ndcBook()      → AeroBook      (reservation with passenger data → returns BookId/BookGuid/PNR)
+//   - ndcConfirm()   → ConfirmBook   (issues tickets → returns ticket numbers)
+//   - ndcAnnulate()  → AnnulateBook  (VOID — used to refund on confirm failure)
 
 import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
 
@@ -64,6 +61,9 @@ type NdcOfferContext = {
 const NS_COMMON = "http://schemas.datacontract.org/2004/07/SiteCity.Common";
 const NS_SEARCH = "http://schemas.datacontract.org/2004/07/SiteCity.Avia.Search";
 const NS_PREBOOK = "http://schemas.datacontract.org/2004/07/SiteCity.Avia.Prebook";
+const NS_BOOKING = "http://schemas.datacontract.org/2004/07/SiteCity.Avia.Booking";
+const NS_CONFIRM = "http://schemas.datacontract.org/2004/07/SiteCity.BookInfo.ConfirmBook";
+const NS_ANNULATE = "http://schemas.datacontract.org/2004/07/SiteCity.BookInfo.AnnulateBook";
 
 function xmlEscape(s: string | undefined | null): string {
   return String(s ?? "").replace(/[<>&'"]/g, (c) =>
@@ -354,3 +354,205 @@ export async function ndcPrebook(ctx: NdcOfferContext) {
 }
 
 export type { NdcOfferContext };
+
+// ---------------------------------------------------------------------------
+// AeroBook — reservation with passenger data
+// ---------------------------------------------------------------------------
+
+export type NdcPassenger = {
+  given_name: string;
+  family_name: string;
+  middle_name?: string;
+  born_on: string;        // YYYY-MM-DD
+  gender: "m" | "f";
+  age_type: "Adult" | "Child" | "Infant";
+  document_number: string;
+  document_expiry?: string; // YYYY-MM-DD
+  nationality_iso3?: string;
+};
+
+export type NdcBookInput = {
+  ctx: NdcOfferContext;
+  client_reference: string;     // ≤40 chars
+  email: string;
+  phone: string;
+  passengers: NdcPassenger[];
+  selected_tariffs?: string[];
+  selected_services?: string[];
+};
+
+export type NdcBookResult = {
+  book_id: string;
+  book_guid: string;
+  full_price: number;
+  currency: string;
+  confirmable_to?: string;
+  pnrs: string[];
+};
+
+export async function ndcBook(input: NdcBookInput): Promise<NdcBookResult> {
+  if (!isNdcEnabled()) throw new Error("xml.agency disabled");
+  const c = cfg();
+
+  const paxXml = input.passengers.map((p) =>
+    `<b:PaxData>`
+    + `<b:AgeType>${p.age_type}</b:AgeType>`
+    + `<b:BirthDay>${toSiteCityDate(p.born_on)}</b:BirthDay>`
+    + (p.nationality_iso3 ? `<b:BirthISO>${xmlEscape(p.nationality_iso3)}</b:BirthISO>` : `<b:BirthISO i:nil="true"/>`)
+    + `<b:Document>${xmlEscape(p.document_number)}</b:Document>`
+    + (p.document_expiry ? `<b:DocumentExDate>${toSiteCityDate(p.document_expiry)}</b:DocumentExDate>` : "")
+    + `<b:GenderType>${p.gender === "f" ? "Female" : "Male"}</b:GenderType>`
+    + (p.middle_name ? `<b:MiddleName>${xmlEscape(p.middle_name)}</b:MiddleName>` : `<b:MiddleName i:nil="true"/>`)
+    + `<b:Name>${xmlEscape(p.given_name)}</b:Name>`
+    + `<b:Surname>${xmlEscape(p.family_name)}</b:Surname>`
+    + `</b:PaxData>`
+  ).join("");
+
+  const tariffsXml = input.selected_tariffs && input.selected_tariffs.length
+    ? `<a:SelectedTariffs xmlns:b="http://schemas.microsoft.com/2003/10/Serialization/Arrays">`
+      + input.selected_tariffs.map((id) => `<b:string>${xmlEscape(id)}</b:string>`).join("")
+      + `</a:SelectedTariffs>`
+    : `<a:SelectedTariffs i:nil="true" xmlns:b="http://schemas.microsoft.com/2003/10/Serialization/Arrays"/>`;
+
+  const servicesXml = input.selected_services && input.selected_services.length
+    ? `<a:SelectedServices xmlns:b="http://schemas.microsoft.com/2003/10/Serialization/Arrays">`
+      + input.selected_services.map((id) => `<b:string>${xmlEscape(id)}</b:string>`).join("")
+      + `</a:SelectedServices>`
+    : `<a:SelectedServices i:nil="true" xmlns:b="http://schemas.microsoft.com/2003/10/Serialization/Arrays"/>`;
+
+  const body = `<?xml version="1.0" encoding="utf-8"?>`
+    + `<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">`
+    + `<s:Body>`
+    + `<AeroBook xmlns="http://tempuri.org/">`
+    + `<credentials xmlns:a="${NS_COMMON}" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">`
+    + credentialsXml(input.ctx.currency)
+    + `</credentials>`
+    + `<aeroBookParams xmlns:a="${NS_BOOKING}" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">`
+    + `<a:ClientReference>${xmlEscape(input.client_reference.slice(0, 40))}</a:ClientReference>`
+    + `<a:CustomerFIO i:nil="true"/>`
+    + `<a:Email>${xmlEscape(input.email)}</a:Email>`
+    + `<a:ExtendedParams i:nil="true"/>`
+    + `<a:Marker i:nil="true"/>`
+    + `<a:OfferCode>${xmlEscape(input.ctx.offer_code)}</a:OfferCode>`
+    + `<a:Partner i:nil="true"/>`
+    + `<a:PaxList xmlns:b="${NS_COMMON}">${paxXml}</a:PaxList>`
+    + `<a:Phone>${xmlEscape(input.phone)}</a:Phone>`
+    + (input.ctx.search_guid ? `<a:SearchGuid>${xmlEscape(input.ctx.search_guid)}</a:SearchGuid>` : `<a:SearchGuid i:nil="true"/>`)
+    + servicesXml
+    + tariffsXml
+    + `<a:Utm i:nil="true"/>`
+    + `</aeroBookParams>`
+    + `</AeroBook>`
+    + `</s:Body></s:Envelope>`;
+
+  const xml = await soapCall({
+    url: c.actionUrl,
+    action: "http://tempuri.org/ISiteAvia/AeroBook",
+    body,
+    timeoutMs: TIMEOUTS.search,
+  });
+
+  const success = pick(xml, tag("Success"));
+  if (success && success.trim().toLowerCase() === "false") {
+    const msg = pick(xml, tag("ErrorString")) || "Book failed";
+    throw new Error(`xml.agency book: ${msg}`);
+  }
+  const bookId = pick(xml, tag("BookId"));
+  const bookGuid = pick(xml, tag("BookGuid"));
+  if (!bookId || !bookGuid) throw new Error("xml.agency book: missing BookId/BookGuid");
+  const fullPrice = Number(pick(xml, tag("FullPrice")) || "0");
+  const currency = pick(xml, tag("Currency")) || input.ctx.currency;
+  const confirmableTo = pick(xml, tag("ConfirmableTo")) || undefined;
+  const pnrs = pickAll(xml, tagAll("PNR"));
+
+  return { book_id: bookId, book_guid: bookGuid, full_price: fullPrice, currency, confirmable_to: confirmableTo, pnrs };
+}
+
+// ---------------------------------------------------------------------------
+// ConfirmBook — issues tickets
+// ---------------------------------------------------------------------------
+
+export type NdcConfirmResult = {
+  status: "Booked" | "WaitToBooking" | "Cancelled" | string;
+  pnrs: string[];
+  ticket_numbers: string[];
+  cancellable: boolean;
+  deadline_utc?: string;
+};
+
+export async function ndcConfirm(input: { book_id: string; book_guid: string; price: number; currency: string }): Promise<NdcConfirmResult> {
+  if (!isNdcEnabled()) throw new Error("xml.agency disabled");
+  const c = cfg();
+
+  const body = `<?xml version="1.0" encoding="utf-8"?>`
+    + `<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">`
+    + `<s:Body>`
+    + `<ConfirmBook xmlns="http://tempuri.org/">`
+    + `<authInfo xmlns:a="${NS_COMMON}" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">`
+    + credentialsXml(input.currency)
+    + `</authInfo>`
+    + `<confirmParams xmlns:a="${NS_CONFIRM}" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">`
+    + `<a:BookGuid>${xmlEscape(input.book_guid)}</a:BookGuid>`
+    + `<a:BookId>${xmlEscape(input.book_id)}</a:BookId>`
+    + `<a:Price>${input.price.toFixed(2)}</a:Price>`
+    + `</confirmParams>`
+    + `</ConfirmBook>`
+    + `</s:Body></s:Envelope>`;
+
+  const xml = await soapCall({
+    url: c.actionUrl,
+    action: "http://tempuri.org/ISiteBookInfo/ConfirmBook",
+    body,
+    timeoutMs: TIMEOUTS.search,
+  });
+
+  const success = pick(xml, tag("Success"));
+  if (success && success.trim().toLowerCase() === "false") {
+    const msg = pick(xml, tag("ErrorString")) || "Confirm failed";
+    throw new Error(`xml.agency confirm: ${msg}`);
+  }
+  const status = pick(xml, tag("BookingStatus")) || "Unknown";
+  const pnrs = pickAll(xml, tagAll("PNR"));
+  const tickets = pickAll(xml, tagAll("TicketNumber"));
+  const cancellable = (pick(xml, tag("Cancellable")) || "").toLowerCase() === "true";
+  const deadline = pick(xml, tag("DeadLineDateUtc")) || undefined;
+
+  return { status, pnrs, ticket_numbers: tickets, cancellable, deadline_utc: deadline };
+}
+
+// ---------------------------------------------------------------------------
+// AnnulateBook — VOID (compensation on confirm failure)
+// ---------------------------------------------------------------------------
+
+export async function ndcAnnulate(input: { book_id: string; book_guid: string; currency?: string }) {
+  if (!isNdcEnabled()) return { success: false };
+  const c = cfg();
+
+  const body = `<?xml version="1.0" encoding="utf-8"?>`
+    + `<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">`
+    + `<s:Body>`
+    + `<AnnulateBook xmlns="http://tempuri.org/">`
+    + `<credentials xmlns:a="${NS_COMMON}" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">`
+    + credentialsXml(input.currency || "USD")
+    + `</credentials>`
+    + `<annulateBookParams xmlns:a="${NS_ANNULATE}" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">`
+    + `<a:BookGuid>${xmlEscape(input.book_guid)}</a:BookGuid>`
+    + `<a:BookId>${xmlEscape(input.book_id)}</a:BookId>`
+    + `</annulateBookParams>`
+    + `</AnnulateBook>`
+    + `</s:Body></s:Envelope>`;
+
+  try {
+    const xml = await soapCall({
+      url: c.actionUrl,
+      action: "http://tempuri.org/ISiteBookInfo/AnnulateBook",
+      body,
+      timeoutMs: TIMEOUTS.search,
+    });
+    const success = pick(xml, tag("Success"));
+    return { success: success?.trim().toLowerCase() === "true" };
+  } catch (e) {
+    console.error("[ndc] annulate failed", e);
+    return { success: false };
+  }
+}
