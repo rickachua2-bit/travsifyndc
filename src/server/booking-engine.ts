@@ -26,6 +26,8 @@ import { getOrScrapeInsurance } from "@/server/providers/insurance-scraper";
 import { searchVisas as sherpaSearch } from "@/server/providers/sherpa";
 import { convert as fxConvert, SUPPORTED_CURRENCIES } from "@/server/fx";
 import { findCountryByCode } from "@/data/countries";
+import { requireWalletDebit } from "@/lib/flight-booking";
+import { composePrice } from "@/server/bookings";
 
 type Vertical = "flights" | "hotels" | "tours" | "transfers" | "insurance" | "visas" | "car_rentals";
 
@@ -92,14 +94,7 @@ async function publicPrice(
     };
   }
 
-  const { data, error } = await supabaseAdmin.rpc("compose_price", {
-    p_partner_id: null as unknown as string,
-    p_vertical: vertical,
-    p_provider_base: baseRounded,
-    p_currency: target,
-  });
-  if (error) throw new Error(`Price composition failed: ${error.message}`);
-  const b = data as { provider_base: number; travsify_markup: number; partner_markup: number; total: number; currency: string };
+  const b = await composePrice({ partnerId: null, vertical, providerBase: baseRounded, currency: target });
   return {
     provider_base: Number(b.provider_base),
     travsify_markup: Number(b.travsify_markup),
@@ -137,17 +132,20 @@ export const publicSearchFlights = createServerFn({ method: "POST" })
   ).parse(d))
   .handler(async ({ data }): Promise<string> => {
     const display = data.display_currency || "USD";
-    const res = await duffelSearch("live", {
+    const input = {
       origin: data.origin || data.slices?.[0]?.origin || "",
       destination: data.destination || data.slices?.[0]?.destination || "",
       departure_date: data.departure_date || data.slices?.[0]?.departure_date || "",
       return_date: data.return_date,
-      adults: data.adults,
+      adults: data.adults ?? 1,
       children: data.children,
       infants: data.infants,
       cabin: data.cabin,
       slices: data.slices,
-    });
+    };
+    const { isNdcEnabled, ndcSearch } = await import("@/server/providers/ndc");
+    // Do not silently switch suppliers when xml.agency is enabled.
+    const res = isNdcEnabled() ? await ndcSearch(input) : await duffelSearch("live", input);
     const offers = await Promise.all(res.offers.map(async (o) => {
       const base = Number(o.total_amount);
       const ccy = String(o.total_currency || "USD");
@@ -373,6 +371,8 @@ export const guestCheckout = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const vertical = data.vertical as Vertical;
     const display = data.display_currency || "USD";
+    const { prepareFlight } = await import("@/server/flight-fulfillment.server");
+    const flight = vertical === "flights" ? await prepareFlight(data.payload, data.base_amount, data.currency) : null;
     const price = await publicPrice(vertical, data.base_amount, data.currency, display);
     const reference = genBookingRef();
 
@@ -386,7 +386,7 @@ export const guestCheckout = createServerFn({ method: "POST" })
         user_id: guestUserId,
         environment: "live",
         vertical,
-        provider: PROVIDER[vertical],
+        provider: flight?.ndc_context ? "xmlagency" : PROVIDER[vertical],
         reference,
         status: "pending_payment",
         fulfillment_mode: FULFILLMENT[vertical],
@@ -398,7 +398,7 @@ export const guestCheckout = createServerFn({ method: "POST" })
         metadata: {
           guest: true,
           contact: data.contact,
-          payload: data.payload,
+          payload: flight ?? data.payload,
           price_breakdown: price,
           provider_currency: data.currency.toUpperCase(),
           provider_amount: data.base_amount,
@@ -495,8 +495,13 @@ export const walletCheckout = createServerFn({ method: "POST" })
     const { userId, claims } = context as unknown as { userId: string; claims: { email?: string } };
     const vertical = data.vertical as Vertical;
     const display = data.display_currency || "USD";
-    const price = await publicPrice(vertical, data.base_amount, data.currency, display);
+    const { prepareFlight, fulfillFlight } = await import("@/server/flight-fulfillment.server");
+    const flight = vertical === "flights" ? await prepareFlight(data.payload, data.base_amount, data.currency) : null;
+    const price = vertical === "flights"
+      ? await composePrice({ partnerId: userId, vertical, providerBase: await fxConvert(data.base_amount, data.currency, display), currency: display })
+      : await publicPrice(vertical, data.base_amount, data.currency, display);
     const reference = genBookingRef();
+    let resultStatus: "confirmed" | "processing" = FULFILLMENT[vertical] === "auto" ? "confirmed" : "processing";
     const fulfillment = FULFILLMENT[vertical];
 
     // Initial status: confirmed for auto verticals (will attempt provider call),
@@ -509,7 +514,7 @@ export const walletCheckout = createServerFn({ method: "POST" })
         user_id: userId,
         environment: "live",
         vertical,
-        provider: PROVIDER[vertical],
+        provider: flight?.ndc_context ? "xmlagency" : PROVIDER[vertical],
         reference,
         status: initialStatus,
         fulfillment_mode: fulfillment,
@@ -521,7 +526,7 @@ export const walletCheckout = createServerFn({ method: "POST" })
         metadata: {
           paid_via: "wallet",
           contact: data.contact,
-          payload: data.payload,
+          payload: flight ?? data.payload,
           price_breakdown: price,
           provider_currency: data.currency.toUpperCase(),
           provider_amount: data.base_amount,
@@ -534,11 +539,11 @@ export const walletCheckout = createServerFn({ method: "POST" })
 
     // Debit wallet — RPC throws on insufficient balance.
     try {
-      await supabaseAdmin.rpc("wallet_debit", {
+      const { error: debitError } = await supabaseAdmin.rpc("wallet_debit", {
         p_user_id: userId,
         p_currency: price.currency,
         p_amount: price.total,
-        p_category: "booking_payment",
+        p_category: "booking",
         p_reference: `book_${reference}`,
         p_description: `${vertical} booking ${reference}`,
         p_provider: PROVIDER[vertical],
@@ -546,6 +551,7 @@ export const walletCheckout = createServerFn({ method: "POST" })
         p_booking_id: booking.id,
         p_metadata: { vertical } as never,
       });
+      requireWalletDebit(debitError);
     } catch (e) {
       await supabaseAdmin.from("bookings").update({
         status: "cancelled",
@@ -559,23 +565,15 @@ export const walletCheckout = createServerFn({ method: "POST" })
     if (fulfillment === "auto") {
       try {
         if (vertical === "flights") {
-          const offerId = data.payload.offer_id as string;
-          const passengers = data.payload.passengers as Array<{
-            given_name: string; family_name: string; born_on: string;
-            gender: "m" | "f"; title: "mr" | "ms" | "mrs" | "miss" | "dr";
-            email: string; phone_number: string;
-          }>;
-          const order = await duffelCreateOrder("live", {
-            offer_id: offerId,
-            passengers,
-            payment_amount: String(data.base_amount),
-            payment_currency: data.currency.toUpperCase(),
-          });
-          const orderData = order.data as Record<string, unknown>;
-          await supabaseAdmin.from("bookings").update({
-            status: "confirmed",
-            provider_reference: (orderData.id as string) || null,
+          if (!flight) throw new Error("Flight details are missing.");
+          const result = await fulfillFlight(flight, reference, data.base_amount, data.currency.toUpperCase());
+          resultStatus = result.status;
+          const { error: saveError } = await supabaseAdmin.from("bookings").update({
+            status: result.status, provider: result.provider, provider_reference: result.reference,
+            metadata: { paid_via: "wallet", contact: data.contact, payload: flight, price_breakdown: price, ...result.metadata } as never,
           }).eq("id", booking.id);
+          // Ticket issued: never refund because a subsequent persistence call failed.
+          if (saveError) console.error("Flight confirmation persistence failed", booking.id, saveError.message);
         } else if (vertical === "hotels") {
           const offerId = data.payload.offer_id as string;
           const holder = data.payload.holder as { firstName: string; lastName: string; email: string; phone?: string };
@@ -623,6 +621,6 @@ export const walletCheckout = createServerFn({ method: "POST" })
       amount: price.total,
       currency: price.currency,
       price_breakdown: price,
-      status: fulfillment === "auto" ? "confirmed" : "processing",
+      status: resultStatus,
     };
   });
