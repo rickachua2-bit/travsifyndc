@@ -1,0 +1,2 @@
+# Architecture rules
+- Existing RPC modules in `src/server/*.functions.ts` and `booking-engine.ts` are the only server-directory exceptions to client import protection; their handlers are stripped by TanStack while provider/helper modules stay protected.

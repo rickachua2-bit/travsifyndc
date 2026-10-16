@@ -84,6 +84,7 @@ export async function searchFlights(env: "sandbox" | "live", input: DuffelSearch
       id: o.id,
       total_amount: o.total_amount,
       total_currency: o.total_currency,
+      passengers: o.passengers,
       owner: (o.owner as Record<string, unknown> | undefined)?.name,
       slices: (o.slices as Array<Record<string, unknown>> | undefined)?.map((s) => ({
         origin: (s.origin as Record<string, unknown> | undefined)?.iata_code,
@@ -107,6 +108,7 @@ export async function getOffer(env: "sandbox" | "live", offerId: string) {
 export type DuffelBookInput = {
   offer_id: string;
   passengers: Array<{
+    id?: string;
     given_name: string;
     family_name: string;
     born_on: string; // YYYY-MM-DD
@@ -124,7 +126,7 @@ export async function createOrder(env: "sandbox" | "live", input: DuffelBookInpu
     data: {
       type: "instant",
       selected_offers: [input.offer_id],
-      passengers: input.passengers,
+      passengers: input.passengers.map(({ id, given_name, family_name, born_on, gender, title, email, phone_number }) => ({ id, given_name, family_name, born_on, gender, title, email, phone_number })),
       payments: [{ type: "balance", amount: input.payment_amount, currency: input.payment_currency }],
     },
   };

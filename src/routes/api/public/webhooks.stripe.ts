@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verifyStripeSignature, retrievePaymentMethod } from "@/server/providers/stripe";
-import { createOrder as duffelOrder } from "@/server/providers/duffel";
 import { prebookHotel as liteapiPrebook, bookHotel as liteapiBook } from "@/server/providers/liteapi";
 
 export const Route = createFileRoute("/api/public/webhooks/stripe")({
@@ -86,7 +85,7 @@ async function fulfillGuestBooking(bookingId: string, paymentIntentId: string) {
     .select("*")
     .eq("id", bookingId)
     .maybeSingle();
-  if (!booking) return;
+  if (!booking || ["confirmed", "processing", "failed", "cancelled"].includes(booking.status)) return;
 
   const meta = (booking.metadata as Record<string, unknown>) || {};
   const payload = (meta.payload as Record<string, unknown>) || {};
@@ -116,25 +115,15 @@ async function fulfillGuestBooking(bookingId: string, paymentIntentId: string) {
   // Auto verticals: call supplier now.
   try {
     if (vertical === "flights") {
-      const order = await duffelOrder("live", {
-        offer_id: String(payload.offer_id || ""),
-        passengers: (payload.passengers as Array<{
-          given_name: string; family_name: string; born_on: string;
-          gender: "m" | "f"; title: "mr" | "ms" | "mrs" | "miss" | "dr";
-          email: string; phone_number: string;
-        }>) || [],
-        payment_amount: String((meta as Record<string, unknown>).provider_amount ?? booking.total_amount),
-        payment_currency: String(booking.currency),
-      });
-      const orderData = order.data as Record<string, unknown>;
-      await supabaseAdmin.from("bookings")
-        .update({
-          ...baseUpdate,
-          status: "confirmed",
-          provider_reference: (orderData.id as string) || null,
-          metadata: { ...meta, supplier_order: orderData } as never,
-        })
-        .eq("id", bookingId);
+      const { FlightPayloadSchema } = await import("@/lib/flight-booking");
+      const { fulfillFlight } = await import("@/server/flight-fulfillment.server");
+      const result = await fulfillFlight(FlightPayloadSchema.parse(payload), booking.reference,
+        Number(meta.provider_amount ?? booking.total_amount), String(meta.provider_currency ?? booking.currency));
+      const { error } = await supabaseAdmin.from("bookings").update({ ...baseUpdate,
+        status: result.status, provider: result.provider, provider_reference: result.reference,
+        metadata: { ...meta, ...result.metadata } as never,
+      }).eq("id", bookingId);
+      if (error) console.error("Flight confirmation persistence failed", bookingId, error.message);
     } else if (vertical === "hotels") {
       const pre = await liteapiPrebook(String(payload.offer_id || "")) as { data?: { prebookId?: string } };
       const prebookId = pre.data?.prebookId;

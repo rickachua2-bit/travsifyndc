@@ -6,4 +6,14 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig();
+export default defineConfig({
+  tanstackStart: {
+    importProtection: {
+      client: {
+        // These modules export compiler-transformed RPCs, not server helpers.
+        // Keep the rest of src/server protected from browser imports.
+        excludeFiles: ["**/node_modules/**", "**/server/*.functions.ts", "**/server/booking-engine.ts"],
+      },
+    },
+  },
+});

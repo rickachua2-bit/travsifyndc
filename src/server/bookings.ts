@@ -24,18 +24,25 @@ export type PriceBreakdown = {
 
 /** Compute final price (provider base + Travsify markup + partner markup) for a partner, vertical, currency. */
 export async function composePrice(input: {
-  partnerId: string;
+  partnerId: string | null;
   vertical: Vertical;
   providerBase: number;
   currency: string;
 }): Promise<PriceBreakdown> {
-  const { data, error } = await supabaseAdmin.rpc("compose_price", {
-    p_partner_id: input.partnerId,
-    p_vertical: input.vertical,
-    p_provider_base: input.providerBase,
-    p_currency: input.currency.toUpperCase(),
-  });
-  if (error) throw new Error(`Price composition failed: ${error.message}`);
+  // Pricing reads are safe to retry; never retry wallet debits or supplier orders.
+  let response;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    response = await supabaseAdmin.rpc("compose_price", {
+      p_partner_id: input.partnerId as string,
+      p_vertical: input.vertical,
+      p_provider_base: input.providerBase,
+      p_currency: input.currency.toUpperCase(),
+    });
+    if (!response.error || !/fetch|52[0-9]|50[234]|timeout/i.test(response.error.message)) break;
+    if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 250 * (attempt + 1)));
+  }
+  if (!response || response.error) throw new Error("Pricing is temporarily unavailable. Please try again shortly.");
+  const data = response.data;
   const breakdown = data as PriceBreakdown;
   return {
     provider_base: Number(breakdown.provider_base),
