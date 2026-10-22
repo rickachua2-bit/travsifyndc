@@ -1,6 +1,7 @@
 // Duffel client — flights NDC supplier.
 // Docs: https://duffel.com/docs/api
 import { fetchWithTimeout, TIMEOUTS } from "./fetch-with-timeout";
+import { collectOfferPages, type OfferPage } from "@/lib/flight-offer-pages";
 
 const BASE = "https://api.duffel.com";
 const VERSION = "v2";
@@ -77,10 +78,14 @@ export async function searchFlights(env: "sandbox" | "live", input: DuffelSearch
     body: JSON.stringify(body),
   });
 
-  const offers = await call<{ data: Array<Record<string, unknown>> }>(env, `/air/offers?offer_request_id=${offerReq.data.id}&limit=10&sort=total_amount`);
+  const offers = await collectOfferPages(after => {
+    const query = new URLSearchParams({ offer_request_id: offerReq.data.id, limit: "200", sort: "total_amount" });
+    if (after) query.set("after", after);
+    return call<OfferPage<Record<string, unknown>>>(env, `/air/offers?${query}`);
+  });
   return {
     offer_request_id: offerReq.data.id,
-    offers: offers.data.map((o: Record<string, unknown>) => ({
+    offers: offers.map((o: Record<string, unknown>) => ({
       id: o.id,
       total_amount: o.total_amount,
       total_currency: o.total_currency,
@@ -95,6 +100,9 @@ export async function searchFlights(env: "sandbox" | "live", input: DuffelSearch
           arriving_at: seg.arriving_at,
           marketing_carrier: (seg.marketing_carrier as Record<string, unknown> | undefined)?.iata_code,
           flight_number: seg.marketing_carrier_flight_number,
+          origin: (seg.origin as Record<string, unknown> | undefined)?.iata_code,
+          destination: (seg.destination as Record<string, unknown> | undefined)?.iata_code,
+          cabin: ((seg.passengers as Array<Record<string, unknown>> | undefined)?.[0]?.cabin_class) || input.cabin || "economy",
         })),
       })),
     })),
