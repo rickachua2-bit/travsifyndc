@@ -16,7 +16,6 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { genBookingRef } from "@/server/gateway";
 import { createPaymentIntent } from "@/server/providers/stripe";
-import { searchFlights as duffelSearch } from "@/server/providers/duffel";
 import { searchHotelRates as liteapiSearch, prebookHotel as liteapiPrebookHotel, bookHotel as liteapiBookHotel } from "@/server/providers/liteapi";
 import { requireSupabaseAuth as authMiddleware } from "@/integrations/supabase/auth-middleware";
 import { getOrScrapeTours } from "@/server/providers/getyourguide-scraper";
@@ -143,9 +142,9 @@ export const publicSearchFlights = createServerFn({ method: "POST" })
       cabin: data.cabin,
       slices: data.slices,
     };
-    const { isNdcEnabled, ndcSearch } = await import("@/server/providers/ndc");
-    // Do not silently switch suppliers when xml.agency is enabled.
-    const res = isNdcEnabled() ? await ndcSearch(input) : await duffelSearch("live", input);
+    const { searchBothFlightSuppliers, cheapestFlightsFirst } = await import("./flight-search.server");
+    const res = await searchBothFlightSuppliers("live", input);
+    if (!res.offers.length && res.errors.length) throw new Error("Flight search is temporarily unavailable. Please try again shortly.");
     const offers = await Promise.all(res.offers.map(async (o) => {
       const base = Number(o.total_amount);
       const ccy = String(o.total_currency || "USD");
@@ -159,7 +158,7 @@ export const publicSearchFlights = createServerFn({ method: "POST" })
         price_breakdown: price,
       };
     }));
-    return JSON.stringify({ offers, display_currency: display });
+    return JSON.stringify({ offers: await cheapestFlightsFirst(offers), suppliers_called: res.suppliers_called, display_currency: display });
   });
 
 export const publicSearchHotels = createServerFn({ method: "POST" })

@@ -1,8 +1,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { composePrice } from "@/server/bookings";
-import { searchFlights } from "@/server/providers/duffel";
 import { ProviderTimeoutError } from "@/server/providers/fetch-with-timeout";
-import { isNdcEnabled, ndcSearch } from "@/server/providers/ndc";
+import { searchBothFlightSuppliers, cheapestFlightsFirst } from "./flight-search.server";
 
 type ProcessorResult =
   | { status: "succeeded"; offers: number }
@@ -49,40 +48,11 @@ export async function processFlightSearchJob(jobId: string): Promise<ProcessorRe
     cabin: "economy" | "premium_economy" | "business" | "first";
   };
 
-  // ---- Provider strategy ---------------------------------------------------
-  // xml.agency (NDC) is the PRIMARY supplier. Duffel is a fallback that we
-  // only call if xml.agency returned zero usable offers OR errored. This
-  // matches the "xml.agency primary, Duffel fallback" production policy.
-  const suppliersCalled: string[] = [];
-  let ndcOffers: Array<Record<string, unknown>> = [];
-  let ndcError: Error | null = null;
-
-  if (isNdcEnabled()) {
-    suppliersCalled.push("xmlagency");
-    try {
-      const r = await ndcSearch(input);
-      ndcOffers = (r as { offers: Array<Record<string, unknown>> }).offers || [];
-    } catch (e) {
-      ndcError = e as Error;
-      console.error("[process-flight-search] xml.agency failed", ndcError.message);
-    }
-  }
-
-  let duffelOffers: Array<Record<string, unknown>> = [];
-  let duffelError: Error | null = null;
-  if (ndcOffers.length === 0) {
-    suppliersCalled.push("duffel");
-    try {
-      const r = await searchFlights(claimed.environment as "sandbox" | "live", input);
-      duffelOffers = r.offers as Array<Record<string, unknown>>;
-    } catch (e) {
-      duffelError = e as Error;
-      console.error("[process-flight-search] Duffel fallback failed", duffelError.message);
-    }
-  }
-
-  if (ndcOffers.length === 0 && duffelOffers.length === 0) {
-    const reason = ndcError || duffelError;
+  const search = await searchBothFlightSuppliers(claimed.environment as "sandbox" | "live", input);
+  const suppliersCalled = search.suppliers_called;
+  const allOffers = search.offers;
+  if (allOffers.length === 0) {
+    const reason = search.errors.find((error): error is Error => error instanceof Error);
     const isTimeout = reason instanceof ProviderTimeoutError;
     await supabaseAdmin
       .from("flight_search_jobs")
@@ -97,10 +67,6 @@ export async function processFlightSearchJob(jobId: string): Promise<ProcessorRe
     return { status: "failed", reason: reason?.message || "no_offers" };
   }
 
-  const allOffers = [
-    ...ndcOffers.map((o) => ({ ...o, source: "xmlagency" })),
-    ...duffelOffers.map((o) => ({ ...o, source: "duffel" })),
-  ];
   const priced = await Promise.all(allOffers.map(async (o) => {
     const baseAmount = Number((o as Record<string, unknown>).total_amount);
     const currency = String((o as Record<string, unknown>).total_currency || "USD");
@@ -128,7 +94,7 @@ export async function processFlightSearchJob(jobId: string): Promise<ProcessorRe
     .from("flight_search_jobs")
     .update({
       status: "succeeded",
-      result: { flights: priced, suppliers_called: suppliersCalled },
+      result: JSON.parse(JSON.stringify({ flights: await cheapestFlightsFirst(priced), suppliers_called: suppliersCalled })),
       suppliers_called: suppliersCalled,
       completed_at: new Date().toISOString(),
     })

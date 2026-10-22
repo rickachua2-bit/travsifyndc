@@ -6,7 +6,7 @@ import {
   fundUsdWalletIntent, fundNgnWallet, ensureVirtualAccount, submitWithdrawal,
 } from "@/server/wallet";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { searchFlights as duffelSearch, createOrder as duffelOrder } from "@/server/providers/duffel";
+import { createOrder as duffelOrder } from "@/server/providers/duffel";
 import { searchHotelRates as liteapiSearch, prebookHotel as liteapiPrebook, bookHotel as liteapiBook } from "@/server/providers/liteapi";
 import { searchTours as gygSearch } from "@/server/providers/getyourguide";
 import { searchTransfers as mozioSearch } from "@/server/providers/mozio";
@@ -234,7 +234,9 @@ export const searchFlightsInternal = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }): Promise<string> => {
     const { userId } = context as unknown as { userId: string };
-    const raw = await duffelSearch("live", data);
+    const { searchBothFlightSuppliers, cheapestFlightsFirst } = await import("./flight-search.server");
+    const raw = await searchBothFlightSuppliers("live", data);
+    if (!raw.offers.length && raw.errors.length) throw new Error("Flight search is temporarily unavailable. Please try again shortly.");
     
     // Apply markups to each offer
     const pricedOffers = await Promise.all(raw.offers.map(async (o) => {
@@ -256,7 +258,7 @@ export const searchFlightsInternal = createServerFn({ method: "POST" })
       }
     }));
 
-    return JSON.stringify({ ...raw, offers: pricedOffers });
+    return JSON.stringify({ suppliers_called: raw.suppliers_called, offers: await cheapestFlightsFirst(pricedOffers) });
   });
 
 export const searchHotelsInternal = createServerFn({ method: "POST" })
