@@ -22,6 +22,8 @@ export type FlightOffer = {
   base_amount: number;
   base_currency: string;
   owner?: string;
+  passengers?: Array<{ id: string }>;
+  _ndc_context?: { offer_code: string; search_guid?: string; currency: string };
   slices?: FlightSlice[];
 };
 
@@ -255,7 +257,7 @@ function OfferCard({ offer, format, onSelect, isCheapest, isFastest }: { offer: 
 
         <div className="flex flex-col items-end gap-1 border-l-0 sm:border-l sm:border-border sm:pl-4">
           <div className="font-display text-2xl font-extrabold text-primary">{format(Number(offer.total_amount), offer.total_currency)}</div>
-          <div className="text-[10px] text-muted-foreground">per traveller · all-in</div>
+          <div className="text-[10px] text-muted-foreground">all travelers · all-in</div>
           <button onClick={onSelect} className="btn-glow mt-1 rounded-lg bg-accent px-5 py-2 text-xs font-bold text-accent-foreground">Select →</button>
         </div>
       </div>

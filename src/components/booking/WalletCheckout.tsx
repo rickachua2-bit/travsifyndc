@@ -51,8 +51,8 @@ export function WalletCheckout({
   // verticals; we display the same number the search results showed.
   const estimateTotal = useMemo(() => {
     if (breakdown) return breakdown.total;
-    return input.base_amount; // best-effort estimate
-  }, [breakdown, input.base_amount]);
+    return input.quoted_total ?? input.base_amount;
+  }, [breakdown, input.base_amount, input.quoted_total]);
 
   const balance = useMemo(() => {
     if (!wallets) return null;

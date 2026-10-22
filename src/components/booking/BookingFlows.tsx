@@ -4,6 +4,9 @@
  * Same UI; only the checkout component differs.
  */
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { Button } from "@/components/ui/button";
+import { travelerTypes } from "@/lib/flight-booking";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -50,6 +53,8 @@ function Checkout({ mode, input, onCancel, onSuccess }: {
 
 export function FlightsFlow({ mode = "guest" }: FlowProps) {
   const { currency: displayCurrency, format } = useCurrency();
+  const searchFlights = useServerFn(publicSearchFlights);
+  const [travelers, setTravelers] = useState<Array<"Adult" | "Child" | "Infant">>(["Adult"]);
   const [busy, setBusy] = useState(false);
   const [offers, setOffers] = useState<FlightOffer[]>([]);
   const [routeLabel, setRouteLabel] = useState("");
@@ -59,9 +64,10 @@ export function FlightsFlow({ mode = "guest" }: FlowProps) {
 
   async function search(payload: FlightSearchPayload) {
     setRouteLabel(`${payload.slices[0]?.destination || ""}`);
+    setTravelers(travelerTypes(payload.adults, payload.children, payload.infants));
     setBusy(true); setOffers([]); setPicked(null); setCheckout(null); setDone(null);
     try {
-      const json = await publicSearchFlights({ data: {
+      const json = await searchFlights({ data: {
         slices: payload.slices,
         return_date: payload.return_date,
         adults: payload.adults,
@@ -80,22 +86,27 @@ export function FlightsFlow({ mode = "guest" }: FlowProps) {
   function startCheckout(form: HTMLFormElement) {
     if (!picked) return;
     const fd = new FormData(form);
-    const passenger = {
-      given_name: String(fd.get("given_name")),
-      family_name: String(fd.get("family_name")),
-      born_on: String(fd.get("born_on")),
-      gender: String(fd.get("gender")) as "m" | "f",
-      title: String(fd.get("title")) as "mr" | "ms" | "mrs" | "miss" | "dr",
-      email: String(fd.get("email")),
-      phone_number: String(fd.get("phone")),
-    };
+    const passengers = travelers.map((age_type, i) => ({
+      id: picked.passengers?.[i]?.id,
+      given_name: String(fd.get(`given_name_${i}`)),
+      family_name: String(fd.get(`family_name_${i}`)),
+      born_on: String(fd.get(`born_on_${i}`)),
+      gender: String(fd.get(`gender_${i}`)) as "m" | "f",
+      title: String(fd.get(`title_${i}`)) as "mr" | "ms" | "mrs" | "miss" | "dr",
+      email: String(fd.get("email")), phone_number: String(fd.get("phone")), age_type,
+      ...(picked._ndc_context ? {
+        document_number: String(fd.get(`document_number_${i}`)),
+        document_expiry: String(fd.get(`document_expiry_${i}`)),
+        nationality_iso3: String(fd.get(`nationality_iso3_${i}`)).toUpperCase(),
+      } : {}),
+    }));
+    const contact = passengers[0];
+    if (!contact) return;
     setCheckout({
-      vertical: "flights",
-      base_amount: picked.base_amount,
-      currency: picked.base_currency,                 // provider native currency for compose_price input
-      display_currency: displayCurrency,              // user's chosen settlement currency
-      contact: { name: `${passenger.given_name} ${passenger.family_name}`, email: passenger.email, phone: passenger.phone_number },
-      payload: { offer_id: picked.id, passengers: [passenger], provider_amount: picked.base_amount },
+      vertical: "flights", base_amount: picked.base_amount, currency: picked.base_currency,
+      display_currency: displayCurrency, quoted_total: Number(picked.total_amount),
+      contact: { name: `${contact.given_name} ${contact.family_name}`, email: contact.email, phone: contact.phone_number },
+      payload: { offer_id: picked.id, passengers, ndc_context: picked._ndc_context, provider_amount: picked.base_amount },
     });
   }
 
@@ -119,16 +130,26 @@ export function FlightsFlow({ mode = "guest" }: FlowProps) {
       {picked && (
         <form onSubmit={(e) => { e.preventDefault(); startCheckout(e.currentTarget); }} className="mt-6 grid gap-3 rounded-2xl border border-border bg-white p-5 sm:grid-cols-2" style={{ boxShadow: "var(--shadow-soft)" }}>
           <h3 className="col-span-full font-display text-base font-bold text-primary">Passenger details — {format(Number(picked.total_amount), picked.total_currency)}</h3>
-          <Field label="Title"><select name="title" required className={inputCls}><option value="mr">Mr</option><option value="ms">Ms</option><option value="mrs">Mrs</option><option value="miss">Miss</option><option value="dr">Dr</option></select></Field>
-          <Field label="Gender"><select name="gender" required className={inputCls}><option value="m">Male</option><option value="f">Female</option></select></Field>
-          <Field label="Given name"><input name="given_name" required className={inputCls} /></Field>
-          <Field label="Family name"><input name="family_name" required className={inputCls} /></Field>
-          <Field label="Date of birth"><input name="born_on" type="date" required className={inputCls} /></Field>
+          {travelers.map((ageType, i) => (
+            <fieldset key={i} className="col-span-full grid gap-3 border-b border-border pb-4 sm:grid-cols-2">
+              <legend className="mb-2 text-sm font-semibold">Traveler {i + 1} · {ageType}</legend>
+              <Field label="Title"><select name={`title_${i}`} required className={inputCls}><option value="mr">Mr</option><option value="ms">Ms</option><option value="mrs">Mrs</option><option value="miss">Miss</option><option value="dr">Dr</option></select></Field>
+              <Field label="Gender"><select name={`gender_${i}`} required className={inputCls}><option value="m">Male</option><option value="f">Female</option></select></Field>
+              <Field label="Given name"><input name={`given_name_${i}`} required className={inputCls} /></Field>
+              <Field label="Family name"><input name={`family_name_${i}`} required className={inputCls} /></Field>
+              <Field label="Date of birth"><input name={`born_on_${i}`} type="date" required className={inputCls} /></Field>
+              {picked._ndc_context && <>
+                <Field label="Passport number"><input name={`document_number_${i}`} minLength={3} maxLength={40} required className={inputCls} /></Field>
+                <Field label="Passport expiry"><input name={`document_expiry_${i}`} type="date" required className={inputCls} /></Field>
+                <Field label="Nationality (3-letter code)"><input name={`nationality_iso3_${i}`} placeholder="NGA" pattern="[A-Za-z]{3}" maxLength={3} required className={inputCls} /></Field>
+              </>}
+            </fieldset>
+          ))}
           <Field label="Email (ticket destination)"><input name="email" type="email" required className={inputCls} /></Field>
           <Field label="Phone"><input name="phone" required placeholder="+234 800 000 0000" className={inputCls} /></Field>
           <div className="col-span-full flex gap-2">
-            <button type="button" onClick={() => setPicked(null)} className="rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold">Back</button>
-            <button type="submit" className="btn-glow rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground">Continue to payment</button>
+            <Button type="button" variant="outline" onClick={() => setPicked(null)}>Back</Button>
+            <Button type="submit">Continue to payment</Button>
           </div>
         </form>
       )}
