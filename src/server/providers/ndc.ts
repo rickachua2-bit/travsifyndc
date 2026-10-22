@@ -44,6 +44,7 @@ export type NdcSearchInput = {
   children?: number;
   infants?: number;
   cabin?: "economy" | "premium_economy" | "business" | "first";
+  slices?: Array<{ origin: string; destination: string; departure_date: string }>;
 };
 
 type NdcOfferContext = {
@@ -167,9 +168,9 @@ export async function ndcSearch(input: NdcSearchInput) {
   const c = cfg();
   const currency = "USD"; // priced in USD, FX-converted downstream
 
-  const slices: Array<{ origin: string; destination: string; date: string }> = [
-    { origin: input.origin, destination: input.destination, date: input.departure_date },
-  ];
+  const slices = input.slices?.length
+    ? input.slices.map(s => ({ origin: s.origin, destination: s.destination, date: s.departure_date }))
+    : [{ origin: input.origin, destination: input.destination, date: input.departure_date }];
   if (input.return_date) {
     slices.push({ origin: input.destination, destination: input.origin, date: input.return_date });
   }

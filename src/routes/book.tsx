@@ -18,6 +18,8 @@ export const Route = createFileRoute("/book")({
       { name: "description", content: "Search and book flights, hotels, tours, transfers, e-Visas and travel insurance. Pay securely with card. Confirmation by email." },
       { property: "og:title", content: "Book travel · Travsify" },
       { property: "og:description", content: "One platform for flights, hotels, tours, transfers, visas and insurance — real inventory, instant confirmation." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });
@@ -26,7 +28,7 @@ function BookPage() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<BookingVertical>("flights");
-  const vertical = VERTICALS.find((v) => v.id === tab)!;
+  const vertical = VERTICALS.find((v) => v.id === tab) ?? VERTICALS[0];
 
   return (
     <PageShell>

@@ -11,12 +11,12 @@ import {
 
 export const Route = createFileRoute("/_authenticated/dashboard-book")({
   component: DashboardBookPage,
-  head: () => ({ meta: [{ title: "Book — pay from wallet · Travsify" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Book — pay from wallet · Travsify" }, { name: "description", content: "Search travel and book using your Travsify wallet." }, { property: "og:title", content: "Travsify wallet bookings" }, { property: "og:description", content: "Search travel and settle securely from your Travsify wallet." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
 });
 
 function DashboardBookPage() {
   const [tab, setTab] = useState<BookingVertical>("flights");
-  const vertical = VERTICALS.find((v) => v.id === tab)!;
+  const vertical = VERTICALS.find((v) => v.id === tab) ?? VERTICALS[0];
 
   return (
     <PartnerShell>
