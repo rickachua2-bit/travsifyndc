@@ -1,6 +1,6 @@
 ## Combined flight search
-- [ ] Query XML and Duffel together for API and website searches.
-- [ ] Sort final fares cheapest first and verify comparison rules and live results.
+- [x] Query XML and Duffel together for API and website searches.
+- [x] Sort final fares cheapest first; eight flight tests pass and live LOS–DXB results were verified in ascending price order.
 
 ## Flight booking repair
 - [x] Restore booking page loading and reproduce live flight results.
