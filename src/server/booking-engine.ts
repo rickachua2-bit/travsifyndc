@@ -16,7 +16,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { genBookingRef } from "@/server/gateway";
 import { createPaymentIntent } from "@/server/providers/stripe";
-import { searchFlights as duffelSearch, createOrder as duffelCreateOrder } from "@/server/providers/duffel";
+import { searchFlights as duffelSearch } from "@/server/providers/duffel";
 import { searchHotelRates as liteapiSearch, prebookHotel as liteapiPrebookHotel, bookHotel as liteapiBookHotel } from "@/server/providers/liteapi";
 import { requireSupabaseAuth as authMiddleware } from "@/integrations/supabase/auth-middleware";
 import { getOrScrapeTours } from "@/server/providers/getyourguide-scraper";

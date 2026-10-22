@@ -35,6 +35,7 @@ export const Route = createFileRoute("/")({
         content: "One API. Global inventory. Local payments. Built for Africa & the world.",
       },
       { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

@@ -10,6 +10,7 @@ export type ContactDetails = { name: string; email: string; phone: string };
 export type CheckoutInput = {
   vertical: "flights" | "hotels" | "tours" | "transfers" | "insurance" | "visas" | "car_rentals";
   base_amount: number;        // pre-markup, supplier price (in provider currency)
+  quoted_total?: number;
   currency: string;           // provider native currency
   display_currency?: "USD" | "NGN";  // user-chosen settlement currency
   contact: ContactDetails;

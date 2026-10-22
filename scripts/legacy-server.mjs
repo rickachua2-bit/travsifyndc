@@ -1,11 +1,11 @@
 import express from 'express';
 import { toNodeHandler } from 'h3-v2/node';
-import entry from './dist/server/server.js';
+import entry from '../dist/server/server.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(path.dirname(__filename));
 
 const app = express();
 const port = process.env.PORT || 10000;
