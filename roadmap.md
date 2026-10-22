@@ -1,5 +1,5 @@
 ## Combined flight search
-- [ ] Fetch every supplier result page, remove repeated itineraries using the cheapest final fare, and verify live ordering.
+- [x] Fetch every supplier result page and remove repeated itineraries using the cheapest final fare; eleven tests pass and 30 live LOS–DXB results were verified cheapest first.
 - [x] Query XML and Duffel together for API and website searches.
 - [x] Sort final fares cheapest first; eight flight tests pass and live LOS–DXB results were verified in ascending price order.
 
