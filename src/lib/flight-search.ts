@@ -1,5 +1,51 @@
 export type SupplierOffers = { offers: Array<Record<string, unknown>> };
 
+type ItineraryOffer = {
+  id?: unknown;
+  source?: unknown;
+  slices?: unknown;
+};
+
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? value as Record<string, unknown> : {};
+}
+
+/** Never collapse incomplete itineraries merely because a field is missing. */
+export function flightItineraryKey(offer: ItineraryOffer): string | null {
+  if (!Array.isArray(offer.slices) || !offer.slices.length) return null;
+  const parts: string[] = [];
+  for (const rawSlice of offer.slices) {
+    const slice = record(rawSlice);
+    if (!Array.isArray(slice.segments) || !slice.segments.length) return null;
+    const segments: unknown[] = [];
+    for (const rawSegment of slice.segments) {
+      const segment = record(rawSegment);
+      if (!segment.marketing_carrier || !segment.flight_number || !segment.departing_at || !segment.arriving_at) return null;
+      segments.push([
+        String(segment.marketing_carrier).toUpperCase(),
+        String(segment.flight_number).replace(/^0+(?=\d)/, "").toUpperCase(),
+        String(segment.departing_at).slice(0, 19), String(segment.arriving_at).slice(0, 19),
+        segment.origin || slice.origin, segment.destination || slice.destination,
+      ]);
+    }
+    parts.push(JSON.stringify(segments));
+  }
+  return JSON.stringify(parts);
+}
+
+/** Called after final-price sorting, so each itinerary keeps its cheapest supplier offer. */
+export function uniqueFlightItineraries<T extends ItineraryOffer>(offers: T[]): T[] {
+  const seen = new Set<string>();
+  return offers.filter(offer => {
+    const itinerary = flightItineraryKey(offer);
+    const key = itinerary || (offer.id ? `${offer.source || ""}:${String(offer.id)}` : null);
+    if (!key) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 /** Start both requests before awaiting either; preserve the healthy supplier. */
 export async function collectFlightOffers(
   xml: () => Promise<SupplierOffers>,
