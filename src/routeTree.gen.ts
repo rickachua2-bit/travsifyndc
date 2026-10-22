@@ -9,133 +9,92 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SigninRouteImport } from './routes/signin'
-import { Route as SdkDotjsRouteImport } from './routes/sdk[.]js'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as GetApiAccessRouteImport } from './routes/get-api-access'
-import { Route as DocsRouteImport } from './routes/docs'
-import { Route as DevelopersRouteImport } from './routes/developers'
-import { Route as DemoRouteImport } from './routes/demo'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as BookRouteImport } from './routes/book'
-import { Route as AdminLoginRouteImport } from './routes/admin-login'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SdkJsRouteImport } from './routes/sdk.js'
-import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
-import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
-import { Route as AuthenticatedPendingReviewRouteImport } from './routes/_authenticated/pending-review'
-import { Route as AuthenticatedMarkupsRouteImport } from './routes/_authenticated/markups'
-import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
-import { Route as AuthenticatedDashboardBookRouteImport } from './routes/_authenticated/dashboard-book'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
-import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as AdminLoginRouteImport } from './routes/admin-login'
+import { Route as BookRouteImport } from './routes/book'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as DemoRouteImport } from './routes/demo'
+import { Route as DevelopersRouteImport } from './routes/developers'
+import { Route as DocsRouteImport } from './routes/docs'
+import { Route as GetApiAccessRouteImport } from './routes/get-api-access'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SdkDotjsRouteImport } from './routes/sdk[.]js'
+import { Route as SigninRouteImport } from './routes/signin'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
+import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDashboardBookRouteImport } from './routes/_authenticated/dashboard-book'
+import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
+import { Route as AuthenticatedMarkupsRouteImport } from './routes/_authenticated/markups'
+import { Route as AuthenticatedPendingReviewRouteImport } from './routes/_authenticated/pending-review'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
+import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as SdkJsRouteImport } from './routes/sdk.js'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
-import { Route as VisaTrackReferenceRouteImport } from './routes/visa.track.$reference'
-import { Route as ApiV1PayoutsRouteImport } from './routes/api/v1/payouts'
-import { Route as ApiV1HealthRouteImport } from './routes/api/v1/health'
-import { Route as ApiV1CatalogRouteImport } from './routes/api/v1/catalog'
-import { Route as ApiPublicDemoSearchRouteImport } from './routes/api/public/demo-search'
-import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin/withdrawals'
-import { Route as AuthenticatedAdminWalletsRouteImport } from './routes/_authenticated/admin/wallets'
-import { Route as AuthenticatedAdminVisaQueueRouteImport } from './routes/_authenticated/admin/visa-queue'
-import { Route as AuthenticatedAdminVisaProductsRouteImport } from './routes/_authenticated/admin/visa-products'
-import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
-import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin/support'
-import { Route as AuthenticatedAdminScrapeRunsRouteImport } from './routes/_authenticated/admin/scrape-runs'
-import { Route as AuthenticatedAdminRevenueRouteImport } from './routes/_authenticated/admin/revenue'
-import { Route as AuthenticatedAdminProviderHealthRouteImport } from './routes/_authenticated/admin/provider-health'
-import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
-import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
-import { Route as AuthenticatedAdminLedgerRouteImport } from './routes/_authenticated/admin/ledger'
-import { Route as AuthenticatedAdminInventoryRouteImport } from './routes/_authenticated/admin/inventory'
-import { Route as AuthenticatedAdminDataSyncRouteImport } from './routes/_authenticated/admin/data-sync'
-import { Route as AuthenticatedAdminContactSubmissionsRouteImport } from './routes/_authenticated/admin/contact-submissions'
-import { Route as AuthenticatedAdminCachesRouteImport } from './routes/_authenticated/admin/caches'
-import { Route as AuthenticatedAdminBookingsRouteImport } from './routes/_authenticated/admin/bookings'
-import { Route as AuthenticatedAdminApiLogsRouteImport } from './routes/_authenticated/admin/api-logs'
-import { Route as AuthenticatedAdminApiKeysRouteImport } from './routes/_authenticated/admin/api-keys'
 import { Route as AuthenticatedAdminAccessRequestsRouteImport } from './routes/_authenticated/admin/access-requests'
-import { Route as ApiV1VisasSearchRouteImport } from './routes/api/v1/visas.search'
-import { Route as ApiV1VisasBookingsRouteImport } from './routes/api/v1/visas.bookings'
-import { Route as ApiV1TransfersSearchRouteImport } from './routes/api/v1/transfers.search'
-import { Route as ApiV1TransfersBookingsRouteImport } from './routes/api/v1/transfers.bookings'
-import { Route as ApiV1ToursSearchRouteImport } from './routes/api/v1/tours.search'
-import { Route as ApiV1ToursLocationsRouteImport } from './routes/api/v1/tours.locations'
-import { Route as ApiV1ToursBookingsRouteImport } from './routes/api/v1/tours.bookings'
-import { Route as ApiV1RentalsSearchRouteImport } from './routes/api/v1/rentals.search'
-import { Route as ApiV1PaymentsIntentsRouteImport } from './routes/api/v1/payments.intents'
-import { Route as ApiV1InsuranceSearchRouteImport } from './routes/api/v1/insurance.search'
-import { Route as ApiV1InsuranceBookingsRouteImport } from './routes/api/v1/insurance.bookings'
-import { Route as ApiV1HotelsSearchRouteImport } from './routes/api/v1/hotels.search'
-import { Route as ApiV1HotelsBookingsRouteImport } from './routes/api/v1/hotels.bookings'
-import { Route as ApiV1FlightsSearchRouteImport } from './routes/api/v1/flights.search'
-import { Route as ApiV1FlightsOrdersRouteImport } from './routes/api/v1/flights.orders'
-import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks.stripe'
-import { Route as ApiPublicWebhooksFincraRouteImport } from './routes/api/public/webhooks.fincra'
-import { Route as ApiPublicInternalProcessFlightSearchRouteImport } from './routes/api/public/internal/process-flight-search'
-import { Route as AuthenticatedAdminVisaQueueIdRouteImport } from './routes/_authenticated/admin/visa-queue.$id'
-import { Route as AuthenticatedAdminSupportIdRouteImport } from './routes/_authenticated/admin/support.$id'
+import { Route as AuthenticatedAdminApiKeysRouteImport } from './routes/_authenticated/admin/api-keys'
+import { Route as AuthenticatedAdminApiLogsRouteImport } from './routes/_authenticated/admin/api-logs'
+import { Route as AuthenticatedAdminBookingsRouteImport } from './routes/_authenticated/admin/bookings'
+import { Route as AuthenticatedAdminCachesRouteImport } from './routes/_authenticated/admin/caches'
+import { Route as AuthenticatedAdminContactSubmissionsRouteImport } from './routes/_authenticated/admin/contact-submissions'
+import { Route as AuthenticatedAdminDataSyncRouteImport } from './routes/_authenticated/admin/data-sync'
+import { Route as AuthenticatedAdminInventoryRouteImport } from './routes/_authenticated/admin/inventory'
+import { Route as AuthenticatedAdminLedgerRouteImport } from './routes/_authenticated/admin/ledger'
+import { Route as AuthenticatedAdminMarkupsRouteImport } from './routes/_authenticated/admin/markups'
+import { Route as AuthenticatedAdminProcessingRouteImport } from './routes/_authenticated/admin/processing'
+import { Route as AuthenticatedAdminProviderHealthRouteImport } from './routes/_authenticated/admin/provider-health'
+import { Route as AuthenticatedAdminRevenueRouteImport } from './routes/_authenticated/admin/revenue'
+import { Route as AuthenticatedAdminScrapeRunsRouteImport } from './routes/_authenticated/admin/scrape-runs'
+import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin/support'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
+import { Route as AuthenticatedAdminVisaProductsRouteImport } from './routes/_authenticated/admin/visa-products'
+import { Route as AuthenticatedAdminVisaQueueRouteImport } from './routes/_authenticated/admin/visa-queue'
+import { Route as AuthenticatedAdminWalletsRouteImport } from './routes/_authenticated/admin/wallets'
+import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin/withdrawals'
+import { Route as ApiPublicDemoSearchRouteImport } from './routes/api/public/demo-search'
+import { Route as ApiV1CatalogRouteImport } from './routes/api/v1/catalog'
+import { Route as ApiV1HealthRouteImport } from './routes/api/v1/health'
+import { Route as ApiV1PayoutsRouteImport } from './routes/api/v1/payouts'
+import { Route as VisaTrackReferenceRouteImport } from './routes/visa.track.$reference'
 import { Route as AuthenticatedAdminApplicationsIdRouteImport } from './routes/_authenticated/admin/applications.$id'
-import { Route as ApiV1FlightsSearchSearchIdRouteImport } from './routes/api/v1/flights.search.$searchId'
-import { Route as ApiV1AdminSyncVisasRouteImport } from './routes/api/v1/admin.sync.visas'
-import { Route as ApiV1AdminSyncTransfersRouteImport } from './routes/api/v1/admin.sync.transfers'
-import { Route as ApiV1AdminSyncToursRouteImport } from './routes/api/v1/admin.sync.tours'
-import { Route as ApiV1AdminSyncSeedRouteImport } from './routes/api/v1/admin.sync.seed'
-import { Route as ApiV1AdminSyncRentalsRouteImport } from './routes/api/v1/admin.sync.rentals'
+import { Route as AuthenticatedAdminSupportIdRouteImport } from './routes/_authenticated/admin/support.$id'
+import { Route as AuthenticatedAdminVisaQueueIdRouteImport } from './routes/_authenticated/admin/visa-queue.$id'
+import { Route as ApiPublicInternalProcessFlightSearchRouteImport } from './routes/api/public/internal/process-flight-search'
+import { Route as ApiPublicWebhooksFincraRouteImport } from './routes/api/public/webhooks.fincra'
+import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks.stripe'
+import { Route as ApiV1FlightsOrdersRouteImport } from './routes/api/v1/flights.orders'
+import { Route as ApiV1FlightsSearchRouteImport } from './routes/api/v1/flights.search'
+import { Route as ApiV1HotelsBookingsRouteImport } from './routes/api/v1/hotels.bookings'
+import { Route as ApiV1HotelsSearchRouteImport } from './routes/api/v1/hotels.search'
+import { Route as ApiV1InsuranceBookingsRouteImport } from './routes/api/v1/insurance.bookings'
+import { Route as ApiV1InsuranceSearchRouteImport } from './routes/api/v1/insurance.search'
+import { Route as ApiV1PaymentsIntentsRouteImport } from './routes/api/v1/payments.intents'
+import { Route as ApiV1RentalsSearchRouteImport } from './routes/api/v1/rentals.search'
+import { Route as ApiV1ToursBookingsRouteImport } from './routes/api/v1/tours.bookings'
+import { Route as ApiV1ToursLocationsRouteImport } from './routes/api/v1/tours.locations'
+import { Route as ApiV1ToursSearchRouteImport } from './routes/api/v1/tours.search'
+import { Route as ApiV1TransfersBookingsRouteImport } from './routes/api/v1/transfers.bookings'
+import { Route as ApiV1TransfersSearchRouteImport } from './routes/api/v1/transfers.search'
+import { Route as ApiV1VisasBookingsRouteImport } from './routes/api/v1/visas.bookings'
+import { Route as ApiV1VisasSearchRouteImport } from './routes/api/v1/visas.search'
 import { Route as ApiV1AdminSyncInsuranceRouteImport } from './routes/api/v1/admin.sync.insurance'
+import { Route as ApiV1AdminSyncRentalsRouteImport } from './routes/api/v1/admin.sync.rentals'
+import { Route as ApiV1AdminSyncSeedRouteImport } from './routes/api/v1/admin.sync.seed'
+import { Route as ApiV1AdminSyncToursRouteImport } from './routes/api/v1/admin.sync.tours'
+import { Route as ApiV1AdminSyncTransfersRouteImport } from './routes/api/v1/admin.sync.transfers'
+import { Route as ApiV1AdminSyncVisasRouteImport } from './routes/api/v1/admin.sync.visas'
+import { Route as ApiV1FlightsSearchSearchIdRouteImport } from './routes/api/v1/flights.search.$searchId'
 
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SigninRoute = SigninRouteImport.update({
-  id: '/signin',
-  path: '/signin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SdkDotjsRoute = SdkDotjsRouteImport.update({
-  id: '/sdk.js',
-  path: '/sdk.js',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GetApiAccessRoute = GetApiAccessRouteImport.update({
-  id: '/get-api-access',
-  path: '/get-api-access',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocsRoute = DocsRouteImport.update({
-  id: '/docs',
-  path: '/docs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevelopersRoute = DevelopersRouteImport.update({
-  id: '/developers',
-  path: '/developers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoRoute = DemoRouteImport.update({
-  id: '/demo',
-  path: '/demo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookRoute = BookRouteImport.update({
-  id: '/book',
-  path: '/book',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -143,44 +102,74 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin-login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const BookRoute = BookRouteImport.update({
+  id: '/book',
+  path: '/book',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SdkJsRoute = SdkJsRouteImport.update({
-  id: '/sdk/js',
-  path: '/sdk/js',
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
+const DevelopersRoute = DevelopersRouteImport.update({
+  id: '/developers',
+  path: '/developers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GetApiAccessRoute = GetApiAccessRouteImport.update({
+  id: '/get-api-access',
+  path: '/get-api-access',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SdkDotjsRoute = SdkDotjsRouteImport.update({
+  id: '/sdk.js',
+  path: '/sdk.js',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigninRoute = SigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
-  id: '/support',
-  path: '/support',
+const AuthenticatedApiKeysRoute = AuthenticatedApiKeysRouteImport.update({
+  id: '/api-keys',
+  path: '/api-keys',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedPendingReviewRoute =
-  AuthenticatedPendingReviewRouteImport.update({
-    id: '/pending-review',
-    path: '/pending-review',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedMarkupsRoute = AuthenticatedMarkupsRouteImport.update({
-  id: '/markups',
-  path: '/markups',
+const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
-  id: '/kyc',
-  path: '/kyc',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDashboardBookRoute =
@@ -189,161 +178,46 @@ const AuthenticatedDashboardBookRoute =
     path: '/dashboard-book',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
-  id: '/bookings',
-  path: '/bookings',
+const AuthenticatedMarkupsRoute = AuthenticatedMarkupsRouteImport.update({
+  id: '/markups',
+  path: '/markups',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedApiKeysRoute = AuthenticatedApiKeysRouteImport.update({
-  id: '/api-keys',
-  path: '/api-keys',
+const AuthenticatedPendingReviewRoute =
+  AuthenticatedPendingReviewRouteImport.update({
+    id: '/pending-review',
+    path: '/pending-review',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const SdkJsRoute = SdkJsRouteImport.update({
+  id: '/sdk/js',
+  path: '/sdk/js',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
-const VisaTrackReferenceRoute = VisaTrackReferenceRouteImport.update({
-  id: '/visa/track/$reference',
-  path: '/visa/track/$reference',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1PayoutsRoute = ApiV1PayoutsRouteImport.update({
-  id: '/api/v1/payouts',
-  path: '/api/v1/payouts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1HealthRoute = ApiV1HealthRouteImport.update({
-  id: '/api/v1/health',
-  path: '/api/v1/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1CatalogRoute = ApiV1CatalogRouteImport.update({
-  id: '/api/v1/catalog',
-  path: '/api/v1/catalog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicDemoSearchRoute = ApiPublicDemoSearchRouteImport.update({
-  id: '/api/public/demo-search',
-  path: '/api/public/demo-search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedAdminWithdrawalsRoute =
-  AuthenticatedAdminWithdrawalsRouteImport.update({
-    id: '/withdrawals',
-    path: '/withdrawals',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminWalletsRoute =
-  AuthenticatedAdminWalletsRouteImport.update({
-    id: '/wallets',
-    path: '/wallets',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminVisaQueueRoute =
-  AuthenticatedAdminVisaQueueRouteImport.update({
-    id: '/visa-queue',
-    path: '/visa-queue',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminVisaProductsRoute =
-  AuthenticatedAdminVisaProductsRouteImport.update({
-    id: '/visa-products',
-    path: '/visa-products',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedAdminSupportRoute =
-  AuthenticatedAdminSupportRouteImport.update({
-    id: '/support',
-    path: '/support',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminScrapeRunsRoute =
-  AuthenticatedAdminScrapeRunsRouteImport.update({
-    id: '/scrape-runs',
-    path: '/scrape-runs',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminRevenueRoute =
-  AuthenticatedAdminRevenueRouteImport.update({
-    id: '/revenue',
-    path: '/revenue',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminProviderHealthRoute =
-  AuthenticatedAdminProviderHealthRouteImport.update({
-    id: '/provider-health',
-    path: '/provider-health',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminProcessingRoute =
-  AuthenticatedAdminProcessingRouteImport.update({
-    id: '/processing',
-    path: '/processing',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminMarkupsRoute =
-  AuthenticatedAdminMarkupsRouteImport.update({
-    id: '/markups',
-    path: '/markups',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminLedgerRoute =
-  AuthenticatedAdminLedgerRouteImport.update({
-    id: '/ledger',
-    path: '/ledger',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminInventoryRoute =
-  AuthenticatedAdminInventoryRouteImport.update({
-    id: '/inventory',
-    path: '/inventory',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminDataSyncRoute =
-  AuthenticatedAdminDataSyncRouteImport.update({
-    id: '/data-sync',
-    path: '/data-sync',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminContactSubmissionsRoute =
-  AuthenticatedAdminContactSubmissionsRouteImport.update({
-    id: '/contact-submissions',
-    path: '/contact-submissions',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminCachesRoute =
-  AuthenticatedAdminCachesRouteImport.update({
-    id: '/caches',
-    path: '/caches',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminBookingsRoute =
-  AuthenticatedAdminBookingsRouteImport.update({
-    id: '/bookings',
-    path: '/bookings',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminApiLogsRoute =
-  AuthenticatedAdminApiLogsRouteImport.update({
-    id: '/api-logs',
-    path: '/api-logs',
+const AuthenticatedAdminAccessRequestsRoute =
+  AuthenticatedAdminAccessRequestsRouteImport.update({
+    id: '/access-requests',
+    path: '/access-requests',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminApiKeysRoute =
@@ -352,108 +226,143 @@ const AuthenticatedAdminApiKeysRoute =
     path: '/api-keys',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const AuthenticatedAdminAccessRequestsRoute =
-  AuthenticatedAdminAccessRequestsRouteImport.update({
-    id: '/access-requests',
-    path: '/access-requests',
+const AuthenticatedAdminApiLogsRoute =
+  AuthenticatedAdminApiLogsRouteImport.update({
+    id: '/api-logs',
+    path: '/api-logs',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const ApiV1VisasSearchRoute = ApiV1VisasSearchRouteImport.update({
-  id: '/api/v1/visas/search',
-  path: '/api/v1/visas/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1VisasBookingsRoute = ApiV1VisasBookingsRouteImport.update({
-  id: '/api/v1/visas/bookings',
-  path: '/api/v1/visas/bookings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1TransfersSearchRoute = ApiV1TransfersSearchRouteImport.update({
-  id: '/api/v1/transfers/search',
-  path: '/api/v1/transfers/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1TransfersBookingsRoute = ApiV1TransfersBookingsRouteImport.update({
-  id: '/api/v1/transfers/bookings',
-  path: '/api/v1/transfers/bookings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1ToursSearchRoute = ApiV1ToursSearchRouteImport.update({
-  id: '/api/v1/tours/search',
-  path: '/api/v1/tours/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1ToursLocationsRoute = ApiV1ToursLocationsRouteImport.update({
-  id: '/api/v1/tours/locations',
-  path: '/api/v1/tours/locations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1ToursBookingsRoute = ApiV1ToursBookingsRouteImport.update({
-  id: '/api/v1/tours/bookings',
-  path: '/api/v1/tours/bookings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1RentalsSearchRoute = ApiV1RentalsSearchRouteImport.update({
-  id: '/api/v1/rentals/search',
-  path: '/api/v1/rentals/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1PaymentsIntentsRoute = ApiV1PaymentsIntentsRouteImport.update({
-  id: '/api/v1/payments/intents',
-  path: '/api/v1/payments/intents',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1InsuranceSearchRoute = ApiV1InsuranceSearchRouteImport.update({
-  id: '/api/v1/insurance/search',
-  path: '/api/v1/insurance/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1InsuranceBookingsRoute = ApiV1InsuranceBookingsRouteImport.update({
-  id: '/api/v1/insurance/bookings',
-  path: '/api/v1/insurance/bookings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1HotelsSearchRoute = ApiV1HotelsSearchRouteImport.update({
-  id: '/api/v1/hotels/search',
-  path: '/api/v1/hotels/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1HotelsBookingsRoute = ApiV1HotelsBookingsRouteImport.update({
-  id: '/api/v1/hotels/bookings',
-  path: '/api/v1/hotels/bookings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1FlightsSearchRoute = ApiV1FlightsSearchRouteImport.update({
-  id: '/api/v1/flights/search',
-  path: '/api/v1/flights/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiV1FlightsOrdersRoute = ApiV1FlightsOrdersRouteImport.update({
-  id: '/api/v1/flights/orders',
-  path: '/api/v1/flights/orders',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
-  id: '/api/public/webhooks/stripe',
-  path: '/api/public/webhooks/stripe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicWebhooksFincraRoute = ApiPublicWebhooksFincraRouteImport.update({
-  id: '/api/public/webhooks/fincra',
-  path: '/api/public/webhooks/fincra',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicInternalProcessFlightSearchRoute =
-  ApiPublicInternalProcessFlightSearchRouteImport.update({
-    id: '/api/public/internal/process-flight-search',
-    path: '/api/public/internal/process-flight-search',
-    getParentRoute: () => rootRouteImport,
+const AuthenticatedAdminBookingsRoute =
+  AuthenticatedAdminBookingsRouteImport.update({
+    id: '/bookings',
+    path: '/bookings',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const AuthenticatedAdminVisaQueueIdRoute =
-  AuthenticatedAdminVisaQueueIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedAdminVisaQueueRoute,
+const AuthenticatedAdminCachesRoute =
+  AuthenticatedAdminCachesRouteImport.update({
+    id: '/caches',
+    path: '/caches',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminContactSubmissionsRoute =
+  AuthenticatedAdminContactSubmissionsRouteImport.update({
+    id: '/contact-submissions',
+    path: '/contact-submissions',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminDataSyncRoute =
+  AuthenticatedAdminDataSyncRouteImport.update({
+    id: '/data-sync',
+    path: '/data-sync',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminInventoryRoute =
+  AuthenticatedAdminInventoryRouteImport.update({
+    id: '/inventory',
+    path: '/inventory',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminLedgerRoute =
+  AuthenticatedAdminLedgerRouteImport.update({
+    id: '/ledger',
+    path: '/ledger',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminMarkupsRoute =
+  AuthenticatedAdminMarkupsRouteImport.update({
+    id: '/markups',
+    path: '/markups',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminProcessingRoute =
+  AuthenticatedAdminProcessingRouteImport.update({
+    id: '/processing',
+    path: '/processing',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminProviderHealthRoute =
+  AuthenticatedAdminProviderHealthRouteImport.update({
+    id: '/provider-health',
+    path: '/provider-health',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminRevenueRoute =
+  AuthenticatedAdminRevenueRouteImport.update({
+    id: '/revenue',
+    path: '/revenue',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminScrapeRunsRoute =
+  AuthenticatedAdminScrapeRunsRouteImport.update({
+    id: '/scrape-runs',
+    path: '/scrape-runs',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminSupportRoute =
+  AuthenticatedAdminSupportRouteImport.update({
+    id: '/support',
+    path: '/support',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminVisaProductsRoute =
+  AuthenticatedAdminVisaProductsRouteImport.update({
+    id: '/visa-products',
+    path: '/visa-products',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminVisaQueueRoute =
+  AuthenticatedAdminVisaQueueRouteImport.update({
+    id: '/visa-queue',
+    path: '/visa-queue',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminWalletsRoute =
+  AuthenticatedAdminWalletsRouteImport.update({
+    id: '/wallets',
+    path: '/wallets',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminWithdrawalsRoute =
+  AuthenticatedAdminWithdrawalsRouteImport.update({
+    id: '/withdrawals',
+    path: '/withdrawals',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const ApiPublicDemoSearchRoute = ApiPublicDemoSearchRouteImport.update({
+  id: '/api/public/demo-search',
+  path: '/api/public/demo-search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1CatalogRoute = ApiV1CatalogRouteImport.update({
+  id: '/api/v1/catalog',
+  path: '/api/v1/catalog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1HealthRoute = ApiV1HealthRouteImport.update({
+  id: '/api/v1/health',
+  path: '/api/v1/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1PayoutsRoute = ApiV1PayoutsRouteImport.update({
+  id: '/api/v1/payouts',
+  path: '/api/v1/payouts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VisaTrackReferenceRoute = VisaTrackReferenceRouteImport.update({
+  id: '/visa/track/$reference',
+  path: '/visa/track/$reference',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminApplicationsIdRoute =
+  AuthenticatedAdminApplicationsIdRouteImport.update({
+    id: '/applications/$id',
+    path: '/applications/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminSupportIdRoute =
   AuthenticatedAdminSupportIdRouteImport.update({
@@ -461,41 +370,101 @@ const AuthenticatedAdminSupportIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminSupportRoute,
   } as any)
-const AuthenticatedAdminApplicationsIdRoute =
-  AuthenticatedAdminApplicationsIdRouteImport.update({
-    id: '/applications/$id',
-    path: '/applications/$id',
-    getParentRoute: () => AuthenticatedAdminRoute,
+const AuthenticatedAdminVisaQueueIdRoute =
+  AuthenticatedAdminVisaQueueIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminVisaQueueRoute,
   } as any)
-const ApiV1FlightsSearchSearchIdRoute =
-  ApiV1FlightsSearchSearchIdRouteImport.update({
-    id: '/$searchId',
-    path: '/$searchId',
-    getParentRoute: () => ApiV1FlightsSearchRoute,
+const ApiPublicInternalProcessFlightSearchRoute =
+  ApiPublicInternalProcessFlightSearchRouteImport.update({
+    id: '/api/public/internal/process-flight-search',
+    path: '/api/public/internal/process-flight-search',
+    getParentRoute: () => rootRouteImport,
   } as any)
-const ApiV1AdminSyncVisasRoute = ApiV1AdminSyncVisasRouteImport.update({
-  id: '/api/v1/admin/sync/visas',
-  path: '/api/v1/admin/sync/visas',
+const ApiPublicWebhooksFincraRoute = ApiPublicWebhooksFincraRouteImport.update({
+  id: '/api/public/webhooks/fincra',
+  path: '/api/public/webhooks/fincra',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiV1AdminSyncTransfersRoute = ApiV1AdminSyncTransfersRouteImport.update({
-  id: '/api/v1/admin/sync/transfers',
-  path: '/api/v1/admin/sync/transfers',
+const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
+  id: '/api/public/webhooks/stripe',
+  path: '/api/public/webhooks/stripe',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiV1AdminSyncToursRoute = ApiV1AdminSyncToursRouteImport.update({
-  id: '/api/v1/admin/sync/tours',
-  path: '/api/v1/admin/sync/tours',
+const ApiV1FlightsOrdersRoute = ApiV1FlightsOrdersRouteImport.update({
+  id: '/api/v1/flights/orders',
+  path: '/api/v1/flights/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiV1AdminSyncSeedRoute = ApiV1AdminSyncSeedRouteImport.update({
-  id: '/api/v1/admin/sync/seed',
-  path: '/api/v1/admin/sync/seed',
+const ApiV1FlightsSearchRoute = ApiV1FlightsSearchRouteImport.update({
+  id: '/api/v1/flights/search',
+  path: '/api/v1/flights/search',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiV1AdminSyncRentalsRoute = ApiV1AdminSyncRentalsRouteImport.update({
-  id: '/api/v1/admin/sync/rentals',
-  path: '/api/v1/admin/sync/rentals',
+const ApiV1HotelsBookingsRoute = ApiV1HotelsBookingsRouteImport.update({
+  id: '/api/v1/hotels/bookings',
+  path: '/api/v1/hotels/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1HotelsSearchRoute = ApiV1HotelsSearchRouteImport.update({
+  id: '/api/v1/hotels/search',
+  path: '/api/v1/hotels/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1InsuranceBookingsRoute = ApiV1InsuranceBookingsRouteImport.update({
+  id: '/api/v1/insurance/bookings',
+  path: '/api/v1/insurance/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1InsuranceSearchRoute = ApiV1InsuranceSearchRouteImport.update({
+  id: '/api/v1/insurance/search',
+  path: '/api/v1/insurance/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1PaymentsIntentsRoute = ApiV1PaymentsIntentsRouteImport.update({
+  id: '/api/v1/payments/intents',
+  path: '/api/v1/payments/intents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1RentalsSearchRoute = ApiV1RentalsSearchRouteImport.update({
+  id: '/api/v1/rentals/search',
+  path: '/api/v1/rentals/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1ToursBookingsRoute = ApiV1ToursBookingsRouteImport.update({
+  id: '/api/v1/tours/bookings',
+  path: '/api/v1/tours/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1ToursLocationsRoute = ApiV1ToursLocationsRouteImport.update({
+  id: '/api/v1/tours/locations',
+  path: '/api/v1/tours/locations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1ToursSearchRoute = ApiV1ToursSearchRouteImport.update({
+  id: '/api/v1/tours/search',
+  path: '/api/v1/tours/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1TransfersBookingsRoute = ApiV1TransfersBookingsRouteImport.update({
+  id: '/api/v1/transfers/bookings',
+  path: '/api/v1/transfers/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1TransfersSearchRoute = ApiV1TransfersSearchRouteImport.update({
+  id: '/api/v1/transfers/search',
+  path: '/api/v1/transfers/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1VisasBookingsRoute = ApiV1VisasBookingsRouteImport.update({
+  id: '/api/v1/visas/bookings',
+  path: '/api/v1/visas/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1VisasSearchRoute = ApiV1VisasSearchRouteImport.update({
+  id: '/api/v1/visas/search',
+  path: '/api/v1/visas/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1AdminSyncInsuranceRoute = ApiV1AdminSyncInsuranceRouteImport.update({
@@ -503,6 +472,37 @@ const ApiV1AdminSyncInsuranceRoute = ApiV1AdminSyncInsuranceRouteImport.update({
   path: '/api/v1/admin/sync/insurance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1AdminSyncRentalsRoute = ApiV1AdminSyncRentalsRouteImport.update({
+  id: '/api/v1/admin/sync/rentals',
+  path: '/api/v1/admin/sync/rentals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1AdminSyncSeedRoute = ApiV1AdminSyncSeedRouteImport.update({
+  id: '/api/v1/admin/sync/seed',
+  path: '/api/v1/admin/sync/seed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1AdminSyncToursRoute = ApiV1AdminSyncToursRouteImport.update({
+  id: '/api/v1/admin/sync/tours',
+  path: '/api/v1/admin/sync/tours',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1AdminSyncTransfersRoute = ApiV1AdminSyncTransfersRouteImport.update({
+  id: '/api/v1/admin/sync/transfers',
+  path: '/api/v1/admin/sync/transfers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1AdminSyncVisasRoute = ApiV1AdminSyncVisasRouteImport.update({
+  id: '/api/v1/admin/sync/visas',
+  path: '/api/v1/admin/sync/visas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1FlightsSearchSearchIdRoute =
+  ApiV1FlightsSearchSearchIdRouteImport.update({
+    id: '/$searchId',
+    path: '/$searchId',
+    getParentRoute: () => ApiV1FlightsSearchRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -1030,81 +1030,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signin': {
-      id: '/signin'
-      path: '/signin'
-      fullPath: '/signin'
-      preLoaderRoute: typeof SigninRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sdk.js': {
-      id: '/sdk.js'
-      path: '/sdk.js'
-      fullPath: '/sdk.js'
-      preLoaderRoute: typeof SdkDotjsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/get-api-access': {
-      id: '/get-api-access'
-      path: '/get-api-access'
-      fullPath: '/get-api-access'
-      preLoaderRoute: typeof GetApiAccessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/docs': {
-      id: '/docs'
-      path: '/docs'
-      fullPath: '/docs'
-      preLoaderRoute: typeof DocsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/developers': {
-      id: '/developers'
-      path: '/developers'
-      fullPath: '/developers'
-      preLoaderRoute: typeof DevelopersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/demo': {
-      id: '/demo'
-      path: '/demo'
-      fullPath: '/demo'
-      preLoaderRoute: typeof DemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/book': {
-      id: '/book'
-      path: '/book'
-      fullPath: '/book'
-      preLoaderRoute: typeof BookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin-login': {
-      id: '/admin-login'
-      path: '/admin-login'
-      fullPath: '/admin-login'
-      preLoaderRoute: typeof AdminLoginRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1114,74 +1044,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/admin-login': {
+      id: '/admin-login'
+      path: '/admin-login'
+      fullPath: '/admin-login'
+      preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sdk/js': {
-      id: '/sdk/js'
-      path: '/sdk/js'
-      fullPath: '/sdk/js'
-      preLoaderRoute: typeof SdkJsRouteImport
+    '/book': {
+      id: '/book'
+      path: '/book'
+      fullPath: '/book'
+      preLoaderRoute: typeof BookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/wallet': {
-      id: '/_authenticated/wallet'
-      path: '/wallet'
-      fullPath: '/wallet'
-      preLoaderRoute: typeof AuthenticatedWalletRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/support': {
-      id: '/_authenticated/support'
-      path: '/support'
-      fullPath: '/support'
-      preLoaderRoute: typeof AuthenticatedSupportRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/pending-review': {
-      id: '/_authenticated/pending-review'
-      path: '/pending-review'
-      fullPath: '/pending-review'
-      preLoaderRoute: typeof AuthenticatedPendingReviewRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/developers': {
+      id: '/developers'
+      path: '/developers'
+      fullPath: '/developers'
+      preLoaderRoute: typeof DevelopersRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/markups': {
-      id: '/_authenticated/markups'
-      path: '/markups'
-      fullPath: '/markups'
-      preLoaderRoute: typeof AuthenticatedMarkupsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/kyc': {
-      id: '/_authenticated/kyc'
-      path: '/kyc'
-      fullPath: '/kyc'
-      preLoaderRoute: typeof AuthenticatedKycRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/get-api-access': {
+      id: '/get-api-access'
+      path: '/get-api-access'
+      fullPath: '/get-api-access'
+      preLoaderRoute: typeof GetApiAccessRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/dashboard-book': {
-      id: '/_authenticated/dashboard-book'
-      path: '/dashboard-book'
-      fullPath: '/dashboard-book'
-      preLoaderRoute: typeof AuthenticatedDashboardBookRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/sdk.js': {
+      id: '/sdk.js'
+      path: '/sdk.js'
+      fullPath: '/sdk.js'
+      preLoaderRoute: typeof SdkDotjsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/bookings': {
-      id: '/_authenticated/bookings'
-      path: '/bookings'
-      fullPath: '/bookings'
-      preLoaderRoute: typeof AuthenticatedBookingsRouteImport
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/api-keys': {
@@ -1191,186 +1135,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApiKeysRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+    '/_authenticated/bookings': {
+      id: '/_authenticated/bookings'
+      path: '/bookings'
+      fullPath: '/bookings'
+      preLoaderRoute: typeof AuthenticatedBookingsRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard-book': {
+      id: '/_authenticated/dashboard-book'
+      path: '/dashboard-book'
+      fullPath: '/dashboard-book'
+      preLoaderRoute: typeof AuthenticatedDashboardBookRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/kyc': {
+      id: '/_authenticated/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof AuthenticatedKycRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/markups': {
+      id: '/_authenticated/markups'
+      path: '/markups'
+      fullPath: '/markups'
+      preLoaderRoute: typeof AuthenticatedMarkupsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pending-review': {
+      id: '/_authenticated/pending-review'
+      path: '/pending-review'
+      fullPath: '/pending-review'
+      preLoaderRoute: typeof AuthenticatedPendingReviewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/wallet': {
+      id: '/_authenticated/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/sdk/js': {
+      id: '/sdk/js'
+      path: '/sdk/js'
+      fullPath: '/sdk/js'
+      preLoaderRoute: typeof SdkJsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/visa/track/$reference': {
-      id: '/visa/track/$reference'
-      path: '/visa/track/$reference'
-      fullPath: '/visa/track/$reference'
-      preLoaderRoute: typeof VisaTrackReferenceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/payouts': {
-      id: '/api/v1/payouts'
-      path: '/api/v1/payouts'
-      fullPath: '/api/v1/payouts'
-      preLoaderRoute: typeof ApiV1PayoutsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/health': {
-      id: '/api/v1/health'
-      path: '/api/v1/health'
-      fullPath: '/api/v1/health'
-      preLoaderRoute: typeof ApiV1HealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/catalog': {
-      id: '/api/v1/catalog'
-      path: '/api/v1/catalog'
-      fullPath: '/api/v1/catalog'
-      preLoaderRoute: typeof ApiV1CatalogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/demo-search': {
-      id: '/api/public/demo-search'
-      path: '/api/public/demo-search'
-      fullPath: '/api/public/demo-search'
-      preLoaderRoute: typeof ApiPublicDemoSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/admin/withdrawals': {
-      id: '/_authenticated/admin/withdrawals'
-      path: '/withdrawals'
-      fullPath: '/admin/withdrawals'
-      preLoaderRoute: typeof AuthenticatedAdminWithdrawalsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/wallets': {
-      id: '/_authenticated/admin/wallets'
-      path: '/wallets'
-      fullPath: '/admin/wallets'
-      preLoaderRoute: typeof AuthenticatedAdminWalletsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/visa-queue': {
-      id: '/_authenticated/admin/visa-queue'
-      path: '/visa-queue'
-      fullPath: '/admin/visa-queue'
-      preLoaderRoute: typeof AuthenticatedAdminVisaQueueRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/visa-products': {
-      id: '/_authenticated/admin/visa-products'
-      path: '/visa-products'
-      fullPath: '/admin/visa-products'
-      preLoaderRoute: typeof AuthenticatedAdminVisaProductsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/users': {
-      id: '/_authenticated/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/support': {
-      id: '/_authenticated/admin/support'
-      path: '/support'
-      fullPath: '/admin/support'
-      preLoaderRoute: typeof AuthenticatedAdminSupportRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/scrape-runs': {
-      id: '/_authenticated/admin/scrape-runs'
-      path: '/scrape-runs'
-      fullPath: '/admin/scrape-runs'
-      preLoaderRoute: typeof AuthenticatedAdminScrapeRunsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/revenue': {
-      id: '/_authenticated/admin/revenue'
-      path: '/revenue'
-      fullPath: '/admin/revenue'
-      preLoaderRoute: typeof AuthenticatedAdminRevenueRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/provider-health': {
-      id: '/_authenticated/admin/provider-health'
-      path: '/provider-health'
-      fullPath: '/admin/provider-health'
-      preLoaderRoute: typeof AuthenticatedAdminProviderHealthRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/processing': {
-      id: '/_authenticated/admin/processing'
-      path: '/processing'
-      fullPath: '/admin/processing'
-      preLoaderRoute: typeof AuthenticatedAdminProcessingRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/markups': {
-      id: '/_authenticated/admin/markups'
-      path: '/markups'
-      fullPath: '/admin/markups'
-      preLoaderRoute: typeof AuthenticatedAdminMarkupsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/ledger': {
-      id: '/_authenticated/admin/ledger'
-      path: '/ledger'
-      fullPath: '/admin/ledger'
-      preLoaderRoute: typeof AuthenticatedAdminLedgerRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/inventory': {
-      id: '/_authenticated/admin/inventory'
-      path: '/inventory'
-      fullPath: '/admin/inventory'
-      preLoaderRoute: typeof AuthenticatedAdminInventoryRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/data-sync': {
-      id: '/_authenticated/admin/data-sync'
-      path: '/data-sync'
-      fullPath: '/admin/data-sync'
-      preLoaderRoute: typeof AuthenticatedAdminDataSyncRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/contact-submissions': {
-      id: '/_authenticated/admin/contact-submissions'
-      path: '/contact-submissions'
-      fullPath: '/admin/contact-submissions'
-      preLoaderRoute: typeof AuthenticatedAdminContactSubmissionsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/caches': {
-      id: '/_authenticated/admin/caches'
-      path: '/caches'
-      fullPath: '/admin/caches'
-      preLoaderRoute: typeof AuthenticatedAdminCachesRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/bookings': {
-      id: '/_authenticated/admin/bookings'
-      path: '/bookings'
-      fullPath: '/admin/bookings'
-      preLoaderRoute: typeof AuthenticatedAdminBookingsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/api-logs': {
-      id: '/_authenticated/admin/api-logs'
-      path: '/api-logs'
-      fullPath: '/admin/api-logs'
-      preLoaderRoute: typeof AuthenticatedAdminApiLogsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/api-keys': {
-      id: '/_authenticated/admin/api-keys'
-      path: '/api-keys'
-      fullPath: '/admin/api-keys'
-      preLoaderRoute: typeof AuthenticatedAdminApiKeysRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/access-requests': {
@@ -1380,116 +1212,200 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAccessRequestsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/api/v1/visas/search': {
-      id: '/api/v1/visas/search'
-      path: '/api/v1/visas/search'
-      fullPath: '/api/v1/visas/search'
-      preLoaderRoute: typeof ApiV1VisasSearchRouteImport
+    '/_authenticated/admin/api-keys': {
+      id: '/_authenticated/admin/api-keys'
+      path: '/api-keys'
+      fullPath: '/admin/api-keys'
+      preLoaderRoute: typeof AuthenticatedAdminApiKeysRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/api-logs': {
+      id: '/_authenticated/admin/api-logs'
+      path: '/api-logs'
+      fullPath: '/admin/api-logs'
+      preLoaderRoute: typeof AuthenticatedAdminApiLogsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/bookings': {
+      id: '/_authenticated/admin/bookings'
+      path: '/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AuthenticatedAdminBookingsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/caches': {
+      id: '/_authenticated/admin/caches'
+      path: '/caches'
+      fullPath: '/admin/caches'
+      preLoaderRoute: typeof AuthenticatedAdminCachesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/contact-submissions': {
+      id: '/_authenticated/admin/contact-submissions'
+      path: '/contact-submissions'
+      fullPath: '/admin/contact-submissions'
+      preLoaderRoute: typeof AuthenticatedAdminContactSubmissionsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/data-sync': {
+      id: '/_authenticated/admin/data-sync'
+      path: '/data-sync'
+      fullPath: '/admin/data-sync'
+      preLoaderRoute: typeof AuthenticatedAdminDataSyncRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/inventory': {
+      id: '/_authenticated/admin/inventory'
+      path: '/inventory'
+      fullPath: '/admin/inventory'
+      preLoaderRoute: typeof AuthenticatedAdminInventoryRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/ledger': {
+      id: '/_authenticated/admin/ledger'
+      path: '/ledger'
+      fullPath: '/admin/ledger'
+      preLoaderRoute: typeof AuthenticatedAdminLedgerRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/markups': {
+      id: '/_authenticated/admin/markups'
+      path: '/markups'
+      fullPath: '/admin/markups'
+      preLoaderRoute: typeof AuthenticatedAdminMarkupsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/processing': {
+      id: '/_authenticated/admin/processing'
+      path: '/processing'
+      fullPath: '/admin/processing'
+      preLoaderRoute: typeof AuthenticatedAdminProcessingRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/provider-health': {
+      id: '/_authenticated/admin/provider-health'
+      path: '/provider-health'
+      fullPath: '/admin/provider-health'
+      preLoaderRoute: typeof AuthenticatedAdminProviderHealthRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/revenue': {
+      id: '/_authenticated/admin/revenue'
+      path: '/revenue'
+      fullPath: '/admin/revenue'
+      preLoaderRoute: typeof AuthenticatedAdminRevenueRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/scrape-runs': {
+      id: '/_authenticated/admin/scrape-runs'
+      path: '/scrape-runs'
+      fullPath: '/admin/scrape-runs'
+      preLoaderRoute: typeof AuthenticatedAdminScrapeRunsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/support': {
+      id: '/_authenticated/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AuthenticatedAdminSupportRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/visa-products': {
+      id: '/_authenticated/admin/visa-products'
+      path: '/visa-products'
+      fullPath: '/admin/visa-products'
+      preLoaderRoute: typeof AuthenticatedAdminVisaProductsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/visa-queue': {
+      id: '/_authenticated/admin/visa-queue'
+      path: '/visa-queue'
+      fullPath: '/admin/visa-queue'
+      preLoaderRoute: typeof AuthenticatedAdminVisaQueueRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/wallets': {
+      id: '/_authenticated/admin/wallets'
+      path: '/wallets'
+      fullPath: '/admin/wallets'
+      preLoaderRoute: typeof AuthenticatedAdminWalletsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/withdrawals': {
+      id: '/_authenticated/admin/withdrawals'
+      path: '/withdrawals'
+      fullPath: '/admin/withdrawals'
+      preLoaderRoute: typeof AuthenticatedAdminWithdrawalsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/api/public/demo-search': {
+      id: '/api/public/demo-search'
+      path: '/api/public/demo-search'
+      fullPath: '/api/public/demo-search'
+      preLoaderRoute: typeof ApiPublicDemoSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/visas/bookings': {
-      id: '/api/v1/visas/bookings'
-      path: '/api/v1/visas/bookings'
-      fullPath: '/api/v1/visas/bookings'
-      preLoaderRoute: typeof ApiV1VisasBookingsRouteImport
+    '/api/v1/catalog': {
+      id: '/api/v1/catalog'
+      path: '/api/v1/catalog'
+      fullPath: '/api/v1/catalog'
+      preLoaderRoute: typeof ApiV1CatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/transfers/search': {
-      id: '/api/v1/transfers/search'
-      path: '/api/v1/transfers/search'
-      fullPath: '/api/v1/transfers/search'
-      preLoaderRoute: typeof ApiV1TransfersSearchRouteImport
+    '/api/v1/health': {
+      id: '/api/v1/health'
+      path: '/api/v1/health'
+      fullPath: '/api/v1/health'
+      preLoaderRoute: typeof ApiV1HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/transfers/bookings': {
-      id: '/api/v1/transfers/bookings'
-      path: '/api/v1/transfers/bookings'
-      fullPath: '/api/v1/transfers/bookings'
-      preLoaderRoute: typeof ApiV1TransfersBookingsRouteImport
+    '/api/v1/payouts': {
+      id: '/api/v1/payouts'
+      path: '/api/v1/payouts'
+      fullPath: '/api/v1/payouts'
+      preLoaderRoute: typeof ApiV1PayoutsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/tours/search': {
-      id: '/api/v1/tours/search'
-      path: '/api/v1/tours/search'
-      fullPath: '/api/v1/tours/search'
-      preLoaderRoute: typeof ApiV1ToursSearchRouteImport
+    '/visa/track/$reference': {
+      id: '/visa/track/$reference'
+      path: '/visa/track/$reference'
+      fullPath: '/visa/track/$reference'
+      preLoaderRoute: typeof VisaTrackReferenceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/tours/locations': {
-      id: '/api/v1/tours/locations'
-      path: '/api/v1/tours/locations'
-      fullPath: '/api/v1/tours/locations'
-      preLoaderRoute: typeof ApiV1ToursLocationsRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/admin/applications/$id': {
+      id: '/_authenticated/admin/applications/$id'
+      path: '/applications/$id'
+      fullPath: '/admin/applications/$id'
+      preLoaderRoute: typeof AuthenticatedAdminApplicationsIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/api/v1/tours/bookings': {
-      id: '/api/v1/tours/bookings'
-      path: '/api/v1/tours/bookings'
-      fullPath: '/api/v1/tours/bookings'
-      preLoaderRoute: typeof ApiV1ToursBookingsRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/admin/support/$id': {
+      id: '/_authenticated/admin/support/$id'
+      path: '/$id'
+      fullPath: '/admin/support/$id'
+      preLoaderRoute: typeof AuthenticatedAdminSupportIdRouteImport
+      parentRoute: typeof AuthenticatedAdminSupportRoute
     }
-    '/api/v1/rentals/search': {
-      id: '/api/v1/rentals/search'
-      path: '/api/v1/rentals/search'
-      fullPath: '/api/v1/rentals/search'
-      preLoaderRoute: typeof ApiV1RentalsSearchRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/admin/visa-queue/$id': {
+      id: '/_authenticated/admin/visa-queue/$id'
+      path: '/$id'
+      fullPath: '/admin/visa-queue/$id'
+      preLoaderRoute: typeof AuthenticatedAdminVisaQueueIdRouteImport
+      parentRoute: typeof AuthenticatedAdminVisaQueueRoute
     }
-    '/api/v1/payments/intents': {
-      id: '/api/v1/payments/intents'
-      path: '/api/v1/payments/intents'
-      fullPath: '/api/v1/payments/intents'
-      preLoaderRoute: typeof ApiV1PaymentsIntentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/insurance/search': {
-      id: '/api/v1/insurance/search'
-      path: '/api/v1/insurance/search'
-      fullPath: '/api/v1/insurance/search'
-      preLoaderRoute: typeof ApiV1InsuranceSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/insurance/bookings': {
-      id: '/api/v1/insurance/bookings'
-      path: '/api/v1/insurance/bookings'
-      fullPath: '/api/v1/insurance/bookings'
-      preLoaderRoute: typeof ApiV1InsuranceBookingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/hotels/search': {
-      id: '/api/v1/hotels/search'
-      path: '/api/v1/hotels/search'
-      fullPath: '/api/v1/hotels/search'
-      preLoaderRoute: typeof ApiV1HotelsSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/hotels/bookings': {
-      id: '/api/v1/hotels/bookings'
-      path: '/api/v1/hotels/bookings'
-      fullPath: '/api/v1/hotels/bookings'
-      preLoaderRoute: typeof ApiV1HotelsBookingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/flights/search': {
-      id: '/api/v1/flights/search'
-      path: '/api/v1/flights/search'
-      fullPath: '/api/v1/flights/search'
-      preLoaderRoute: typeof ApiV1FlightsSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/v1/flights/orders': {
-      id: '/api/v1/flights/orders'
-      path: '/api/v1/flights/orders'
-      fullPath: '/api/v1/flights/orders'
-      preLoaderRoute: typeof ApiV1FlightsOrdersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/webhooks/stripe': {
-      id: '/api/public/webhooks/stripe'
-      path: '/api/public/webhooks/stripe'
-      fullPath: '/api/public/webhooks/stripe'
-      preLoaderRoute: typeof ApiPublicWebhooksStripeRouteImport
+    '/api/public/internal/process-flight-search': {
+      id: '/api/public/internal/process-flight-search'
+      path: '/api/public/internal/process-flight-search'
+      fullPath: '/api/public/internal/process-flight-search'
+      preLoaderRoute: typeof ApiPublicInternalProcessFlightSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/webhooks/fincra': {
@@ -1499,67 +1415,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksFincraRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/internal/process-flight-search': {
-      id: '/api/public/internal/process-flight-search'
-      path: '/api/public/internal/process-flight-search'
-      fullPath: '/api/public/internal/process-flight-search'
-      preLoaderRoute: typeof ApiPublicInternalProcessFlightSearchRouteImport
+    '/api/public/webhooks/stripe': {
+      id: '/api/public/webhooks/stripe'
+      path: '/api/public/webhooks/stripe'
+      fullPath: '/api/public/webhooks/stripe'
+      preLoaderRoute: typeof ApiPublicWebhooksStripeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin/visa-queue/$id': {
-      id: '/_authenticated/admin/visa-queue/$id'
-      path: '/$id'
-      fullPath: '/admin/visa-queue/$id'
-      preLoaderRoute: typeof AuthenticatedAdminVisaQueueIdRouteImport
-      parentRoute: typeof AuthenticatedAdminVisaQueueRoute
-    }
-    '/_authenticated/admin/support/$id': {
-      id: '/_authenticated/admin/support/$id'
-      path: '/$id'
-      fullPath: '/admin/support/$id'
-      preLoaderRoute: typeof AuthenticatedAdminSupportIdRouteImport
-      parentRoute: typeof AuthenticatedAdminSupportRoute
-    }
-    '/_authenticated/admin/applications/$id': {
-      id: '/_authenticated/admin/applications/$id'
-      path: '/applications/$id'
-      fullPath: '/admin/applications/$id'
-      preLoaderRoute: typeof AuthenticatedAdminApplicationsIdRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/api/v1/flights/search/$searchId': {
-      id: '/api/v1/flights/search/$searchId'
-      path: '/$searchId'
-      fullPath: '/api/v1/flights/search/$searchId'
-      preLoaderRoute: typeof ApiV1FlightsSearchSearchIdRouteImport
-      parentRoute: typeof ApiV1FlightsSearchRoute
-    }
-    '/api/v1/admin/sync/visas': {
-      id: '/api/v1/admin/sync/visas'
-      path: '/api/v1/admin/sync/visas'
-      fullPath: '/api/v1/admin/sync/visas'
-      preLoaderRoute: typeof ApiV1AdminSyncVisasRouteImport
+    '/api/v1/flights/orders': {
+      id: '/api/v1/flights/orders'
+      path: '/api/v1/flights/orders'
+      fullPath: '/api/v1/flights/orders'
+      preLoaderRoute: typeof ApiV1FlightsOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/admin/sync/transfers': {
-      id: '/api/v1/admin/sync/transfers'
-      path: '/api/v1/admin/sync/transfers'
-      fullPath: '/api/v1/admin/sync/transfers'
-      preLoaderRoute: typeof ApiV1AdminSyncTransfersRouteImport
+    '/api/v1/flights/search': {
+      id: '/api/v1/flights/search'
+      path: '/api/v1/flights/search'
+      fullPath: '/api/v1/flights/search'
+      preLoaderRoute: typeof ApiV1FlightsSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/admin/sync/tours': {
-      id: '/api/v1/admin/sync/tours'
-      path: '/api/v1/admin/sync/tours'
-      fullPath: '/api/v1/admin/sync/tours'
-      preLoaderRoute: typeof ApiV1AdminSyncToursRouteImport
+    '/api/v1/hotels/bookings': {
+      id: '/api/v1/hotels/bookings'
+      path: '/api/v1/hotels/bookings'
+      fullPath: '/api/v1/hotels/bookings'
+      preLoaderRoute: typeof ApiV1HotelsBookingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/admin/sync/seed': {
-      id: '/api/v1/admin/sync/seed'
-      path: '/api/v1/admin/sync/seed'
-      fullPath: '/api/v1/admin/sync/seed'
-      preLoaderRoute: typeof ApiV1AdminSyncSeedRouteImport
+    '/api/v1/hotels/search': {
+      id: '/api/v1/hotels/search'
+      path: '/api/v1/hotels/search'
+      fullPath: '/api/v1/hotels/search'
+      preLoaderRoute: typeof ApiV1HotelsSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/insurance/bookings': {
+      id: '/api/v1/insurance/bookings'
+      path: '/api/v1/insurance/bookings'
+      fullPath: '/api/v1/insurance/bookings'
+      preLoaderRoute: typeof ApiV1InsuranceBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/insurance/search': {
+      id: '/api/v1/insurance/search'
+      path: '/api/v1/insurance/search'
+      fullPath: '/api/v1/insurance/search'
+      preLoaderRoute: typeof ApiV1InsuranceSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/payments/intents': {
+      id: '/api/v1/payments/intents'
+      path: '/api/v1/payments/intents'
+      fullPath: '/api/v1/payments/intents'
+      preLoaderRoute: typeof ApiV1PaymentsIntentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/rentals/search': {
+      id: '/api/v1/rentals/search'
+      path: '/api/v1/rentals/search'
+      fullPath: '/api/v1/rentals/search'
+      preLoaderRoute: typeof ApiV1RentalsSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/tours/bookings': {
+      id: '/api/v1/tours/bookings'
+      path: '/api/v1/tours/bookings'
+      fullPath: '/api/v1/tours/bookings'
+      preLoaderRoute: typeof ApiV1ToursBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/tours/locations': {
+      id: '/api/v1/tours/locations'
+      path: '/api/v1/tours/locations'
+      fullPath: '/api/v1/tours/locations'
+      preLoaderRoute: typeof ApiV1ToursLocationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/tours/search': {
+      id: '/api/v1/tours/search'
+      path: '/api/v1/tours/search'
+      fullPath: '/api/v1/tours/search'
+      preLoaderRoute: typeof ApiV1ToursSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/transfers/bookings': {
+      id: '/api/v1/transfers/bookings'
+      path: '/api/v1/transfers/bookings'
+      fullPath: '/api/v1/transfers/bookings'
+      preLoaderRoute: typeof ApiV1TransfersBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/transfers/search': {
+      id: '/api/v1/transfers/search'
+      path: '/api/v1/transfers/search'
+      fullPath: '/api/v1/transfers/search'
+      preLoaderRoute: typeof ApiV1TransfersSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/visas/bookings': {
+      id: '/api/v1/visas/bookings'
+      path: '/api/v1/visas/bookings'
+      fullPath: '/api/v1/visas/bookings'
+      preLoaderRoute: typeof ApiV1VisasBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/visas/search': {
+      id: '/api/v1/visas/search'
+      path: '/api/v1/visas/search'
+      fullPath: '/api/v1/visas/search'
+      preLoaderRoute: typeof ApiV1VisasSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/admin/sync/insurance': {
+      id: '/api/v1/admin/sync/insurance'
+      path: '/api/v1/admin/sync/insurance'
+      fullPath: '/api/v1/admin/sync/insurance'
+      preLoaderRoute: typeof ApiV1AdminSyncInsuranceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/admin/sync/rentals': {
@@ -1569,12 +1541,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1AdminSyncRentalsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/admin/sync/insurance': {
-      id: '/api/v1/admin/sync/insurance'
-      path: '/api/v1/admin/sync/insurance'
-      fullPath: '/api/v1/admin/sync/insurance'
-      preLoaderRoute: typeof ApiV1AdminSyncInsuranceRouteImport
+    '/api/v1/admin/sync/seed': {
+      id: '/api/v1/admin/sync/seed'
+      path: '/api/v1/admin/sync/seed'
+      fullPath: '/api/v1/admin/sync/seed'
+      preLoaderRoute: typeof ApiV1AdminSyncSeedRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/admin/sync/tours': {
+      id: '/api/v1/admin/sync/tours'
+      path: '/api/v1/admin/sync/tours'
+      fullPath: '/api/v1/admin/sync/tours'
+      preLoaderRoute: typeof ApiV1AdminSyncToursRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/admin/sync/transfers': {
+      id: '/api/v1/admin/sync/transfers'
+      path: '/api/v1/admin/sync/transfers'
+      fullPath: '/api/v1/admin/sync/transfers'
+      preLoaderRoute: typeof ApiV1AdminSyncTransfersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/admin/sync/visas': {
+      id: '/api/v1/admin/sync/visas'
+      path: '/api/v1/admin/sync/visas'
+      fullPath: '/api/v1/admin/sync/visas'
+      preLoaderRoute: typeof ApiV1AdminSyncVisasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/flights/search/$searchId': {
+      id: '/api/v1/flights/search/$searchId'
+      path: '/$searchId'
+      fullPath: '/api/v1/flights/search/$searchId'
+      preLoaderRoute: typeof ApiV1FlightsSearchSearchIdRouteImport
+      parentRoute: typeof ApiV1FlightsSearchRoute
     }
   }
 }
