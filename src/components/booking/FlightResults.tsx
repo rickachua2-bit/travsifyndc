@@ -86,7 +86,7 @@ export function FlightResults({
   onSelect: (o: FlightOffer) => void;
   format: (amount: number, currency?: string) => string;
 }) {
-  const [sort, setSort] = useState<SortKey>("recommended");
+  const [sort, setSort] = useState<SortKey>("cheapest");
   const [stopsFilter, setStopsFilter] = useState<Set<number>>(new Set());
   const [carrierFilter, setCarrierFilter] = useState<Set<string>>(new Set());
   const [bandsFilter, setBandsFilter] = useState<Set<string>>(new Set());
