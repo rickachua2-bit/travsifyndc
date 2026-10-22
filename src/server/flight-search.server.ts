@@ -4,7 +4,7 @@ import { ndcSearch } from "./providers/ndc";
 import { convert } from "./fx";
 
 export async function searchBothFlightSuppliers(environment: "sandbox" | "live", input: DuffelSearchInput) {
-  return collectFlightOffers(() => ndcSearch(input), () => searchFlights(environment, input));
+  return collectFlightOffers(() => ndcSearch({ ...input, adults: input.adults ?? 1 }), () => searchFlights(environment, input));
 }
 
 export function cheapestFlightsFirst<T extends { total_amount?: unknown; total_currency?: unknown }>(offers: T[]) {

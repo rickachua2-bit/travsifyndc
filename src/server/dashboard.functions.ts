@@ -6,7 +6,7 @@ import {
   fundUsdWalletIntent, fundNgnWallet, ensureVirtualAccount, submitWithdrawal,
 } from "@/server/wallet";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { searchFlights as duffelSearch, createOrder as duffelOrder } from "@/server/providers/duffel";
+import { createOrder as duffelOrder } from "@/server/providers/duffel";
 import { searchHotelRates as liteapiSearch, prebookHotel as liteapiPrebook, bookHotel as liteapiBook } from "@/server/providers/liteapi";
 import { searchTours as gygSearch } from "@/server/providers/getyourguide";
 import { searchTransfers as mozioSearch } from "@/server/providers/mozio";

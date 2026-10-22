@@ -94,7 +94,7 @@ export async function processFlightSearchJob(jobId: string): Promise<ProcessorRe
     .from("flight_search_jobs")
     .update({
       status: "succeeded",
-      result: { flights: await cheapestFlightsFirst(priced), suppliers_called: suppliersCalled },
+      result: JSON.parse(JSON.stringify({ flights: await cheapestFlightsFirst(priced), suppliers_called: suppliersCalled })),
       suppliers_called: suppliersCalled,
       completed_at: new Date().toISOString(),
     })
